@@ -1,0 +1,18 @@
+# Python and tooling
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Someone else's video material never leaves the machine
+**/reference/private/
+
+# Render scratch folders
+**/edit/work/
+**/edit/preview/work/
+
+# Secrets, in case one is ever dropped here by mistake
+.env
+.env.*
+*.pem
+*.key

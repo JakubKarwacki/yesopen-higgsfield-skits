@@ -1,0 +1,80 @@
+{
+ "slug": "SLUG",
+ "date": "YYYY-MM-DD",
+ "name": "SLUG",
+ "title": "Working title / end-card line",
+ "language": "en",
+ "fps": 30,
+ "formats": [
+  "9:16",
+  "4:5",
+  "1:1",
+  "16:9"
+ ],
+ "reference": {
+  "url": "",
+  "title": "",
+  "channel": "",
+  "note": "Link and our own analysis only; frames and transcript stay in reference/private/."
+ },
+ "cast": {
+  "char1": {
+   "still": "stills/still-char1-0.png",
+   "url": "",
+   "args": "args/still-char1.json",
+   "voice": "calm, warm American male voice"
+  },
+  "char2": {
+   "still": "stills/still-char2-0.png",
+   "url": "",
+   "args": "args/still-char2.json",
+   "voice": "crisp, confident American female voice"
+  }
+ },
+ "takes": {
+  "c1a": "takes/take-char1-1-720p-0.mp4",
+  "c2a": "takes/take-char2-1-720p-0.mp4"
+ },
+ "speech": {
+  "thr": -26.0,
+  "gap": 0.12,
+  "reach": 0.8
+ },
+ "captions": {
+  "style": {
+   "max_words": 3,
+   "max_chars": 18,
+   "gap": 0.35
+  },
+  "sample": "It's not you.",
+  "fixes": {}
+ },
+ "notification_app": "YesOpen",
+ "notification_when": "now",
+ "notifications": {
+  "notif-1": "Text of the first banner"
+ },
+ "endcard": {
+  "tagline": [
+   [
+    [
+     "First line.",
+     "ink"
+    ]
+   ],
+   [
+    [
+     "Second line with a ",
+     "ink"
+    ],
+    [
+     "blue word.",
+     "blue"
+    ]
+   ]
+  ],
+  "url": "yesopens.com",
+  "dur": 2.6
+ },
+ "ding_volume": 0.55
+}

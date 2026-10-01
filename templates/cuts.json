@@ -1,0 +1,52 @@
+{
+ "_doc": "One entry per shot, in timeline order. line = [first word, last word] as Whisper wrote them (punctuation ignored). head/tail = seconds kept before/after the line. zoom/cy = punch-in. events: ding {after}, banner {name, after, dur}, ding_at {take_time}, cutaway {take_time, take, in, dur, zoom, cy}. fixed = [in, out] for a silent span. out = absolute take time to end at. See references/edit-pipeline.md.",
+ "defaults": {
+  "cy": 0.4
+ },
+ "cuts": [
+  {
+   "take": "c1a",
+   "line": [
+    "Hey",
+    "up"
+   ],
+   "head": 0.3,
+   "tail": 0.2,
+   "note": "1 CHAR1: Hey... I think we should break up."
+  },
+  {
+   "take": "c2a",
+   "line": [
+    "You're",
+    "agency"
+   ],
+   "head": 0.1,
+   "tail": 0.3,
+   "zoom": 1.25,
+   "cy": 0.33,
+   "note": "2 CHAR2: reaction line with a punch-in"
+  },
+  {
+   "take": "c1a",
+   "line": [
+    "I",
+    "know"
+   ],
+   "head": 0.12,
+   "tail": 1.35,
+   "events": [
+    {
+     "type": "ding",
+     "after": 0.2
+    },
+    {
+     "type": "banner",
+     "name": "notif-1",
+     "after": 0.22,
+     "dur": 1.9
+    }
+   ],
+   "note": "3 CHAR1: denial line, then DING + banner"
+  }
+ ]
+}

@@ -1,0 +1,6 @@
+interface:
+  display_name: "YesOpen Higgsfield Skits"
+  short_description: "Funny YesOpen video skits from a reference video, made with Higgsfield"
+  default_prompt: "Use $yesopen-higgsfield-skits to watch this reference video, write a funny YesOpen skit where YesOpen is only the punchline, and after my approval produce it with Higgsfield in 9:16, 4:5, 1:1 and 16:9."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,57 @@
+# QA checklist, gate by gate
+
+Tick every item. A gate that fails stops the next paid step.
+
+## Gate 1: reference analysis
+
+- [ ] `reference/analysis.md` written in our own words: form, beat map, engine, editing grammar.
+- [ ] Frames and transcript only in `reference/private/` (git-ignored, never published).
+- [ ] "What we take / what we do not take" filled in.
+
+## Gate 2: script (needs the owner's explicit approval)
+
+- [ ] It is a skit, not a product demo: the first 10 seconds contain no feature.
+- [ ] One familiar frame, one engine, 3–4 escalation steps, a turn, a button, an end-card line.
+- [ ] Every product claim is in the claims table with a file and line in `business-card/messages/en`.
+- [ ] No line, name or signature joke copied from the reference.
+- [ ] Lines under ~12 words; numbers written as words for the take prompts.
+- [ ] Cost estimate given (seconds of takes x price, `hf-job cost`).
+- [ ] Approval recorded in `script.md` (who, date).
+
+## Gate 3: cast stills
+
+- [ ] Four candidates per character on one sheet.
+- [ ] Picked still: no logos, no readable text, neutral face with lips closed, prop visible, face large enough
+      for a 1.4x punch-in, real local business look, nobody in the background.
+- [ ] `stills/picked.json` and the args saved.
+
+## Gate 4: takes
+
+- [ ] `hf-job` used (jobs.jsonl has every request id).
+- [ ] `inspect_take.py` run on each take: all lines present and in order, right words, one voice.
+- [ ] Lip sync holds on every line (sheet), no music, no extra people, no on-screen text.
+- [ ] Silent actions happened where the jokes need them.
+- [ ] Room tone at least 3 dB under `speech.thr`.
+
+## Gate 5: edit
+
+- [ ] Preview of the first 8–10 cuts shown and approved before the full edit when the pacing is new.
+- [ ] Every cut has a `note` with the script line.
+- [ ] Banners show the exact approved text and appear on the ding; nothing covers a face.
+- [ ] Captions: every chunk on the right speaker and shot (`qa-<fmt>-captions.jpg`), spelling and
+      punctuation as in the script.
+- [ ] End card: right tagline, URL, 2.6 s, ding.
+
+## Gate 6: final, per format
+
+- [ ] `qa_report.py`: frames actual = planned (`frames.ok`), loudness −14 ±1 LUFS, true peak ≤ −1.0 dBTP.
+- [ ] `--whisper` on the 9:16 master: word match ≈ 1.0 with the caption words (the gym skit: 1.0, no differences).
+- [ ] Watched once from start to end with sound.
+- [ ] 4:5, 1:1, 16:9 checked with sheets: faces framed, captions readable, banners clear of faces.
+
+## Gate 7: delivery
+
+- [ ] Clickable local links to the master, share and web files in the reply.
+- [ ] Web version sent for preview; Artifact page only if asked.
+- [ ] Nothing posted publicly without an explicit request.
+- [ ] `script.md` updated with what changed in production and the final files.

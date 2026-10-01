@@ -1,0 +1,7 @@
+{
+ "image_url": "../stills/still-char1-0.png",
+ "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing him, slight natural handheld movement. The [character] from the image stays in place in his [place] and talks directly into the camera lens as if to the person filming him, with natural, understated comedic acting and accurate lip sync. He speaks English in a [voice from project.json cast]. In this exact order, with real pauses where he silently listens:\n1) [Acting direction]: \"[Line one.]\" [Optional silent action.]\nPause.\n2) [Acting direction]: \"[Line two.]\"\nPause.\n3) [Acting direction]: \"[Line three.]\"\nOnly his voice and quiet [place] room tone. No music, no background music, no other people, no subtitles, no text on screen.",
+ "duration": 20,
+ "resolution": "720p",
+ "generate_audio": true
+}

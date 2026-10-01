@@ -1,0 +1,104 @@
+{
+ "slug": "gym-breakup",
+ "date": "2026-10-01",
+ "name": "its-not-you-its-your-invoices",
+ "title": "It's not you. It's your invoices.",
+ "language": "en",
+ "fps": 30,
+ "formats": [
+  "9:16",
+  "4:5",
+  "1:1",
+  "16:9"
+ ],
+ "reference": {
+  "url": "https://www.youtube.com/watch?v=NvKrK5S0yS4",
+  "title": "How to breakup with your girlfriend #shorts",
+  "channel": "Content Machine",
+  "note": "Only the link and our own analysis are kept; the reference's frames and transcript stay private."
+ },
+ "cast": {
+  "owner": {
+   "still": "stills/still-owner-v2-3.png",
+   "url": "https://d3u0tzju9qaucj.cloudfront.net/1afd69d3-f0b3-4fa7-b234-55e0d71ae71d/74ee542d-c9ef-4096-8576-8b1ddcc56a47.png",
+   "args": "args/still-owner-v2.json",
+   "voice": "calm, warm, slightly deep American male voice"
+  },
+  "agency": {
+   "still": "stills/still-agency-v2-1.png",
+   "url": "https://d3u0tzju9qaucj.cloudfront.net/1afd69d3-f0b3-4fa7-b234-55e0d71ae71d/00cbe575-8127-4b6a-89a4-ca135f4d4cf9.png",
+   "args": "args/still-agency-v2.json",
+   "voice": "crisp, confident American female voice with a slightly sassy tone"
+  }
+ },
+ "takes": {
+  "o1": "takes/take-owner-1-720p-0.mp4",
+  "a1": "takes/take-agency-1-720p-0.mp4",
+  "o2": "takes/take-owner-2-720p-0.mp4",
+  "a2": "takes/take-agency-2-720p-0.mp4"
+ },
+ "speech": {
+  "thr": -26.0,
+  "gap": 0.12,
+  "reach": 0.8
+ },
+ "captions": {
+  "style": {
+   "max_words": 3,
+   "max_chars": 18,
+   "gap": 0.35
+  },
+  "sample": "It's not you.",
+  "fixes": {
+   "o1": {
+    "you,": "you.",
+    "it's": "It's"
+   },
+   "o2": {
+    "Honestly,": "Honestly?",
+    "absolutely": "Absolutely",
+    "come": "Come",
+    "2am,": "2 a.m.",
+    "you": "You",
+    "5": "five",
+    "no,": "no!"
+   },
+   "a2": {
+    "us?": "us...",
+    "For": "for",
+    "app?": "app?!"
+   }
+  }
+ },
+ "notification_app": "YesOpen",
+ "notification_when": "now",
+ "notifications": {
+  "notif-1": "Answered your question. Anything else?",
+  "notif-2": "12 new reviews answered",
+  "notif-3": "Your post is live on Instagram and Facebook",
+  "notif-4": "You're #1 for “gym near me”"
+ },
+ "endcard": {
+  "tagline": [
+   [
+    [
+     "It’s not you.",
+     "ink"
+    ]
+   ],
+   [
+    [
+     "It’s your ",
+     "ink"
+    ],
+    [
+     "invoices.",
+     "blue"
+    ]
+   ]
+  ],
+  "url": "yesopens.com",
+  "dur": 2.6
+ },
+ "ding_volume": 0.55
+}

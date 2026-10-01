@@ -1,0 +1,88 @@
+{
+ "_doc": "qa_report.py results for the four renders made with the skill scripts on 2026-10-01; the 9:16 render is byte-identical (MD5 095ffdca450db823b26fd76fa89a1204) to the approved master",
+ "9x16": {
+  "frames": {
+   "planned_dialogue": 2128,
+   "planned_endcard": 78,
+   "planned_total": 2206,
+   "actual": 2206,
+   "ok": true
+  },
+  "loudness": {
+   "integrated_lufs": -14.2,
+   "lra_lu": 6.7,
+   "true_peak_dbtp": -1.4,
+   "ok": true
+  },
+  "volume": {
+   "mean_db": -19.1,
+   "max_db": -1.4
+  },
+  "caption_chunks": 59,
+  "whisper": {
+   "word_match": 1.0,
+   "differences_vs_captions": [],
+   "heard": "Hey, I think we should break up. You're breaking up? With your marketing agency? It's not you. It's your invoices. Wow. Fine. But who's going to answer all your questions? I don't know. Who's going to reply to your reviews? No idea. Who's going to post on your Instagram? Not a clue. Who's going to get you to the top of Google Maps? Honestly? Absolutely no idea. Wait, are you seeing someone else? What? What? No. Then who keeps texting you? It's just an app. You're leaving us? For an app? It replies at 2 a.m. You reply in five business days. Fine. You'll come crawling back. Don't even think about calling me. What? Babe, no! Come back! Hey, you."
+  }
+ },
+ "4x5": {
+  "frames": {
+   "planned_dialogue": 2128,
+   "planned_endcard": 78,
+   "planned_total": 2206,
+   "actual": 2206,
+   "ok": true
+  },
+  "loudness": {
+   "integrated_lufs": -14.2,
+   "lra_lu": 6.7,
+   "true_peak_dbtp": -1.4,
+   "ok": true
+  },
+  "volume": {
+   "mean_db": -19.1,
+   "max_db": -1.4
+  },
+  "caption_chunks": 59
+ },
+ "1x1": {
+  "frames": {
+   "planned_dialogue": 2128,
+   "planned_endcard": 78,
+   "planned_total": 2206,
+   "actual": 2206,
+   "ok": true
+  },
+  "loudness": {
+   "integrated_lufs": -14.2,
+   "lra_lu": 6.7,
+   "true_peak_dbtp": -1.4,
+   "ok": true
+  },
+  "volume": {
+   "mean_db": -19.1,
+   "max_db": -1.4
+  },
+  "caption_chunks": 59
+ },
+ "16x9": {
+  "frames": {
+   "planned_dialogue": 2128,
+   "planned_endcard": 78,
+   "planned_total": 2206,
+   "actual": 2206,
+   "ok": true
+  },
+  "loudness": {
+   "integrated_lufs": -14.2,
+   "lra_lu": 6.7,
+   "true_peak_dbtp": -1.4,
+   "ok": true
+  },
+  "volume": {
+   "mean_db": -19.1,
+   "max_db": -1.4
+  },
+  "caption_chunks": 59
+ }
+}

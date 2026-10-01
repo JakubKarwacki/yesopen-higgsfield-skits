@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Capture a reference video for private analysis with Ego Browser.
+#
+#   scripts/capture-reference <url> <out-dir> [--step 1.25] [--start 0.2] [--space ID]
+#
+# Ego's embedded Node runtime does not inherit the shell environment (and runs with cwd "/"), so the
+# parameters are written into the script text: `const REF = {...};` + capture_reference.mjs.
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")" && pwd)"
+if [ $# -lt 2 ]; then
+  sed -n '2,6p' "$0" | sed 's/^# \{0,1\}//'
+  exit 2
+fi
+URL="$1"; OUT="$2"; shift 2
+STEP=1.25; START=0.2; SPACE=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --step) STEP="$2"; shift 2 ;;
+    --start) START="$2"; shift 2 ;;
+    --space) SPACE="$2"; shift 2 ;;
+    *) echo "unknown option $1" >&2; exit 2 ;;
+  esac
+done
+mkdir -p "$OUT"
+OUT="$(cd "$OUT" && pwd)"
+CFG="$(python3 -c 'import json,sys; u,o,st,sa,sp=sys.argv[1:]; print(json.dumps({"url":u,"out":o,"step":float(st),"start":float(sa),"space":int(sp) if sp else None}))' "$URL" "$OUT" "$STEP" "$START" "$SPACE")"
+{ printf 'const REF = %s;\n' "$CFG"; cat "$HERE/capture_reference.mjs"; } | ego-browser nodejs

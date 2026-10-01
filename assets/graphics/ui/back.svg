@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 240" width="120" height="240">
+  <defs>
+    <!-- muted, desaturated blue: a hint of the brand hue, not the brand colour itself -->
+    <linearGradient id="backChevronBody" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#D3E0F4"/>
+      <stop offset="0.52" stop-color="#B6C9E4"/>
+      <stop offset="1" stop-color="#9DB3D3"/>
+    </linearGradient>
+    <linearGradient id="backChevronGloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="backChevronBlur" x="-40%" y="-25%" width="180%" height="150%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+  </defs>
+
+  <!-- very soft contact shadow, just enough to keep the clay feel -->
+  <g filter="url(#backChevronBlur)" opacity="0.12">
+    <path d="M88 54 L42 126 L88 198"
+          fill="none" stroke="#7089AE" stroke-width="30"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- chevron body -->
+  <path d="M84 46 L38 120 L84 194"
+        fill="none" stroke="url(#backChevronBody)" stroke-width="30"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- upper left gloss, the highlight that gives the clay look -->
+  <path d="M80 60 L48 112"
+        fill="none" stroke="url(#backChevronGloss)" stroke-width="9"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,7 @@
+{
+ "prompt": "Vertical smartphone video still, point of view of a person standing in front of him. A [age, build, hair, face] [role, e.g. owner of a small independent neighborhood bakery], wearing [plain clothes, no logos], holding [prop without branding], stands in [his own small business, concrete set details]. [Wall, floor, background objects without text], warm natural daylight from big windows. He looks straight into the camera lens, direct eye contact, calm neutral expression, lips closed, about to say something awkward. Medium shot from mid-thigh up, eye level, realistic skin texture, candid, shot on iPhone, shallow depth of field. No text, no logos, no brand marks, no watermark.",
+ "aspect_ratio": "9:16",
+ "resolution": "1080p",
+ "batch_size": 4,
+ "enhance_prompt": false
+}

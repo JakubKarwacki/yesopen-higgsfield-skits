@@ -1,0 +1,13 @@
+{
+ "ink": "#0f172a",
+ "blue": "#0877ff",
+ "muted": "#64748b",
+ "caption_yellow": "#ffe04b",
+ "icon_gradient": [
+  "#0050c1",
+  "#0064f1",
+  "#99c1f9"
+ ],
+ "font": "Manrope (variable, wght 200-800; wordmark 500, tracking -0.05em; captions 800)",
+ "wordmark": "\"Yes\" in ink + \"Open\" in blue; on dark backgrounds \"Yes\" is white"
+}
