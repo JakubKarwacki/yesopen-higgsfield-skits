@@ -15,6 +15,7 @@ Local media in args (image_url, end_image_url, image_urls, video_urls, audio_url
 file paths relative to the args file; submit uploads them first and logs the URLs it got.
 """
 import json
+import math
 import pathlib
 import sys
 import time
@@ -24,14 +25,16 @@ LOG = "jobs.jsonl"
 MEDIA_KEYS = ("image_url", "end_image_url")
 MEDIA_LIST_KEYS = ("image_urls", "video_urls", "audio_urls")
 
-# List prices in USD, read from open.higgsfield.ai/pricing on 2026-10-01. Check the page
-# before a big batch; the real charge also depends on the account's top-up tier.
-PRICES = {
-    "bytedance/seedance-2.5/image-to-video": ("second", 0.2068),
-    "bytedance/seedance-2.5/text-to-video": ("second", 0.2068),
-    "bytedance/seedance-2.5/reference-to-video": ("second", 0.248),
-    "higgsfield-ai/soul/v2/standard": ("image", 0.0126),
-}
+# List prices in USD, read from the model pages on open.higgsfield.ai on 2026-10-01; check them before a big
+# batch. All three Seedance 2.5 modes bill video tokens: ceil(height x width x (input video s + generated s)
+# x 24 / 1024), at $0.0214 per 1,000 tokens in 480p and 720p and $0.0234 in 1080p, which is about $0.2056,
+# $0.4622 and $1.1372 per second. With video inputs the token price is multiplied by 0.6; image and audio
+# references are free. Soul 2 costs $0.0032 per image in 720p and $0.0057 in 1080p. Both default to 720p.
+SEEDANCE = ("bytedance/seedance-2.5/image-to-video", "bytedance/seedance-2.5/text-to-video",
+            "bytedance/seedance-2.5/reference-to-video")
+VIDEO_PIXELS = {"480p": 480 * 854, "720p": 720 * 1280, "1080p": 1080 * 1920}  # 9:16 and 16:9 outputs
+VIDEO_TOKEN_USD = {"480p": 0.0214, "720p": 0.0214, "1080p": 0.0234}  # per 1,000 tokens
+IMAGE_USD = {"higgsfield-ai/soul/v2/standard": {"720p": 0.0032, "1080p": 0.0057}}
 
 
 def log(outdir: pathlib.Path, record: dict) -> None:
@@ -41,15 +44,22 @@ def log(outdir: pathlib.Path, record: dict) -> None:
 
 
 def estimate(model: str, arguments: dict) -> dict:
-    unit, price = PRICES.get(model, (None, None))
-    if unit == "second":
-        qty = arguments.get("duration", 5)
-    elif unit == "image":
-        qty = arguments.get("batch_size", 1)
-    else:
-        return {"model": model, "estimate_usd": None, "note": "no list price stored; check open.higgsfield.ai/pricing"}
-    return {"model": model, "unit": unit, "quantity": qty, "unit_price_usd": price,
-            "estimate_usd": round(qty * price, 4), "note": "list price; resolution and top-up tier can change it"}
+    resolution = arguments.get("resolution", "720p")
+    if model in SEEDANCE and resolution in VIDEO_PIXELS:
+        seconds = arguments.get("duration", 5)
+        tokens = math.ceil(VIDEO_PIXELS[resolution] * seconds * 24 / 1024)
+        rate = VIDEO_TOKEN_USD[resolution] * (0.6 if arguments.get("video_urls") else 1)
+        note = "list price for 9:16 or 16:9"
+        if arguments.get("video_urls"):
+            note += "; the input videos' seconds are billed too and are not included"
+        return {"model": model, "resolution": resolution, "seconds": seconds, "video_tokens": tokens,
+                "usd_per_1000_tokens": round(rate, 5), "estimate_usd": round(tokens / 1000 * rate, 4), "note": note}
+    if resolution in IMAGE_USD.get(model, {}):
+        images, price = arguments.get("batch_size", 1), IMAGE_USD[model][resolution]
+        return {"model": model, "resolution": resolution, "images": images, "usd_per_image": price,
+                "estimate_usd": round(images * price, 4), "note": "list price"}
+    return {"model": model, "estimate_usd": None,
+            "note": f"no list price stored for {resolution}; check the model page on open.higgsfield.ai"}
 
 
 def upload(path: pathlib.Path) -> str:

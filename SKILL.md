@@ -217,13 +217,16 @@ python3 $SK/scripts/encode_variants.py final/<name>-9x16.mp4       # -share.mp4 
 
 | Step | Price | Time | The first skit |
 | --- | --- | --- | --- |
-| Soul 2 batch of 4 stills | about $0.05 | 1.8–2.6 min | 5 batches, about $0.25 |
-| Seedance 2.5 take, per second | $0.2068 | 4–9 min per 20–28 s take | 118 s, about $24.40 |
-| 4 s 480p probe | about $0.83 | a few minutes | refused (no credit), free |
+| Soul 2 batch of 4 stills, 1080p | $0.0228 ($0.0057 per image; $0.0032 in 720p) | 1.8–2.6 min | 5 batches, $0.11 |
+| Seedance 2.5 take, per second | $0.2056 in 480p, $0.4622 in 720p, $1.1372 in 1080p | 4–9 min per 20–28 s take | 96 s in 720p and 22 s in 480p, $48.90 |
+| 4 s 480p probe | $0.82 | a few minutes | refused (no credit), free |
 | Edit, all formats, QA | local | about 15 min the first time; 35–56 s per format re-render | |
 | Link to finished master | | 1 h 25 min, with 30 min waiting for a top-up | |
 
-`hf-job cost <model> <args.json>` prints the estimate for any args file. There is no balance endpoint.
+The first skit cost $49.01 at list price, which matches the account spend. The price per second depends on the
+resolution, so a 1080p take costs about 2.5 times as much as the same take in 720p. `hf-job cost <model>
+<args.json>` prints the estimate for any args file from its resolution, duration and batch size. The API
+returns no cost and there is no balance endpoint.
 
 ## Scripts
 

@@ -52,4 +52,4 @@ Funkcje, których nie znalazłem, nie wchodzą do scenariusza: ...
 - **Zdjęcia startowe:** Soul 2, 9:16, 1080p, `batch_size` 4, `enhance_prompt: false`.
 - **Ujęcia z mową:** Seedance 2.5 image-to-video, `generate_audio: true`, 720p; każda postać mówi swoje kwestie w 1–2 długich ujęciach, z pauzami na słuchanie.
 - **Montaż:** skrypty skilla (`make_edl.py`, `assemble.py`), formaty 9:16, 4:5, 1:1, 16:9.
-- **Szacunkowy koszt:** suma sekund ujęć × stawka z `hf-job cost`.
+- **Szacunkowy koszt:** suma z `hf-job cost` dla każdego ujęcia; stawka za sekundę zależy od rozdzielczości.

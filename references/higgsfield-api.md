@@ -42,7 +42,7 @@ skill and installs `higgsfield-client`.
 | `hf-job resume <label> <request_id> <outdir>` | waits for an already submitted request and downloads it | no (already paid) |
 | `hf-job status <request_id>` | prints the raw status JSON | no |
 | `hf-job upload <file>` | uploads a local image/video/audio, prints `{"file", "url"}` | no |
-| `hf-job cost <model> <args.json>` | list-price estimate from the stored price table; no key needed, nothing sent | no |
+| `hf-job cost <model> <args.json>` | list-price estimate from the resolution, duration and batch size in the args; no key needed, nothing sent | no |
 
 Conventions:
 
@@ -108,22 +108,29 @@ Output: `video` URL. 720p is 720x1280, 480p is 480x854, 24 fps, AAC 32 kHz. Time
 
 ## 4. Prices and credits
 
-List prices from `open.higgsfield.ai/pricing` on 2026-10-01 (the page renders only in a browser; open it
-in Ego Browser):
+List prices from the Pricing section of each model page on open.higgsfield.ai, read on 2026-10-01 (the pages
+render only in a browser; open them in Ego Browser):
 
 | Model | Price |
 | --- | --- |
-| Seedance 2.5 text-to-video / image-to-video | $0.2068 per second (the family starts at $0.2057/s) |
-| Seedance 2.5 reference-to-video, video edit, extend | $0.248 per second |
-| Seedance 2.0 text-to-video / image-to-video | $0.1408 per second |
-| Seedance 2.0 reference-to-video | $0.1679 per second |
-| Soul | about $0.0126 per image |
+| Seedance 2.5 text-to-video, image-to-video, reference-to-video | video tokens = ceil(height x width x (input video s + generated s) x 24 / 1024), at $0.0214 per 1,000 in 480p and 720p and $0.0234 in 1080p. For 9:16 or 16:9 that is about $0.2056 per second in 480p, $0.4622 in 720p and $1.1372 in 1080p. |
+| Seedance 2.5 with video inputs (reference-to-video) | the token price is multiplied by 0.6, and the input videos' seconds are billed too. Image and audio references are free. |
+| Seedance 2.0 (not used) | from $0.1408 per second; the price rises with resolution, so check its model page first |
+| Soul 2 | $0.0032 per image in 720p (the default), $0.0057 in 1080p |
 
-Top-up tiers start at $25, $100 and $1,000. The first skit's successful takes were 118 s of video:
-about $24 at list price, plus five Soul batches of 4 (about $0.25). Jobs refused for balance never run and
-cost nothing; whether a job blocked by content safety is charged could not be checked (no balance endpoint).
+`hf-job cost` applies these prices. Top-up tiers start at $25, $100 and $1,000.
 
-There is no balance endpoint. A low balance shows up in two free ways:
+The API returns no cost and there is no balance endpoint, so compute a skit's cost from the args in
+`jobs.jsonl`. The first skit cost $49.01 at list price:
+
+- four 720p takes, 96 s: $44.38;
+- one 480p take used only in the preview, 22 s: $4.52;
+- five Soul batches of 4 in 1080p: $0.11.
+
+The account spend Marcin saw, about $50, matches this total, so the 720p take blocked by content safety (22 s,
+$10.17 at list price) was most likely not charged. Jobs refused for balance never run and cost nothing.
+
+A low balance shows up in two free ways:
 
 - the submit itself is refused with `not_enough_credits`;
 - the job is accepted and fails within about 5 s with "Your credit balance is too low to complete this request".

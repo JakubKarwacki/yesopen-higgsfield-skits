@@ -123,7 +123,7 @@ md5 -q examples/gym-breakup/final/its-not-you-its-your-invoices-9x16.mp4    # 09
 | --- | --- |
 | Length | 73.5 s (70.9 s dialogue + 2.6 s end card), 21 lines, 21 cuts |
 | Higgsfield | 5 Soul batches (20 stills), 5 Seedance 2.5 takes (118 s of video) |
-| Cost | about $24.65 at list price |
+| Cost | $49.01 at list price, matching the account spend |
 | Time | 1 h 25 min from the link to the master, including 30 min waiting for a top-up |
 | QA | frames as planned in all four formats, −14.2 LUFS, true peak −1.4 dBTP, captions match the audio word for word |
 

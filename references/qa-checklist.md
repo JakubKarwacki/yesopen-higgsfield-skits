@@ -15,7 +15,7 @@ Tick every item. A gate that fails stops the next paid step.
 - [ ] Every product claim is in the claims table with a file and line in `business-card/messages/en`.
 - [ ] No line, name or signature joke copied from the reference.
 - [ ] Lines under ~12 words; numbers written as words for the take prompts.
-- [ ] Cost estimate given (seconds of takes x price, `hf-job cost`).
+- [ ] Cost estimate given (`hf-job cost` for every take; the price per second depends on the resolution).
 - [ ] Approval recorded in `script.md` (who, date).
 
 ## Gate 3: cast stills

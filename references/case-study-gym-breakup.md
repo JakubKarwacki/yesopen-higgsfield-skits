@@ -35,7 +35,7 @@ takes actually said, every cut, every bug and its fix, the costs and the lessons
 | Loudness | −14.2 LUFS integrated, LRA 6.7 LU, true peak −1.4 dBTP (all four formats) |
 | QA | frames planned = actual in every format; Whisper on the 9:16 master matches the captions word for word (1.0, no differences) |
 | Higgsfield | 5 Soul batches (20 stills), 5 completed Seedance takes (118 s of video), 9 failed or refused requests |
-| Cost | about $24.65 at list price (section 15) |
+| Cost | $49.01 at list price, matching the account spend (section 15) |
 | Time | 1 h 25 min from the link (18:44) to the master (20:09), of which about 30 min was waiting for credits |
 | Reproducible | re-rendering the example gives a byte-identical 9:16 master (MD5 `095ffdca450db823b26fd76fa89a1204`) |
 
@@ -519,10 +519,17 @@ The 4:5, 1:1 and 16:9 masters are not stored; render them in about 40 s each:
 
 | Item | Quantity | List price | Cost |
 | --- | --- | --- | --- |
-| Soul 2 stills | 5 batches x 4 = 20 images | about $0.0126 per image | about $0.25 |
-| Seedance 2.5 takes, completed | 20 + 22 (480p) + 26 + 22 + 28 = 118 s | $0.2068 per second | about $24.40 |
+| Soul 2 stills, 1080p | 5 batches x 4 = 20 images | $0.0057 per image | $0.11 |
+| Seedance 2.5 takes in 720p, completed | 20 + 26 + 22 + 28 = 96 s | $0.4622 per second | $44.38 |
+| Seedance 2.5 take in 480p, completed, preview only | 22 s | $0.2056 per second | $4.52 |
 | Requests refused for balance | 8 | not charged (they never ran) | $0 |
-| The take blocked by content safety | 22 s | unknown: there is no balance endpoint to check | $0–4.55 |
+| The 720p take blocked by content safety | 22 s | $10.17 if it had been charged | most likely $0 |
+| **Total** | | | **$49.01** |
+
+The API returns no cost and there is no balance endpoint, so the cost is computed from the args in
+`jobs.jsonl` with the token prices on the model pages (`hf-job cost`). The account spend Marcin saw, about
+$50, matches $49.01, so the blocked take was most likely not charged. An earlier version of this page said
+about $24.65: it charged every second at one flat $0.2068, roughly the 480p price, and was wrong.
 
 Generation time: Soul 1.8–2.6 min per batch; takes 3.9–8.4 min, three in parallel. The edit, with all the
 fixes in section 13, took about 16 minutes from the first preview (19:53) to the master (20:09). With today's scripts a re-render takes 35–56 s per
@@ -552,10 +559,11 @@ the tools that exist for it.
    Pauses with a direction ("she glances suspiciously down at his phone") give usable reaction shots.
    Asked to show the screen, the owner showed the back of the phone: safer, as there is no generated UI to check.
 5. **Same voice, same take.** Each character's lines in one or two long takes kept one voice per character.
-6. **Check the balance with a cheap probe first.** A 4 s 480p probe (`args/probe-owner-4s.json`, about $0.83)
+6. **Check the balance with a cheap probe first.** A 4 s 480p probe (`args/probe-owner-4s.json`, $0.82)
    tells you whether the key has credit and what the voice sounds like. Refused jobs are free; ask for a top-up
    rather than retrying.
-7. **720p is enough.** The edit scales to 1080x1920 with lanczos; 1080p takes cost more and failed first.
+7. **720p is enough.** The edit scales to 1080x1920 with lanczos; 1080p takes cost about 2.5 times as much
+   and failed first.
 8. **A content-safety block can be random.** The same args passed on the retry. Resubmit once, then soften
    the wording.
 9. **Estimate the length from the takes, not from the script.** 21 lines with reactions became 70.9 s, not
