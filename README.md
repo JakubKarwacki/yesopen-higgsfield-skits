@@ -6,9 +6,9 @@ lip-synced takes come from Seedance 2.5 image-to-video, and the edit (cuts, punc
 notification banners, end card, loudness) is a scripted ffmpeg pipeline driven by one JSON file.
 
 <p>
-  <img src="examples/gym-breakup/final/web/its-not-you-its-your-invoices-9x16-poster.jpg" width="200" alt="9:16">
-  <img src="examples/gym-breakup/final/web/its-not-you-its-your-invoices-4x5-poster.jpg" width="285" alt="4:5">
-  <img src="examples/gym-breakup/final/web/its-not-you-its-your-invoices-16x9-poster.jpg" width="400" alt="16:9">
+  <img src="examples/gym-breakup/final/web/its-not-you-its-your-invoices-9x16-poster.jpg" height="240" alt="9:16">
+  <img src="examples/gym-breakup/final/web/its-not-you-its-your-invoices-4x5-poster.jpg" height="240" alt="4:5">
+  <img src="examples/gym-breakup/final/web/its-not-you-its-your-invoices-16x9-poster.jpg" height="240" alt="16:9">
 </p>
 
 The first skit, **"It's not you. It's your invoices."**: a gym owner breaks up with his marketing agency, and
