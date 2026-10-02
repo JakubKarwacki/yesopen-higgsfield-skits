@@ -1,6 +1,7 @@
 # QA checklist, gate by gate
 
-Tick every item. A gate that fails stops the next paid step.
+Tick every item. A gate that fails stops the next paid step. Items marked GPU or Higgsfield apply to that
+engine only.
 
 ## Gate 1: reference analysis
 
@@ -15,23 +16,32 @@ Tick every item. A gate that fails stops the next paid step.
 - [ ] Every product claim is in the claims table with a file and line in `business-card/messages/en`.
 - [ ] No line, name or signature joke copied from the reference.
 - [ ] Lines under ~12 words; numbers written as words for the take prompts.
-- [ ] Cost estimate given (`hf-job cost` for every take; the price per second depends on the resolution).
-- [ ] Approval recorded in `script.md` (who, date).
+- [ ] Cost estimate given. GPU: `gpu_batches.py estimate` and the session's hours at the machine's price.
+      Higgsfield: `hf-job cost` for every take (the price per second depends on the resolution).
+- [ ] GPU: `lines.json` written from the line table; every character has a voice sample (5–15 s, one clean
+      synthetic voice) and a still or a `look`.
+- [ ] Approval recorded in `script.md` (who, date). GPU: the yes covers starting the machine for this session.
 
 ## Gate 3: cast stills
 
 - [ ] Four candidates per character on one sheet.
 - [ ] Picked still: no logos, no readable text, neutral face with lips closed, prop visible, face large enough
       for a 1.4x punch-in, real local business look, nobody in the background.
-- [ ] `stills/picked.json` and the args saved.
+- [ ] Higgsfield: `stills/picked.json` and the args saved. GPU: the pick in `lines.json` →
+      `characters.<name>.still`; the batch file and `jobs.jsonl` kept; phones with their back to the camera.
 
 ## Gate 4: takes
 
-- [ ] `hf-job` used (jobs.jsonl has every request id).
+- [ ] Higgsfield: `hf-job` used (jobs.jsonl has every request id).
+- [ ] GPU: `fit_lines.py` passed every line before any take was made (`lines/fit.json`); the key lines
+      (`key_shots`) listened to: right words, the script's "?" and "!", no mumbling.
 - [ ] `inspect_take.py` run on each take: all lines present and in order, right words, one voice.
 - [ ] Lip sync holds on every line (sheet), no music, no extra people, no on-screen text.
+- [ ] GPU: no zoom or push-in at the end of a take; no phone screen facing the camera.
 - [ ] Silent actions happened where the jokes need them.
 - [ ] Room tone at least 3 dB under `speech.thr`.
+- [ ] GPU: once the takes, the retakes and the music are in, `gpu.py stop --yes` has run and no machine is
+      left (`gpu.py status` with Verda, otherwise the provider's console).
 
 ## Gate 5: edit
 

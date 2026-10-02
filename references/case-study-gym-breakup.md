@@ -5,6 +5,9 @@ was asked, what was decided and why, every prompt and parameter, every Higgsfiel
 takes actually said, every cut, every bug and its fix, the costs and the lessons. All project files are in
 `examples/gym-breakup/`. Times are CEST (UTC+2), as logged in `jobs.jsonl`.
 
+The next day the same script and edit were made again on our own GPU server with open models, for $4.86 of
+machine time: `examples/gym-breakup-gpu/README.md` tells that version, `gpu-engine.md` the method.
+
 ## Contents
 
 1. Result in numbers

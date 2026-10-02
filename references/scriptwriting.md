@@ -6,7 +6,7 @@
 2. Building the joke
 3. Where YesOpen goes
 4. Claims you may use (verified 2026-10-01)
-5. Writing for Seedance
+5. Writing for the engines
 6. The script document and the approval gate
 7. Ideas for the next skits
 
@@ -77,26 +77,44 @@ cd <localesto>/business-card/messages/en
 rg -n -i "review|reply|24/7|closed|instagram|facebook|ranking|#1|post" marketing.json app.json nav.json
 ```
 
-## 5. Writing for Seedance
+## 5. Writing for the engines
 
-- One character per take, all their lines in order, 20–30 s (see `takes-seedance.md`).
-- Lines under 12 words; numbers as words in the prompt.
-- Put the visual jokes into the take as silent actions (phone flip, cough, whistle, walk-out).
+Both engines:
+
+- Lines under 12 words; numbers as words ("two a.m.", "five business days"), because the voice reads them.
+- Put the visual jokes into the takes as silent actions (phone flip, cough, whistle, walk-out).
+- Phones show their back to the camera: a screen facing the lens gets an invented app.
 - On-screen text (banners, captions, end card) is never generated; it is added in the edit.
+
+GPU engine (`gpu-engine.md`, section 6): one take per line, so every line is also one shot.
+
+- Write the line table straight into `lines.json`: per line `text`, `exaggeration` (0.5 neutral, up to 0.85 for
+  shouting), `acting`, and `action`, the one sentence the take prompt gets ("right after the line he clears his
+  throat with a small cough and looks away").
+- A silent joke after a line goes into that line's `action` plus a longer `tail` (1.3–2.6 s in the gym skit).
+  A silent beat before a line: `silence_before` and a whole `prompt` for that take.
+- Mark the lines that carry the joke in `key_shots`; they are the ones to listen to before the takes.
+- `python3 $SK/scripts/gpu_batches.py estimate` gives the GPU minutes for the cost line of the script.
+
+Higgsfield engine (`takes-seedance.md`):
+
+- One character per take, all their lines in order, 20–30 s.
+- Numbers as words in the prompt, the silent jokes as numbered actions between the lines.
 
 ## 6. The script document and the approval gate
 
 Create the project with `scripts/new_project.py` and fill `script.md` from `templates/script.md`
-(in Polish, dialogue in the video's language). Then present it in chat, in Polish, short:
+(in Polish, dialogue in the video's language). Then present it in chat, in the user's language, short:
 
 - the idea in two sentences;
 - the full line table (who, line, acting/shot);
 - what is borrowed from the reference (mechanics only) and what is ours;
 - the claims table with sources;
 - open decisions with a recommendation each (e.g. who the opponent is, the end-card line, how many questions);
-- cost and time estimate for the takes.
+- cost and time estimate for the takes (GPU: the GPU minutes and the session's hours at the machine's price;
+  Higgsfield: `hf-job cost` per take).
 
-Wait for an explicit yes. Changes to lines after approval go back to the owner if they change a joke or a claim.
+Wait for an explicit yes; with the GPU engine it also covers starting the machine for the session. Changes to lines after approval go back to the owner if they change a joke or a claim.
 Mark the approval in `script.md` (`Status: zaakceptowany przez … <date>`).
 
 ## 7. Ideas for the next skits (not produced yet)

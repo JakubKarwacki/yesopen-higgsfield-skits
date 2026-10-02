@@ -3,6 +3,10 @@
 Every character starts as one still image. Seedance animates that exact picture, so the still decides the
 face, the wardrobe, the set, the light and whether a stray logo appears in every second of the video.
 
+This page is for `"engine": "higgsfield"`. The GPU engine animates its still the same way, so the prompt parts
+below hold for it too: write them into `lines.json` → `characters.<name>.look`, open with the framing, and run
+them through `gpu_batches.py stills` (`gpu-engine.md`, section 5).
+
 ## The prompt, part by part
 
 Write the prompt in this order. Each part solves a problem we hit.

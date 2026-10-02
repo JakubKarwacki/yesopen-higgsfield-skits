@@ -3,6 +3,10 @@
 A take is one continuous Seedance clip in which one character says several script lines to the camera,
 with pauses in between. The edit later interleaves the takes into a conversation.
 
+This page is for `"engine": "higgsfield"`. The GPU engine records every line first and makes one take per line
+to that sound (`gpu-engine.md`, section 6); the rules on silent jokes, phones and on-screen text below hold for it
+too.
+
 ## Why long takes per character
 
 - **Voice consistency.** Seedance invents the voice in each generation. One 20–28 s take carries one voice;

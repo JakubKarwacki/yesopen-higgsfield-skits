@@ -36,13 +36,17 @@ The wordmark matches `business-card/components/marketing/common/Logo.tsx` ("Yes"
 
 ## `assets/cast/`
 
-Full-size Soul 2 stills (1152x2048, JPG q92) with the exact Soul args next to each (`*.soul-args.json`).
-Use them as `image_url` to bring a character back.
+Full-size Soul 2 stills (1152x2048, JPG q92) with the exact Soul args next to each (`*.soul-args.json`), and
+voice samples for the GPU engine (`*.voice.wav`, 48 kHz mono, cut from the characters' Seedance takes, so they
+are generated voices). Bring a character back with the still as `image_url` (Higgsfield) or as
+`characters.<name>.still` in `lines.json` (GPU), and the sample as `characters.<name>.voice`.
 
 | File | Character | Used in |
 | --- | --- | --- |
-| `gym-owner.jpg` | gym owner, late 30s, short beard, black tee, grey towel, phone in hand, small gym | the first skit (takes o1, o2) |
-| `agency-manager.jpg` | marketing agency account manager, early 30s, navy suit, black binder, iced latte, gym front desk | the first skit (takes a1, a2) |
+| `gym-owner.jpg` | gym owner, late 30s, short beard, black tee, grey towel, phone in hand, small gym | the first skit (takes o1, o2; his 11 takes in the GPU version) |
+| `gym-owner.voice.wav` | his voice, 8.6 s | the GPU version of the first skit |
+| `agency-manager.jpg` | marketing agency account manager, early 30s, navy suit, black binder, iced latte, gym front desk | the first skit (takes a1, a2; her 10 takes in the GPU version) |
+| `agency-manager.voice.wav` | her voice, 7.0 s | the GPU version of the first skit |
 | `gym-member.jpg` | gym regular, mid 20s, stringer tank, backwards cap, headphones, shaker | cast for the rejected v1, never animated |
 
 ## `assets/broll/`
@@ -88,8 +92,12 @@ Four 5 s product clips from `business-card/public/videos/` (1280x720): `content-
 `customer-welcome.mp4`, `profile-optimization.mp4`, `reviews-autopilot.mp4`. Good for 16:9 cutaways or a
 "what the app did" insert.
 
-## The full example project
+## The full example projects
 
-`examples/gym-breakup/` is the complete first skit: script, args, all Soul candidates, the four takes with
-word timestamps and job logs, `cuts.json`, `edl.json`, the overlays per format, QA sheets, the original edit
-scripts, and the finals (9:16 master and share copy, web copies of all four formats with posters).
+`examples/gym-breakup/` is the complete first skit made with Higgsfield: script, args, all Soul candidates, the
+four takes with word timestamps and job logs, `cuts.json`, `edl.json`, the overlays per format, QA sheets, the
+original edit scripts, and the finals (9:16 master and share copy, web copies of all four formats with posters).
+
+`examples/gym-breakup-gpu/` is the same skit made on the GPU server: `lines.json`, the voice samples, every voice
+take with its batch files, the fitted lines and `fit.json`, the 21 takes with their prompts and job logs, the
+edit, QA and the 9:16 web copy with its poster.

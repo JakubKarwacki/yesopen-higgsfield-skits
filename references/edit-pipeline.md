@@ -14,6 +14,7 @@ and the result is exactly reproducible: re-running the gym example gives a byte-
 5. `edit/edl.json` reference
 6. What `assemble.py` does, filter by filter
 7. Known traps and their fixes
+8. Music bed
 
 ## 1. Tools and setup
 
@@ -49,8 +50,8 @@ Render times on an M-series Mac for the 73.6 s gym skit: 9:16 53 s, 4:5 41 s, 1:
 | `fps` | edit frame rate (takes are 24 fps; the edit resamples to 30) | `30` |
 | `formats` | formats to deliver | `["9:16","4:5","1:1","16:9"]` |
 | `reference` | link to the reference video (no frames, no transcript) | YouTube URL |
-| `cast` | per character: still, its URL, Soul args, voice text used in take prompts | owner, agency |
-| `takes` | short id -> take file; ids are used in `cuts.json` | `o1`, `a1`, `o2`, `a2` |
+| `cast` | per character: still, its URL and Soul args (Higgsfield), voice: the description used in Seedance prompts or the voice sample (GPU) | owner, agency |
+| `takes` | short id -> take file; ids are used in `cuts.json` | `o1`, `a1`, `o2`, `a2`; GPU: `l01` … `l21`, one per line |
 | `speech.thr/gap/reach` | speech detection for line boundaries (dB, s, s) | `-26`, `0.12`, `0.8` |
 | `captions.style` | `max_words`, `max_chars`, `gap` for caption chunks | `3`, `18`, `0.35` |
 | `captions.fixes` | per take: Whisper token -> caption text | `"2am,": "2 a.m."` |
@@ -60,6 +61,8 @@ Render times on an M-series Mac for the 73.6 s gym skit: 9:16 53 s, 4:5 41 s, 1:
 | `endcard.tagline` | lines of `[text, colour]` parts; colours `ink`, `blue`, `muted`, hex or RGB | see example |
 | `endcard.url`, `endcard.dur` | URL under the tagline; card length in s | `yesopens.com`, `2.6` |
 | `ding_volume` | volume of each ding under dialogue | `0.55` |
+| `engine` | who makes the stills and takes: `gpu` (the default for new projects, `gpu-engine.md`) or `higgsfield`; it tells the agent which Phases 3–4 to follow, no script reads it | `higgsfield`; `gpu` in `gym-breakup-gpu` |
+| `music` | optional music bed, section 8; without it the render is exactly as before | not set (no music) |
 
 ## 4. `edit/cuts.json`
 
@@ -106,6 +109,7 @@ Events, timed from the end of the line (`after`), or from the segment start for 
 | `caption_words[]` | `w`, `s`, `e` on the edit timeline, already fixed by `captions.fixes` |
 | `caption_style`, `caption_fixes` | copied for reference |
 | `endcard` | `{name, dur}` or `null` |
+| `music` | only when `project.json` has one: its `music` block plus `thr` from `speech.thr` |
 | `_dialogue_seconds`, `_dialogue_frames` | planned length without the end card (gym: 70.93 s, 2128 frames) |
 
 How a line becomes a segment:
@@ -137,6 +141,10 @@ How a line becomes a segment:
    1.035, white fade-in 0.18 s, a ding at 0.5.
 9. **Final**: concat, `loudnorm=I=-14:TP=-1.5:LRA=11`, 48 kHz, libx264 medium crf 17 high profile yuv420p,
    AAC 192k, `+faststart`.
+10. **With a music bed** (section 8) only the final step changes: `music.py` writes the placed, ducked and faded
+    bed (`edit/work/<fmt>/music-bed.wav`, with its decisions in `music.json`), `amix` adds it under the concat,
+    and a static gain plus a 4x oversampled peak limiter bring the mix to −14 LUFS instead of `loudnorm`. The
+    video stream is bit-identical to the render without music.
 
 ## 7. Known traps
 
@@ -151,3 +159,61 @@ How a line becomes a segment:
 | invented UI on a phone screen (a precaution; not seen in the gym skit, where the owner showed the back of the phone) | video models draw pseudo text | keep screens away from the lens or under a banner; never rely on generated text |
 | `ffmpeg` has no `drawtext` | build without libfreetype/libass | all text is drawn with Pillow and overlaid as PNG |
 | a two-line banner sits too low | a fixed card height | the card grows 48 px per extra line (`brand.notification`) |
+| music swells in every pause after `loudnorm` | `loudnorm`'s dynamic mode rides quiet passages up | the music mix gets one static gain (measured twice) and a peak limiter |
+| a peaky track pushed the mix to −0.2 dBTP after AAC | white-noise hats, crest factor 17 dB | the bed goes through a 4x oversampled limiter at 12 dB above its loudness, the mix through one at −2 dBFS |
+| the downbeat came 15 ms after the cut to the end card | the dialogue's audio runs a few ms past its last frame | the anchor is the segments' frame count / fps, the moment the picture cuts |
+
+## 8. Music bed
+
+Optional. `project.json` → `music`, copied into the EDL by `make_edl.py`; `assemble.py --no-music` leaves it out.
+
+```json
+"music": {"file": "music/bed.flac", "bpm": 100}
+```
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `file` | required | the track, relative to the project (`gpu.py run music`, or a licensed library track) |
+| `bpm` | required for an anchor | the tempo it was made at; the real tempo is searched within 3 % of it |
+| `beats_per_bar` | `4` | as the track's time signature (ACE-Step `timesignature`) |
+| `first_downbeat` | `"auto"` | seconds into the file of the first downbeat; `auto` finds it |
+| `anchor` | `"endcard"` | where a downbeat lands: `endcard` (the cut to the card), `start`, a timeline second, or `null` |
+| `offset` | none | seconds into the file where the bed starts; overrides `anchor` |
+| `start` | `0` | timeline second where the bed comes in |
+| `level_db` | `-9` | bed loudness against the dialogue's integrated loudness, between lines |
+| `duck_db` | `-12` | extra level under speech (so −21 dB against the dialogue) |
+| `attack`, `release` | `0.15`, `0.5` | the dip starts 0.15 s before a line and recovers over 0.5 s after it |
+| `hold` | `0.6` | pauses shorter than this stay ducked, so the bed does not pump between words |
+| `thr` | `speech.thr` | dB above which the cut dialogue counts as speech |
+| `fade_in`, `fade_out` | `0.4`, `1.5` | at the bed's start and the end of the video |
+
+What `music.py` does:
+
+1. **Beat grid.** Spectral flux of the track (16 kHz, 5 ms steps) folded on a beat comb: the tempo within ±3 % of
+   `bpm` (0.05 % then 0.005 % steps) and the phase with the strongest hits; the downbeat is the beat of the bar
+   with the strongest average hit. `python3 $SK/scripts/music.py <file> --bpm 100` prints it: `tempo_bpm`,
+   `first_downbeat`, `beat_clarity` (about 1: no beat; the test tracks 13–25), `downbeat_contrast`.
+2. **Placement.** The bed starts `offset = first_downbeat + k·bar − (anchor − start)` seconds into the file,
+   with the smallest `k` that keeps the offset ≥ 0, so a downbeat lands on the anchor. A track too short for the
+   edit stops with the length it needs.
+3. **Level.** The segment goes to −23 LUFS through a 4x oversampled lookahead limiter at −11 dBFS (12 dB above
+   its loudness; `latency` compensated, so the beat does not move), then to the dialogue's loudness +
+   `level_db`.
+4. **Ducking.** Speech spans come from the cut dialogue's 10 ms envelope above `thr`, with pauses under `hold`
+   filled. The gain is `duck_db` inside a span, ramps down over `attack` before it and back up over `release`
+   after it. The edit is offline, so the dip anticipates the line, which a compressor cannot do; `sidechaincompress`
+   was not used because its depth would follow the dialogue's level and it pumps between words.
+5. **Fades and stem.** Fade in at `start`, fade out over the last `fade_out` seconds, exactly the timeline's
+   length, 48 kHz 24-bit: `edit/work/<fmt>/music-bed.wav`; `music.json` next to it records the grid, the offset,
+   the gains and the speech spans.
+
+Measured on the gym skit with a synthetic 101.3 bpm track (`bpm` given as 100), 9:16 and 1:1:
+
+| Check | Result |
+| --- | --- |
+| tempo and first downbeat on six test tracks (97.2–102.9 bpm, with 0–8 ms timing jitter) | tempo within 0.005 bpm, downbeat within 2.2 ms |
+| downbeat against the first frame of the end card | −0.3 ms (a frame is 33.3 ms) |
+| ducking depth on the track's pad tone, speech against the end card | −12.02 dB (set −12) |
+| final loudness and true peak | −14.4 LUFS, −1.5 dBTP (without music −14.2 LUFS, −1.4 dBTP) |
+| video stream against the render without music | bit-identical |
+| render without `music`, and with `--no-music` | MD5 `095ffdca450db823b26fd76fa89a1204`, unchanged |

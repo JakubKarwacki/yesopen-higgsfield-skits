@@ -1,6 +1,7 @@
 # Higgsfield platform API: keys, jobs, models, prices
 
-How the skits talk to Higgsfield. Everything here was used for the first skit on 2026-10-01.
+How the skits talk to Higgsfield (`"engine": "higgsfield"`). Everything here was used for the first skit on
+2026-10-01. The GPU engine needs none of it: `gpu-engine.md`.
 
 ## Contents
 
