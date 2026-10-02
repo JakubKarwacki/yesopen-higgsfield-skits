@@ -14,7 +14,7 @@ Kilka czatów ma niezależnie prowadzić różne filmy, korzystając z jednego s
 | --- | --- |
 | R1 | Jeden czat prowadzi jeden film; co najmniej dwa czaty mogą równocześnie zlecać i odbierać pracę. |
 | R2 | Generowanie głosu i wideo, kontrola oraz dopasowanie audio, montaż i eksport odbywają się na serwerze. |
-| R3 | GPU wykorzystujemy tam, gdzie poprawia wydajność całego procesu; modele mogą pozostawać w pamięci. |
+| R3 | GPU wykorzystujemy tylko tam, gdzie pomiary potwierdzają poprawę wydajności bez pogorszenia stabilności lub jakości; modele mogą pozostawać w pamięci. Nie wymuszamy akceleracji. |
 | R4 | Etapy różnych ujęć i filmów mogą postępować równolegle z zachowaniem zależności i kontroli jakości. |
 | R5 | Wspólna kolejka sprawiedliwie obsługuje filmy; zatrzymanie jednego nie przerywa drugiego ani nie wyłącza używanego serwera. |
 | R6 | Praca przyjęta przez serwer trwa po rozłączeniu klienta; ponowne połączenie odzyskuje stan bez ślepego powtarzania generowania. |
@@ -82,6 +82,8 @@ Strzałki pokazują zależności jednej kwestii. Różne kwestie i filmy znajduj
 | Przycinanie, dopasowanie audio, analiza głośności | CPU serwera; współdzielona, ograniczona pula prac. | R2–R4 |
 | Montaż, plansze, napisy, kodowanie | Istniejący pipeline Pillow/ffmpeg na CPU serwera, z limitami CPU/RAM oraz liczby renderów. Obecny `libx264` pozostaje punktem odniesienia jakości. | R2, R3, R7 |
 | Obsada, muzyka, upscale, interpolacja | Zadania planowane przez tego samego koordynatora; nie uruchamiać dodatkowych ciężkich modeli poza budżetem pamięci. W razie potrzeby czekają na zwolnienie zasobów. | R3, R4 |
+
+Priorytet decyzji: poprawność i stabilność, następnie płynność obsługi obu filmów i czas ukończenia. Awaria wariantu GPU nie uruchamia automatycznie drugiej próby, dopóki stan pierwszej nie jest rozstrzygnięty. Po takim rozstrzygnięciu wolno przejść tylko na wcześniej zweryfikowany profil CPU lub sekwencyjny, z zachowaniem wejść i QA; w przeciwnym razie wstrzymać etap z czytelnym statusem. Nie eksperymentować nowymi profilami na trwających produkcjach. [R3–R6]
 
 Montaż na serwerze nie oznacza wymuszenia GPU dla każdego filtra czy kodera. Zmiana kodeka lub filtrów na wariant GPU wymaga wykazania poprawy czasu i zachowania jakości na tym sprzęcie. [R2, R3, R7]
 
