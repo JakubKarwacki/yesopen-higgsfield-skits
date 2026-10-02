@@ -1,0 +1,48 @@
+{
+ "jobs": [
+  {
+   "name": "l18-s150",
+   "template": "tts",
+   "set": {
+    "text": "It replies at two a.m. You reply in five business days.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 150
+   }
+  },
+  {
+   "name": "l18-s151",
+   "template": "tts",
+   "set": {
+    "text": "It replies at 2 AM. You reply in five business days.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 151
+   }
+  },
+  {
+   "name": "l18-s152",
+   "template": "tts",
+   "set": {
+    "text": "It replies at two AM. You reply in five business days.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 152
+   }
+  },
+  {
+   "name": "l18-s153",
+   "template": "tts",
+   "set": {
+    "text": "It replies at two a.m. You reply in five business days.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 153
+   }
+  }
+ ]
+}

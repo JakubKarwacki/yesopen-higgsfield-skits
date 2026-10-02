@@ -1,0 +1,219 @@
+{
+ "_doc": "The script as the GPU engine reads it (scripts/gpu_batches.py, scripts/fit_lines.py): who says what, how, and what we see in each take.",
+ "language": "English (en)",
+ "characters": {
+  "owner": {
+   "voice": "voices/owner.wav",
+   "still": "stills/owner.png",
+   "who": "The bearded gym owner",
+   "where": "in his small gym",
+   "him": "him"
+  },
+  "agency": {
+   "voice": "voices/agency.wav",
+   "still": "stills/agency.png",
+   "who": "The marketing agency account manager in a navy blazer",
+   "where": "by the gym's front desk",
+   "him": "her"
+  }
+ },
+ "take": {
+  "tail": 0.6,
+  "seed": 500
+ },
+ "lines": [
+  {
+   "id": "l01",
+   "who": "owner",
+   "text": "Hey... I think we should break up.",
+   "exaggeration": 0.5,
+   "acting": "serious and a little nervous",
+   "action": "serious and a little nervous, he takes a small breath before speaking"
+  },
+  {
+   "id": "l02",
+   "who": "agency",
+   "text": "You're breaking up... with your marketing agency?",
+   "exaggeration": 0.7,
+   "acting": "shocked, leaning toward the camera",
+   "action": "shocked and incredulous, leaning slightly toward the camera"
+  },
+  {
+   "id": "l03",
+   "who": "owner",
+   "text": "It's not you. It's your invoices.",
+   "exaggeration": 0.5,
+   "acting": "calm and sympathetic, tilting his head",
+   "action": "calm and sympathetic, tilting his head slightly"
+  },
+  {
+   "id": "l04",
+   "who": "agency",
+   "text": "Wow.",
+   "exaggeration": 0.6,
+   "acting": "offended, blinking slowly",
+   "action": "offended; she says one word, then blinks slowly and stares in hurt silence with pursed lips",
+   "tail": 1.6
+  },
+  {
+   "id": "l05",
+   "who": "agency",
+   "text": "Fine. But who's going to answer all your questions?",
+   "exaggeration": 0.6,
+   "acting": "regaining confidence, a little threatening",
+   "action": "regaining her confidence, a little threatening, raising one eyebrow"
+  },
+  {
+   "id": "l06",
+   "who": "owner",
+   "text": "I don't know...",
+   "exaggeration": 0.5,
+   "acting": "faking worry with a small shrug",
+   "action": "faking worry with a small shrug; right after the line the phone in his hands lights up, he glances down at it and quickly flips it face down against his chest, then looks back up innocently",
+   "tail": 1.9
+  },
+  {
+   "id": "l07",
+   "who": "agency",
+   "text": "Who's going to reply to your reviews?",
+   "exaggeration": 0.6,
+   "acting": "pressing on",
+   "action": "pressing on, confident and a little smug"
+  },
+  {
+   "id": "l08",
+   "who": "owner",
+   "text": "No idea.",
+   "exaggeration": 0.5,
+   "acting": "innocent, then clears his throat with a small cough",
+   "action": "innocent; right after the line he clears his throat with a small cough and looks away",
+   "tail": 1.5
+  },
+  {
+   "id": "l09",
+   "who": "agency",
+   "text": "Who's going to post on your Instagram?",
+   "exaggeration": 0.6,
+   "acting": "glancing down at his phone",
+   "action": "glancing down suspiciously at his phone, then back at the camera"
+  },
+  {
+   "id": "l10",
+   "who": "owner",
+   "text": "Not a clue.",
+   "exaggeration": 0.5,
+   "acting": "innocent, then whistles quietly looking to the side",
+   "action": "innocent; right after the line he purses his lips and whistles quietly, looking to the side",
+   "tail": 1.6
+  },
+  {
+   "id": "l11",
+   "who": "agency",
+   "text": "Who's going to get you to the top of Google Maps?",
+   "exaggeration": 0.65,
+   "acting": "playing her last card",
+   "action": "playing her last card, slow and serious"
+  },
+  {
+   "id": "l12",
+   "who": "owner",
+   "text": "Honestly? Absolutely no idea.",
+   "exaggeration": 0.55,
+   "acting": "sips a protein shake, cannot hide a smile",
+   "action": "trying to look worried; right after the line he takes a sip from the protein shaker and cannot hide a growing smile",
+   "still": "stills/owner-shake.png",
+   "tail": 1.8
+  },
+  {
+   "id": "l13",
+   "who": "agency",
+   "text": "Wait... are you seeing someone else?",
+   "exaggeration": 0.65,
+   "acting": "narrowing her eyes, suspicious",
+   "action": "narrowing her eyes, suspicious, leaning in slightly",
+   "tail": 0.7
+  },
+  {
+   "id": "l14",
+   "who": "owner",
+   "text": "What? ... What? No.",
+   "exaggeration": 0.7,
+   "acting": "pretending to be offended",
+   "action": "pretending to be offended, eyebrows raised"
+  },
+  {
+   "id": "l15",
+   "who": "agency",
+   "text": "Then who keeps texting you?",
+   "exaggeration": 0.65,
+   "acting": "accusing",
+   "action": "accusing, eyes narrowed"
+  },
+  {
+   "id": "l16",
+   "who": "owner",
+   "text": "It's... just an app.",
+   "exaggeration": 0.5,
+   "acting": "embarrassed, showing his phone",
+   "action": "embarrassed, with a sheepish smile, he lifts the phone a little in one hand, its back toward the camera so the screen is never visible",
+   "seed": 616,
+   "tail": 0.8
+  },
+  {
+   "id": "l17",
+   "who": "agency",
+   "text": "You're leaving us... for an app?!",
+   "exaggeration": 0.85,
+   "acting": "shouting, outraged",
+   "action": "shouting, outraged, leaning toward the camera",
+   "tail": 0.7
+  },
+  {
+   "id": "l18",
+   "who": "owner",
+   "text": "It replies at two a.m. You reply in five business days.",
+   "exaggeration": 0.5,
+   "acting": "shrugging",
+   "action": "with a casual shrug",
+   "tail": 0.5
+  },
+  {
+   "id": "l19",
+   "who": "agency",
+   "text": "Fine. You'll come crawling back. Don't even think about calling me.",
+   "exaggeration": 0.75,
+   "acting": "points her finger, leans into the camera, then turns and walks out of frame",
+   "action": "angry; she points her finger at the camera and leans in, then turns around and walks out of the frame, leaving the gym",
+   "tail": 2.6
+  },
+  {
+   "id": "l20",
+   "who": "owner",
+   "text": "What? Babe, no! Come back!",
+   "exaggeration": 0.8,
+   "acting": "fake despair, reaching after her",
+   "action": "in exaggerated fake despair, reaching one hand after her",
+   "tail": 1.3
+  },
+  {
+   "id": "l21",
+   "who": "owner",
+   "text": "Hey, you.",
+   "exaggeration": 0.35,
+   "acting": "silent joy, then softly to the phone",
+   "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing him, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The bearded gym owner stands alone in his small gym after she has left. For a moment he is still, then he throws his head back and spreads his arms wide in pure joy with a big grin. Then the phone in his hand buzzes, he looks down at it and softly says something to it with a tender smile. Natural, understated comedic acting. No other people, no text on screen.",
+   "silence_before": 3.3,
+   "seconds": 5.3
+  }
+ ],
+ "key_shots": [
+  "l01",
+  "l02",
+  "l03",
+  "l05",
+  "l13",
+  "l14",
+  "l17",
+  "l18"
+ ]
+}

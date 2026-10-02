@@ -1,0 +1,235 @@
+{
+ "jobs": [
+  {
+   "name": "l01",
+   "template": "talk",
+   "set": {
+    "image": "../stills/owner.png",
+    "audio": "../lines/l01.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing him, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The bearded gym owner stays in place in his small gym and talks directly into the camera lens as if to the person filming him, serious and a little nervous, he takes a small breath before speaking. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 3.46,
+    "seed": 501
+   }
+  },
+  {
+   "name": "l02",
+   "template": "talk",
+   "set": {
+    "image": "../stills/agency.png",
+    "audio": "../lines/l02.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing her, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The marketing agency account manager in a navy blazer stays in place by the gym's front desk and talks directly into the camera lens as if to the person filming her, shocked and incredulous, leaning slightly toward the camera. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 3.3,
+    "seed": 502
+   }
+  },
+  {
+   "name": "l03",
+   "template": "talk",
+   "set": {
+    "image": "../stills/owner.png",
+    "audio": "../lines/l03.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing him, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The bearded gym owner stays in place in his small gym and talks directly into the camera lens as if to the person filming him, calm and sympathetic, tilting his head slightly. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 3.46,
+    "seed": 503
+   }
+  },
+  {
+   "name": "l04",
+   "template": "talk",
+   "set": {
+    "image": "../stills/agency.png",
+    "audio": "../lines/l04.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing her, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The marketing agency account manager in a navy blazer stays in place by the gym's front desk and talks directly into the camera lens as if to the person filming her, offended; she says one word, then blinks slowly and stares in hurt silence with pursed lips. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 2.64,
+    "seed": 504
+   }
+  },
+  {
+   "name": "l05",
+   "template": "talk",
+   "set": {
+    "image": "../stills/agency.png",
+    "audio": "../lines/l05.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing her, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The marketing agency account manager in a navy blazer stays in place by the gym's front desk and talks directly into the camera lens as if to the person filming her, regaining her confidence, a little threatening, raising one eyebrow. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 4.51,
+    "seed": 505
+   }
+  },
+  {
+   "name": "l06",
+   "template": "talk",
+   "set": {
+    "image": "../stills/owner.png",
+    "audio": "../lines/l06.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing him, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The bearded gym owner stays in place in his small gym and talks directly into the camera lens as if to the person filming him, faking worry with a small shrug; right after the line the phone in his hands lights up, he glances down at it and quickly flips it face down against his chest, then looks back up innocently. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 3.03,
+    "seed": 506
+   }
+  },
+  {
+   "name": "l07",
+   "template": "talk",
+   "set": {
+    "image": "../stills/agency.png",
+    "audio": "../lines/l07.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing her, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The marketing agency account manager in a navy blazer stays in place by the gym's front desk and talks directly into the camera lens as if to the person filming her, pressing on, confident and a little smug. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 2.65,
+    "seed": 507
+   }
+  },
+  {
+   "name": "l08",
+   "template": "talk",
+   "set": {
+    "image": "../stills/owner.png",
+    "audio": "../lines/l08.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing him, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The bearded gym owner stays in place in his small gym and talks directly into the camera lens as if to the person filming him, innocent; right after the line he clears his throat with a small cough and looks away. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 2.58,
+    "seed": 508
+   }
+  },
+  {
+   "name": "l09",
+   "template": "talk",
+   "set": {
+    "image": "../stills/agency.png",
+    "audio": "../lines/l09.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing her, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The marketing agency account manager in a navy blazer stays in place by the gym's front desk and talks directly into the camera lens as if to the person filming her, glancing down suspiciously at his phone, then back at the camera. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 3.03,
+    "seed": 509
+   }
+  },
+  {
+   "name": "l10",
+   "template": "talk",
+   "set": {
+    "image": "../stills/owner.png",
+    "audio": "../lines/l10.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing him, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The bearded gym owner stays in place in his small gym and talks directly into the camera lens as if to the person filming him, innocent; right after the line he purses his lips and whistles quietly, looking to the side. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 2.68,
+    "seed": 510
+   }
+  },
+  {
+   "name": "l11",
+   "template": "talk",
+   "set": {
+    "image": "../stills/agency.png",
+    "audio": "../lines/l11.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing her, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The marketing agency account manager in a navy blazer stays in place by the gym's front desk and talks directly into the camera lens as if to the person filming her, playing her last card, slow and serious. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 2.94,
+    "seed": 511
+   }
+  },
+  {
+   "name": "l12",
+   "template": "talk",
+   "set": {
+    "image": "../stills/owner-shake.png",
+    "audio": "../lines/l12.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing him, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The bearded gym owner stays in place in his small gym and talks directly into the camera lens as if to the person filming him, trying to look worried; right after the line he takes a sip from the protein shaker and cannot hide a growing smile. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 4.76,
+    "seed": 512
+   }
+  },
+  {
+   "name": "l13",
+   "template": "talk",
+   "set": {
+    "image": "../stills/agency.png",
+    "audio": "../lines/l13.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing her, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The marketing agency account manager in a navy blazer stays in place by the gym's front desk and talks directly into the camera lens as if to the person filming her, narrowing her eyes, suspicious, leaning in slightly. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 2.67,
+    "seed": 513
+   }
+  },
+  {
+   "name": "l14",
+   "template": "talk",
+   "set": {
+    "image": "../stills/owner.png",
+    "audio": "../lines/l14.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing him, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The bearded gym owner stays in place in his small gym and talks directly into the camera lens as if to the person filming him, pretending to be offended, eyebrows raised. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 3.47,
+    "seed": 514
+   }
+  },
+  {
+   "name": "l15",
+   "template": "talk",
+   "set": {
+    "image": "../stills/agency.png",
+    "audio": "../lines/l15.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing her, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The marketing agency account manager in a navy blazer stays in place by the gym's front desk and talks directly into the camera lens as if to the person filming her, accusing, eyes narrowed. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 2.62,
+    "seed": 515
+   }
+  },
+  {
+   "name": "l16",
+   "template": "talk",
+   "set": {
+    "image": "../stills/owner.png",
+    "audio": "../lines/l16.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing him, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The bearded gym owner stays in place in his small gym and talks directly into the camera lens as if to the person filming him, embarrassed, with a sheepish smile, he lifts the phone a little in one hand, its back toward the camera so the screen is never visible. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 3.02,
+    "seed": 616
+   }
+  },
+  {
+   "name": "l17",
+   "template": "talk",
+   "set": {
+    "image": "../stills/agency.png",
+    "audio": "../lines/l17.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing her, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The marketing agency account manager in a navy blazer stays in place by the gym's front desk and talks directly into the camera lens as if to the person filming her, shouting, outraged, leaning toward the camera. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 2.55,
+    "seed": 517
+   }
+  },
+  {
+   "name": "l18",
+   "template": "talk",
+   "set": {
+    "image": "../stills/owner.png",
+    "audio": "../lines/l18.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing him, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The bearded gym owner stays in place in his small gym and talks directly into the camera lens as if to the person filming him, with a casual shrug. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 4.76,
+    "seed": 518
+   }
+  },
+  {
+   "name": "l19",
+   "template": "talk",
+   "set": {
+    "image": "../stills/agency.png",
+    "audio": "../lines/l19.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing her, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The marketing agency account manager in a navy blazer stays in place by the gym's front desk and talks directly into the camera lens as if to the person filming her, angry; she points her finger at the camera and leans in, then turns around and walks out of the frame, leaving the gym. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 7.87,
+    "seed": 519
+   }
+  },
+  {
+   "name": "l20",
+   "template": "talk",
+   "set": {
+    "image": "../stills/owner.png",
+    "audio": "../lines/l20.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing him, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The bearded gym owner stays in place in his small gym and talks directly into the camera lens as if to the person filming him, in exaggerated fake despair, reaching one hand after her. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 3.83,
+    "seed": 520
+   }
+  },
+  {
+   "name": "l21",
+   "template": "talk",
+   "set": {
+    "image": "../stills/owner.png",
+    "audio": "../lines/l21-pad.wav",
+    "prompt": "Single continuous handheld vertical smartphone shot, no cuts, camera at eye level facing him, slight natural handheld movement, the framing stays the same with no zoom and no push-in. The bearded gym owner stands alone in his small gym after she has left. For a moment he is still, then he throws his head back and spreads his arms wide in pure joy with a big grin. Then the phone in his hand buzzes, he looks down at it and softly says something to it with a tender smile. Natural, understated comedic acting. No other people, no text on screen.",
+    "seconds": 5.3,
+    "seed": 521
+   }
+  }
+ ]
+}

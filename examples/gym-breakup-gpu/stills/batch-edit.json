@@ -1,0 +1,24 @@
+{
+ "jobs": [
+  {
+   "name": "owner-shake",
+   "template": "still-edit",
+   "set": {
+    "image": "owner.png",
+    "fast": true,
+    "seed": 311,
+    "prompt": "He holds a plain black protein shaker bottle near his chin with one hand, about to take a sip, looking straight into the camera and trying to hide a smile. Keep his face, beard, hair, black t-shirt, grey towel, the gym and the daylight exactly the same."
+   }
+  },
+  {
+   "name": "owner-shake-b",
+   "template": "still-edit",
+   "set": {
+    "image": "owner.png",
+    "fast": true,
+    "seed": 312,
+    "prompt": "He holds a plain black protein shaker bottle near his chin with one hand, about to take a sip, looking straight into the camera and trying to hide a smile. Keep his face, beard, hair, black t-shirt, grey towel, the gym and the daylight exactly the same."
+   }
+  }
+ ]
+}

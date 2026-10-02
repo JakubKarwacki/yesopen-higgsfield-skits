@@ -1,0 +1,299 @@
+{
+ "_doc": "One entry per edited shot, in timeline order. See references/edit-pipeline.md for every field. Same cuts and events as the Higgsfield edit; one take per line (lNN), heads at most 0.28 s.",
+ "defaults": {
+  "cy": 0.4
+ },
+ "cuts": [
+  {
+   "take": "l01",
+   "line": [
+    "Hey",
+    "up"
+   ],
+   "head": 0.28,
+   "tail": 0.2,
+   "note": "1 OWNER: Hey... I think we should break up."
+  },
+  {
+   "take": "l02",
+   "line": [
+    "You're",
+    "agency"
+   ],
+   "head": 0.1,
+   "tail": 0.3,
+   "zoom": 1.25,
+   "cy": 0.33,
+   "note": "2 AGENCY: You're breaking up... with your marketing agency? Shock punch-in."
+  },
+  {
+   "take": "l03",
+   "line": [
+    "It's",
+    "invoices"
+   ],
+   "head": 0.15,
+   "tail": 0.3,
+   "zoom": 1.1,
+   "cy": 0.38,
+   "note": "3 OWNER: It's not you. It's your invoices. Slight push-in for the title line."
+  },
+  {
+   "take": "l04",
+   "line": [
+    "Wow",
+    "Wow"
+   ],
+   "head": 0.28,
+   "tail": 1.15,
+   "zoom": 1.4,
+   "cy": 0.33,
+   "note": "4 AGENCY: ...Wow. Tight, and hold the pout for 1.15 s."
+  },
+  {
+   "take": "l05",
+   "line": [
+    "Fine",
+    "questions"
+   ],
+   "head": 0.1,
+   "tail": 0.25,
+   "note": "5 AGENCY: Fine. But who's going to answer all your questions?"
+  },
+  {
+   "take": "l06",
+   "line": [
+    "I",
+    "know"
+   ],
+   "head": 0.12,
+   "tail": 1.35,
+   "events": [
+    {
+     "type": "ding",
+     "after": 0.2
+    },
+    {
+     "type": "banner",
+     "name": "notif-1",
+     "after": 0.22,
+     "dur": 1.9
+    }
+   ],
+   "note": "6 OWNER: I don't know... DING + banner 1; he flips the phone face down."
+  },
+  {
+   "take": "l07",
+   "line": [
+    "Who's",
+    "reviews"
+   ],
+   "head": 0.28,
+   "tail": 0.25,
+   "note": "7 AGENCY: Who's going to reply to your reviews? 0.85 s head keeps her suspicious look before the line."
+  },
+  {
+   "take": "l08",
+   "line": [
+    "No",
+    "idea"
+   ],
+   "head": 0.15,
+   "tail": 1.0,
+   "events": [
+    {
+     "type": "ding",
+     "after": 0.15
+    },
+    {
+     "type": "banner",
+     "name": "notif-2",
+     "after": 0.17,
+     "dur": 1.9
+    }
+   ],
+   "note": "8 OWNER: No idea. DING + banner 2; he coughs."
+  },
+  {
+   "take": "l09",
+   "line": [
+    "Who's",
+    "Instagram"
+   ],
+   "head": 0.28,
+   "tail": 0.3,
+   "note": "9 AGENCY: Who's going to post on your Instagram?"
+  },
+  {
+   "take": "l10",
+   "line": [
+    "Not",
+    "clue"
+   ],
+   "head": 0.15,
+   "tail": 1.15,
+   "events": [
+    {
+     "type": "ding",
+     "after": 0.15
+    },
+    {
+     "type": "banner",
+     "name": "notif-3",
+     "after": 0.17,
+     "dur": 2.1
+    }
+   ],
+   "note": "10 OWNER: Not a clue. DING + banner 3; he whistles and looks away."
+  },
+  {
+   "take": "l11",
+   "line": [
+    "Who's",
+    "Maps"
+   ],
+   "head": 0.1,
+   "tail": 0.3,
+   "zoom": 1.15,
+   "cy": 0.36,
+   "note": "11 AGENCY: Who's going to get you to the top of Google Maps? Her last card."
+  },
+  {
+   "take": "l12",
+   "line": [
+    "Honestly",
+    "idea"
+   ],
+   "head": 0.1,
+   "tail": 1.9,
+   "events": [
+    {
+     "type": "ding",
+     "after": 0.15
+    },
+    {
+     "type": "ding",
+     "after": 0.42
+    },
+    {
+     "type": "banner",
+     "name": "notif-4",
+     "after": 0.17,
+     "dur": 2.1
+    }
+   ],
+   "note": "12 OWNER: Honestly? Absolutely no idea. DING DING + banner 4; the smile breaks through."
+  },
+  {
+   "take": "l13",
+   "line": [
+    "Wait",
+    "else"
+   ],
+   "head": 0.28,
+   "tail": 0.35,
+   "zoom": 1.3,
+   "cy": 0.33,
+   "note": "13 AGENCY: Wait... are you seeing someone else? Squint, punch-in."
+  },
+  {
+   "take": "l14",
+   "line": [
+    "What",
+    "No"
+   ],
+   "head": 0.1,
+   "tail": 0.3,
+   "zoom": 1.45,
+   "cy": 0.33,
+   "note": "14 OWNER: What? ...What? No. Tightest punch-in of the video."
+  },
+  {
+   "take": "l15",
+   "line": [
+    "Then",
+    "you"
+   ],
+   "head": 0.1,
+   "tail": 0.3,
+   "note": "15 AGENCY: Then who keeps texting you?"
+  },
+  {
+   "take": "l16",
+   "line": [
+    "It's",
+    "app"
+   ],
+   "head": 0.28,
+   "tail": 1.1,
+   "note": "16 OWNER: It's... just an app. He shows the phone."
+  },
+  {
+   "take": "l17",
+   "line": [
+    "You're",
+    "app"
+   ],
+   "head": 0.1,
+   "tail": 0.4,
+   "zoom": 1.3,
+   "cy": 0.33,
+   "note": "17 AGENCY: You're leaving us... for an app?! Punch-in on the outrage."
+  },
+  {
+   "take": "l18",
+   "line": [
+    "It",
+    "days"
+   ],
+   "head": 0.1,
+   "tail": 0.15,
+   "note": "18 OWNER: It replies at 2 a.m. You reply in five business days."
+  },
+  {
+   "take": "l19",
+   "line": [
+    "Fine",
+    "me"
+   ],
+   "head": 0.1,
+   "events": [
+    {
+     "type": "cutaway",
+     "take_time": 2.85,
+     "take": "l18",
+     "in": 4.3,
+     "dur": 0.6,
+     "zoom": 1.0,
+     "cy": 0.4
+    }
+   ],
+   "note": "19 AGENCY: Fine. You'll come crawling back. Don't even think about calling me. 2.5 s tail so she turns and walks out; a 0.6 s cutaway to the owner's silent face from the end of take 18.",
+   "tail": 1.0
+  },
+  {
+   "take": "l20",
+   "line": [
+    "What",
+    "back"
+   ],
+   "head": 0.08,
+   "tail": 1.0,
+   "note": "20 OWNER: What? Babe, no! Come back!"
+  },
+  {
+   "take": "l21",
+   "fixed": [
+    0.0,
+    5.3
+   ],
+   "events": [
+    {
+     "type": "ding_at",
+     "take_time": 2.85
+    }
+   ],
+   "note": "21 OWNER: silent celebration, DING at 2.85 s, then he says 'Hey, you.' to the phone."
+  }
+ ]
+}

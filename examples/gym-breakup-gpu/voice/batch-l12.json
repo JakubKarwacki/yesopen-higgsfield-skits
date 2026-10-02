@@ -1,0 +1,48 @@
+{
+ "jobs": [
+  {
+   "name": "l12-s160",
+   "template": "tts",
+   "set": {
+    "text": "Honestly? Absolutely no idea.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.55,
+    "seed": 160
+   }
+  },
+  {
+   "name": "l12-s161",
+   "template": "tts",
+   "set": {
+    "text": "Honestly? Absolutely no idea.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.55,
+    "seed": 161
+   }
+  },
+  {
+   "name": "l12-s162",
+   "template": "tts",
+   "set": {
+    "text": "Honestly? Absolutely no idea.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 162
+   }
+  },
+  {
+   "name": "l12-s163",
+   "template": "tts",
+   "set": {
+    "text": "Honestly? Absolutely no idea.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 163
+   }
+  }
+ ]
+}

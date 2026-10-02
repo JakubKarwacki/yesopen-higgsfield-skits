@@ -1,0 +1,466 @@
+{
+ "jobs": [
+  {
+   "name": "l01-s100",
+   "template": "tts",
+   "set": {
+    "text": "Hey... I think we should break up.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 100
+   }
+  },
+  {
+   "name": "l01-s101",
+   "template": "tts",
+   "set": {
+    "text": "Hey... I think we should break up.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 101
+   }
+  },
+  {
+   "name": "l02-s102",
+   "template": "tts",
+   "set": {
+    "text": "You're breaking up... with your marketing agency?",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.7,
+    "seed": 102
+   }
+  },
+  {
+   "name": "l02-s103",
+   "template": "tts",
+   "set": {
+    "text": "You're breaking up... with your marketing agency?",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.7,
+    "seed": 103
+   }
+  },
+  {
+   "name": "l03-s104",
+   "template": "tts",
+   "set": {
+    "text": "It's not you. It's your invoices.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 104
+   }
+  },
+  {
+   "name": "l03-s105",
+   "template": "tts",
+   "set": {
+    "text": "It's not you. It's your invoices.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 105
+   }
+  },
+  {
+   "name": "l04-s106",
+   "template": "tts",
+   "set": {
+    "text": "Wow.",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.6,
+    "seed": 106
+   }
+  },
+  {
+   "name": "l04-s107",
+   "template": "tts",
+   "set": {
+    "text": "Wow.",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.6,
+    "seed": 107
+   }
+  },
+  {
+   "name": "l05-s108",
+   "template": "tts",
+   "set": {
+    "text": "Fine. But who's going to answer all your questions?",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.6,
+    "seed": 108
+   }
+  },
+  {
+   "name": "l05-s109",
+   "template": "tts",
+   "set": {
+    "text": "Fine. But who's going to answer all your questions?",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.6,
+    "seed": 109
+   }
+  },
+  {
+   "name": "l06-s110",
+   "template": "tts",
+   "set": {
+    "text": "I don't know...",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 110
+   }
+  },
+  {
+   "name": "l06-s111",
+   "template": "tts",
+   "set": {
+    "text": "I don't know...",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 111
+   }
+  },
+  {
+   "name": "l07-s112",
+   "template": "tts",
+   "set": {
+    "text": "Who's going to reply to your reviews?",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.6,
+    "seed": 112
+   }
+  },
+  {
+   "name": "l07-s113",
+   "template": "tts",
+   "set": {
+    "text": "Who's going to reply to your reviews?",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.6,
+    "seed": 113
+   }
+  },
+  {
+   "name": "l08-s114",
+   "template": "tts",
+   "set": {
+    "text": "No idea.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 114
+   }
+  },
+  {
+   "name": "l08-s115",
+   "template": "tts",
+   "set": {
+    "text": "No idea.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 115
+   }
+  },
+  {
+   "name": "l09-s116",
+   "template": "tts",
+   "set": {
+    "text": "Who's going to post on your Instagram?",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.6,
+    "seed": 116
+   }
+  },
+  {
+   "name": "l09-s117",
+   "template": "tts",
+   "set": {
+    "text": "Who's going to post on your Instagram?",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.6,
+    "seed": 117
+   }
+  },
+  {
+   "name": "l10-s118",
+   "template": "tts",
+   "set": {
+    "text": "Not a clue.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 118
+   }
+  },
+  {
+   "name": "l10-s119",
+   "template": "tts",
+   "set": {
+    "text": "Not a clue.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 119
+   }
+  },
+  {
+   "name": "l11-s120",
+   "template": "tts",
+   "set": {
+    "text": "Who's going to get you to the top of Google Maps?",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.65,
+    "seed": 120
+   }
+  },
+  {
+   "name": "l11-s121",
+   "template": "tts",
+   "set": {
+    "text": "Who's going to get you to the top of Google Maps?",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.65,
+    "seed": 121
+   }
+  },
+  {
+   "name": "l12-s122",
+   "template": "tts",
+   "set": {
+    "text": "Honestly? Absolutely no idea.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.55,
+    "seed": 122
+   }
+  },
+  {
+   "name": "l12-s123",
+   "template": "tts",
+   "set": {
+    "text": "Honestly? Absolutely no idea.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.55,
+    "seed": 123
+   }
+  },
+  {
+   "name": "l13-s124",
+   "template": "tts",
+   "set": {
+    "text": "Wait... are you seeing someone else?",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.65,
+    "seed": 124
+   }
+  },
+  {
+   "name": "l13-s125",
+   "template": "tts",
+   "set": {
+    "text": "Wait... are you seeing someone else?",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.65,
+    "seed": 125
+   }
+  },
+  {
+   "name": "l14-s126",
+   "template": "tts",
+   "set": {
+    "text": "What? ... What? No.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.7,
+    "seed": 126
+   }
+  },
+  {
+   "name": "l14-s127",
+   "template": "tts",
+   "set": {
+    "text": "What? ... What? No.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.7,
+    "seed": 127
+   }
+  },
+  {
+   "name": "l15-s128",
+   "template": "tts",
+   "set": {
+    "text": "Then who keeps texting you?",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.65,
+    "seed": 128
+   }
+  },
+  {
+   "name": "l15-s129",
+   "template": "tts",
+   "set": {
+    "text": "Then who keeps texting you?",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.65,
+    "seed": 129
+   }
+  },
+  {
+   "name": "l16-s130",
+   "template": "tts",
+   "set": {
+    "text": "It's... just an app.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 130
+   }
+  },
+  {
+   "name": "l16-s131",
+   "template": "tts",
+   "set": {
+    "text": "It's... just an app.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 131
+   }
+  },
+  {
+   "name": "l17-s132",
+   "template": "tts",
+   "set": {
+    "text": "You're leaving us... for an app?!",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.85,
+    "seed": 132
+   }
+  },
+  {
+   "name": "l17-s133",
+   "template": "tts",
+   "set": {
+    "text": "You're leaving us... for an app?!",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.85,
+    "seed": 133
+   }
+  },
+  {
+   "name": "l18-s134",
+   "template": "tts",
+   "set": {
+    "text": "It replies at two a.m. You reply in five business days.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 134
+   }
+  },
+  {
+   "name": "l18-s135",
+   "template": "tts",
+   "set": {
+    "text": "It replies at two a.m. You reply in five business days.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.5,
+    "seed": 135
+   }
+  },
+  {
+   "name": "l19-s136",
+   "template": "tts",
+   "set": {
+    "text": "Fine. You'll come crawling back. Don't even think about calling me.",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.75,
+    "seed": 136
+   }
+  },
+  {
+   "name": "l19-s137",
+   "template": "tts",
+   "set": {
+    "text": "Fine. You'll come crawling back. Don't even think about calling me.",
+    "language": "English (en)",
+    "voice": "../voices/agency.wav",
+    "exaggeration": 0.75,
+    "seed": 137
+   }
+  },
+  {
+   "name": "l20-s138",
+   "template": "tts",
+   "set": {
+    "text": "What? Babe, no! Come back!",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.8,
+    "seed": 138
+   }
+  },
+  {
+   "name": "l20-s139",
+   "template": "tts",
+   "set": {
+    "text": "What? Babe, no! Come back!",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.8,
+    "seed": 139
+   }
+  },
+  {
+   "name": "l21-s140",
+   "template": "tts",
+   "set": {
+    "text": "Hey, you.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.35,
+    "seed": 140
+   }
+  },
+  {
+   "name": "l21-s141",
+   "template": "tts",
+   "set": {
+    "text": "Hey, you.",
+    "language": "English (en)",
+    "voice": "../voices/owner.wav",
+    "exaggeration": 0.35,
+    "seed": 141
+   }
+  }
+ ]
+}

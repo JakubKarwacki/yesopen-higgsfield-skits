@@ -5,6 +5,7 @@
  "title": "It's not you. It's your invoices.",
  "language": "en",
  "fps": 30,
+ "engine": "higgsfield",
  "formats": [
   "9:16",
   "4:5",

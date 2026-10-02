@@ -16,3 +16,9 @@ __pycache__/
 .env.*
 *.pem
 *.key
+
+# Example masters that are rebuilt rather than stored (the README of each example says which)
+examples/gym-breakup/final/*-4x5.mp4
+examples/gym-breakup/final/*-1x1.mp4
+examples/gym-breakup/final/*-16x9.mp4
+examples/gym-breakup-gpu/final/*.mp4
