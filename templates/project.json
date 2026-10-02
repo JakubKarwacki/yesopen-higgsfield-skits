@@ -5,6 +5,7 @@
  "title": "Working title / end-card line",
  "language": "en",
  "fps": 30,
+ "engine": "gpu",
  "formats": [
   "9:16",
   "4:5",
@@ -19,21 +20,21 @@
  },
  "cast": {
   "char1": {
-   "still": "stills/still-char1-0.png",
+   "still": "stills/char1.png",
    "url": "",
-   "args": "args/still-char1.json",
-   "voice": "calm, warm American male voice"
+   "args": "",
+   "voice": "voices/char1.wav"
   },
   "char2": {
-   "still": "stills/still-char2-0.png",
+   "still": "stills/char2.png",
    "url": "",
-   "args": "args/still-char2.json",
-   "voice": "crisp, confident American female voice"
+   "args": "",
+   "voice": "voices/char2.wav"
   }
  },
  "takes": {
-  "c1a": "takes/take-char1-1-720p-0.mp4",
-  "c2a": "takes/take-char2-1-720p-0.mp4"
+  "l01": "takes/l01.video.mp4",
+  "l02": "takes/l02.video.mp4"
  },
  "speech": {
   "thr": -26.0,

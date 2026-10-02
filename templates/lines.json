@@ -1,0 +1,49 @@
+{
+ "_doc": "The script as the GPU engine reads it (scripts/gpu_batches.py, scripts/fit_lines.py): who says what, how, and what we see in each take. Every field: references/gpu-engine.md, section 6, and the head of scripts/gpu_batches.py. A whole skit: examples/gym-breakup-gpu/lines.json. Paths are relative to the project.",
+ "language": "English (en)",
+ "characters": {
+  "char1": {
+   "voice": "voices/char1.wav",
+   "still": "stills/char1.png",
+   "look": "Vertical smartphone photo, medium shot from mid-thigh up, eye level, a man in his forties with a short beard, grey hoodie without logos, holding his phone with its back to the camera, standing in a small local gym, daylight from a window, looking straight into the lens with a neutral face, lips closed. No text, no logos, no watermark.",
+   "who": "The bearded gym owner",
+   "where": "in his small gym",
+   "him": "him"
+  },
+  "char2": {
+   "voice": "voices/char2.wav",
+   "still": "stills/char2.png",
+   "look": "Vertical smartphone photo, medium shot from mid-thigh up, eye level, a woman in her thirties in a navy blazer without logos, holding a tablet, standing by the front desk of a small gym, daylight, looking straight into the lens with a neutral face, lips closed. No text, no logos, no watermark.",
+   "who": "The marketing agency account manager in a navy blazer",
+   "where": "by the gym's front desk",
+   "him": "her"
+  }
+ },
+ "take": {
+  "tail": 0.6,
+  "seed": 500
+ },
+ "key_shots": [
+  "l01",
+  "l02"
+ ],
+ "lines": [
+  {
+   "id": "l01",
+   "who": "char1",
+   "text": "First line of the script, numbers as words.",
+   "exaggeration": 0.5,
+   "acting": "serious and a little nervous",
+   "action": "serious and a little nervous, he takes a small breath before speaking"
+  },
+  {
+   "id": "l02",
+   "who": "char2",
+   "text": "The answer?!",
+   "exaggeration": 0.7,
+   "acting": "shocked",
+   "action": "shocked, leaning slightly toward the camera",
+   "tail": 1.2
+  }
+ ]
+}

@@ -102,7 +102,7 @@ def build(project, cfg, cuts_doc, upto=None, with_endcard=True, out_dir=None):
     out_dir = out_dir or project / "edit"
     rel = lambda p: os.path.relpath(p, project)  # noqa: E731
     endcard = cfg.get("endcard") or {}
-    return {
+    edl = {
         "version": 2,
         "root": os.path.relpath(project, out_dir),
         "fps": fps,
@@ -120,6 +120,9 @@ def build(project, cfg, cuts_doc, upto=None, with_endcard=True, out_dir=None):
         "_dialogue_seconds": round(t, 2),
         "_dialogue_frames": sum(round((s["out"] - s["in"]) * fps) for s in segments),
     }
+    if cfg.get("music"):  # only when there is one, so an edit without music keeps its exact EDL
+        edl["music"] = {"thr": cfg.get("speech", {}).get("thr", -26.0), **cfg["music"]}
+    return edl
 
 
 def main():

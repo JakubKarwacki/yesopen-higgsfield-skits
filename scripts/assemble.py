@@ -1,8 +1,9 @@
 """Render the edit in edit/edl.json in one output format: cut the takes, add cutaways, captions,
-notification banners, dings and the end card, then normalise the loudness.
+notification banners, dings and the end card, lay the music bed under it when the EDL has one,
+then normalise the loudness.
 
 usage: python3 assemble.py <project_dir> [--format 9:16|4:5|1:1|16:9] [--edl PATH] [--out PATH]
-                           [--no-captions] [--whisper-captions]
+                           [--no-captions] [--whisper-captions] [--no-music]
 
 Default output: <project>/final/<name>-<format>.mp4, e.g. final/its-not-you-its-your-invoices-9x16.mp4.
 Intermediate files go to <project>/edit/work/<format>/. Overlays come from edit/assets/<format>/
@@ -51,7 +52,7 @@ def whisper_words(audio_src, work, language="en"):
     return [{"w": w["word"].strip(), "s": w["start"], "e": w["end"]} for seg in result["segments"] for w in seg["words"]]
 
 
-def assemble(project, layout, edl_path=None, out_path=None, captions=True, whisper_captions=False):
+def assemble(project, layout, edl_path=None, out_path=None, captions=True, whisper_captions=False, music=True):
     cfg = load_project(project)
     edl_path = pathlib.Path(edl_path or project / "edit" / "edl.json").resolve()
     edl = json.loads(edl_path.read_text())
@@ -145,9 +146,22 @@ def assemble(project, layout, edl_path=None, out_path=None, captions=True, whisp
         parts.append(end_mkv)
     listing = work / "final.txt"
     listing.write_text("".join(f"file '{p.name}'\n" for p in parts))
-    run(["-f", "concat", "-safe", "0", "-i", listing, "-af", "loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000",
-         "-c:v", "libx264", "-preset", "medium", "-crf", "17", "-pix_fmt", "yuv420p", "-profile:v", "high",
-         "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", out_path])
+    loud = "loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000"
+    encode = ["-c:v", "libx264", "-preset", "medium", "-crf", "17", "-pix_fmt", "yuv420p", "-profile:v", "high",
+              "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", out_path]
+    if music and edl.get("music"):
+        from music import build_bed, master
+        timeline = sum(probe_duration(p) for p in parts)
+        # the picture cuts to the end card after the segments' whole frames (the audio runs a few ms longer)
+        cut_at = sum(round((s["out"] - s["in"]) * fps) for s in edl["segments"]) / fps
+        bed, bed_info = build_bed(edl["music"], root, dialogue, timeline, cut_at if end else None, work)
+        # the bed comes placed, ducked and faded (music.py); the mix gets a static gain and a peak limiter
+        graph, bed_info["master_gain_db"] = master(listing, bed, work)
+        print(json.dumps({"format": layout["name"], "music": bed_info}))
+        run(["-f", "concat", "-safe", "0", "-i", listing, "-i", bed, "-filter_complex", graph,
+             "-map", "0:v", "-map", "[a]"] + encode)
+    else:
+        run(["-f", "concat", "-safe", "0", "-i", listing, "-af", loud] + encode)
     return out_path
 
 
@@ -159,6 +173,7 @@ def main():
     ap.add_argument("--out", help="output file (only with a single format)")
     ap.add_argument("--no-captions", action="store_true")
     ap.add_argument("--whisper-captions", action="store_true", help="caption from Whisper on the cut dialogue instead of the EDL words")
+    ap.add_argument("--no-music", action="store_true", help="leave out the music bed even if the EDL has one")
     a = ap.parse_args()
     project = find_project(a.project)
     names = list(__import__("brand").FORMATS) if a.format == "all" else a.format.split(",")
@@ -166,7 +181,7 @@ def main():
         raise SystemExit("--out works with one format only")
     for name in names:
         layout = get_format(name)
-        out = assemble(project, layout, a.edl, a.out, not a.no_captions, a.whisper_captions)
+        out = assemble(project, layout, a.edl, a.out, not a.no_captions, a.whisper_captions, not a.no_music)
         print(json.dumps({"format": layout["name"], "out": str(out), "duration": round(probe_duration(out), 3)}))
 
 

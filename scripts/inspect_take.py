@@ -54,6 +54,22 @@ def frame_sheet(src, step, out, cols=10, width=180):
     return out
 
 
+def tighten_first_word(env, words, quiet_db=-90.0, speech_db=-40.0):
+    """GPU takes start with digital silence before the line (fit_lines.py adds a lead), but Whisper puts the
+    first word at 0.00, so a short head would still start the cut at 0. When the take is silent before its first
+    sound, the first word starts there."""
+    import numpy as np
+    loud = np.nonzero(env > speech_db)[0]
+    if not words or not len(loud) or loud[0] < 10:
+        return False
+    onset = max(loud[0] * HOP - 0.02, 0.0)
+    first = words[0]
+    if float(np.median(env[: loud[0]])) < quiet_db and first["s"] < onset < first["e"]:
+        first["s"] = round(onset, 2)
+        return True
+    return False
+
+
 def room_tone(env, words, margin=0.15):
     """Median level (dB) of the take where nobody speaks: outside every word +- margin."""
     import numpy as np
@@ -91,6 +107,9 @@ def main():
         sheet = frame_sheet(src, a.step, frames_dir / f"{src.stem}_sheet.jpg")
 
     env = envelope(src)
+    if tighten_first_word(env, words):
+        words_path.write_text(json.dumps(words, indent=1))
+        print(f"first word moved to {words[0]['s']:.2f} s, where the sound starts after the silent lead")
     median, p90 = room_tone(env, words)
     lines, cur = [], []
     for w in words:
