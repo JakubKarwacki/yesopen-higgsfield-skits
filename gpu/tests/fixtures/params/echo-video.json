@@ -1,0 +1,28 @@
+{
+  "template": "echo-video",
+  "doc": "test: video in, video out",
+  "params": {
+    "video": {
+      "type": "video",
+      "targets": [
+        [
+          "1",
+          "file"
+        ]
+      ],
+      "required": true
+    },
+    "codec": {
+      "type": "enum",
+      "targets": [
+        [
+          "2",
+          "codec"
+        ]
+      ]
+    }
+  },
+  "outputs": {
+    "video": "2"
+  }
+}

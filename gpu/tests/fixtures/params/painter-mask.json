@@ -1,0 +1,30 @@
+{
+  "template": "painter-mask",
+  "doc": "test: generated half-frame mask through the Painter node, plus a text output",
+  "params": {
+    "mask": {
+      "type": "mask",
+      "targets": [
+        [
+          "1",
+          "mask"
+        ]
+      ],
+      "default": "left"
+    },
+    "prompt": {
+      "type": "text",
+      "targets": [
+        [
+          "3",
+          "value"
+        ]
+      ],
+      "required": true
+    }
+  },
+  "outputs": {
+    "image": "2",
+    "final_prompt": "4"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "1": {
+    "inputs": {
+      "dialog_text": "SPEAKER A: Hey what's up, I'm Purz, I'm here to teach you about ComfyUI!\nSPEAKER B: What is ComfyUI?\nSPEAKER A: It's a node-based visual language for creating anything you want with AI!\nSPEAKER B: I can't wait to try it out, can you teach me how to use it?\nSPEAKER A: Sure!",
+      "exaggeration": 0.5,
+      "cfg_weight": 0.5,
+      "temperature": 0.8,
+      "seed": 776764013,
+      "use_cpu": false,
+      "keep_model_loaded": true,
+      "speaker_A_Audio": [
+        "2",
+        0
+      ],
+      "speaker_B_Audio": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "FL_ChatterboxDialogTTS",
+    "_meta": {
+      "title": "FL Chatterbox Dialog TTS"
+    }
+  },
+  "2": {
+    "inputs": {
+      "audio": "chatterbox_input_target_voice.mp3"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "Load Audio"
+    }
+  },
+  "3": {
+    "inputs": {
+      "audio": "chatterbox_input_gettysburg.wav"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "Load Audio"
+    }
+  },
+  "5": {
+    "inputs": {
+      "filename_prefix": "audio/dialog-mix",
+      "audio": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "SaveAudio",
+    "_meta": {
+      "title": "Save dialog mix (FLAC)"
+    }
+  },
+  "901": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "1",
+        1
+      ],
+      "filename_prefix": "audio/dialog-speaker-a"
+    },
+    "_meta": {
+      "title": "Save speaker A (FLAC)"
+    }
+  },
+  "902": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "1",
+        2
+      ],
+      "filename_prefix": "audio/dialog-speaker-b"
+    },
+    "_meta": {
+      "title": "Save speaker B (FLAC)"
+    }
+  }
+}

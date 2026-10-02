@@ -1,0 +1,103 @@
+{
+  "_doc": "Our only changes to the official templates. ui_steps run on the UI template before conversion; steps run on the converted API prompt. Every step says why.",
+  "tts": {
+    "steps": [
+      {
+        "op": "edit_node",
+        "node": "3",
+        "class_type": "SaveAudio",
+        "title": "Save Audio (FLAC)",
+        "inputs": {
+          "filename_prefix": "audio/tts"
+        },
+        "why": "lossless FLAC instead of MP3: MP3 adds encoder delay, which shifts frame-exact lip sync",
+        "drop_inputs": [
+          "quality"
+        ]
+      },
+      {
+        "op": "set_input",
+        "node": "1",
+        "input": "keep_model_loaded",
+        "value": true,
+        "why": "keep the voice model on the GPU between jobs; unloading it after every line added about 7 s to each 3 s line (measured on the H200, 2 October 2026)"
+      }
+    ]
+  },
+  "tts-dialog": {
+    "ui_steps": [
+      {
+        "op": "bypass_ui_node",
+        "node": 4,
+        "why": "AudioCrop is not a ComfyUI 0.35 core node; we send voice samples already trimmed"
+      }
+    ],
+    "steps": [
+      {
+        "op": "edit_node",
+        "node": "5",
+        "class_type": "SaveAudio",
+        "title": "Save dialog mix (FLAC)",
+        "inputs": {
+          "filename_prefix": "audio/dialog-mix"
+        },
+        "why": "lossless FLAC instead of MP3, as for tts",
+        "drop_inputs": [
+          "quality"
+        ]
+      },
+      {
+        "op": "add_node",
+        "node": "901",
+        "class_type": "SaveAudio",
+        "title": "Save speaker A (FLAC)",
+        "inputs": {
+          "audio": [
+            "1",
+            1
+          ],
+          "filename_prefix": "audio/dialog-speaker-a"
+        },
+        "why": "the isolated track of speaker A drives the lip sync of A's shots"
+      },
+      {
+        "op": "add_node",
+        "node": "902",
+        "class_type": "SaveAudio",
+        "title": "Save speaker B (FLAC)",
+        "inputs": {
+          "audio": [
+            "1",
+            2
+          ],
+          "filename_prefix": "audio/dialog-speaker-b"
+        },
+        "why": "the isolated track of speaker B"
+      },
+      {
+        "op": "set_input",
+        "node": "1",
+        "input": "keep_model_loaded",
+        "value": true,
+        "why": "keep the voice model on the GPU between jobs; unloading it after every line added about 7 s to each 3 s line (measured on the H200, 2 October 2026)"
+      }
+    ]
+  },
+  "music": {
+    "steps": [
+      {
+        "op": "edit_node",
+        "node": "111",
+        "title": "Save music (FLAC)",
+        "drop_inputs": [
+          "format.quality"
+        ],
+        "inputs": {
+          "format": "flac",
+          "filename_prefix": "audio/music"
+        },
+        "why": "lossless bed: the edit mixes and encodes once, at the end"
+      }
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "template": "still-edit",
+  "doc": "The same character in another pose, expression or framing (Qwen-Image-Edit 2511).",
+  "params": {
+    "image": {
+      "type": "image",
+      "targets": [
+        [
+          "41",
+          "image"
+        ]
+      ],
+      "required": true
+    },
+    "prompt": {
+      "type": "text",
+      "targets": [
+        [
+          "170:151",
+          "prompt"
+        ]
+      ],
+      "required": true
+    },
+    "fast": {
+      "type": "bool",
+      "targets": [
+        [
+          "170:168",
+          "value"
+        ]
+      ],
+      "doc": "4-step Lightning LoRA instead of 40 steps"
+    },
+    "seed": {
+      "type": "seed",
+      "targets": [
+        [
+          "170:169",
+          "seed"
+        ]
+      ]
+    }
+  },
+  "outputs": {
+    "image": "195"
+  }
+}

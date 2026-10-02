@@ -1,0 +1,107 @@
+{
+  "template": "two-shot",
+  "doc": "Two people in one frame, one audio track each (InfiniteTalk on Wan 2.1, 480p). Option, downloaded on request.",
+  "params": {
+    "image": {
+      "type": "image",
+      "targets": [
+        [
+          "32",
+          "image"
+        ]
+      ],
+      "required": true
+    },
+    "audio_a": {
+      "type": "audio",
+      "targets": [
+        [
+          "24",
+          "audio"
+        ]
+      ],
+      "required": true
+    },
+    "audio_b": {
+      "type": "audio",
+      "targets": [
+        [
+          "90",
+          "audio"
+        ]
+      ],
+      "required": true
+    },
+    "mask_a": {
+      "type": "mask",
+      "targets": [
+        [
+          "174",
+          "mask"
+        ]
+      ],
+      "default": "left",
+      "doc": "where speaker A is: left, right, or an RGBA PNG whose alpha marks the area"
+    },
+    "mask_b": {
+      "type": "mask",
+      "targets": [
+        [
+          "175",
+          "mask"
+        ]
+      ],
+      "default": "right"
+    },
+    "prompt": {
+      "type": "text",
+      "targets": [
+        [
+          "188:14",
+          "text"
+        ],
+        [
+          "324:312",
+          "text"
+        ]
+      ]
+    },
+    "width": {
+      "type": "int",
+      "targets": [
+        [
+          "149",
+          "value"
+        ]
+      ],
+      "default": 480
+    },
+    "height": {
+      "type": "int",
+      "targets": [
+        [
+          "150",
+          "value"
+        ]
+      ],
+      "default": 832
+    },
+    "seed": {
+      "type": "seed",
+      "targets": [
+        [
+          "188:193",
+          "noise_seed"
+        ],
+        [
+          "324:321",
+          "noise_seed"
+        ]
+      ]
+    }
+  },
+  "outputs": {
+    "video": "141",
+    "first_pass": "162"
+  }
+}

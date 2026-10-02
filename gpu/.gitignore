@@ -1,0 +1,7 @@
+client/config.json
+client/state.json
+server/.env
+__pycache__/
+*.pyc
+.DS_Store
+tests/out/

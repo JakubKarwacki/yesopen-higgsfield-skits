@@ -1,0 +1,78 @@
+{
+  "template": "tts-dialog",
+  "doc": "A whole English conversation with two cloned voices, plus one isolated track per speaker (Chatterbox Dialog).",
+  "params": {
+    "dialog": {
+      "type": "text",
+      "targets": [
+        [
+          "1",
+          "dialog_text"
+        ]
+      ],
+      "required": true,
+      "doc": "lines like 'SPEAKER A: ...' and 'SPEAKER B: ...'"
+    },
+    "voice_a": {
+      "type": "audio",
+      "targets": [
+        [
+          "2",
+          "audio"
+        ]
+      ],
+      "required": true
+    },
+    "voice_b": {
+      "type": "audio",
+      "targets": [
+        [
+          "3",
+          "audio"
+        ]
+      ],
+      "required": true
+    },
+    "exaggeration": {
+      "type": "float",
+      "targets": [
+        [
+          "1",
+          "exaggeration"
+        ]
+      ]
+    },
+    "cfg_weight": {
+      "type": "float",
+      "targets": [
+        [
+          "1",
+          "cfg_weight"
+        ]
+      ]
+    },
+    "temperature": {
+      "type": "float",
+      "targets": [
+        [
+          "1",
+          "temperature"
+        ]
+      ]
+    },
+    "seed": {
+      "type": "seed",
+      "targets": [
+        [
+          "1",
+          "seed"
+        ]
+      ]
+    }
+  },
+  "outputs": {
+    "mix": "5",
+    "speaker_a": "901",
+    "speaker_b": "902"
+  }
+}

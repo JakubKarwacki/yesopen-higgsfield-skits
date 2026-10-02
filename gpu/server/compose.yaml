@@ -1,0 +1,44 @@
+# The GPU server: ComfyUI (always on) and the editor (on demand: docker compose run --rm editor ...).
+# Ports are published on 127.0.0.1 only; reach ComfyUI through the SSH tunnel (client/gpu.py tunnel).
+name: yesopen
+
+services:
+  comfyui:
+    build: .
+    image: yesopen-comfyui:0.35.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8188:8188"
+    volumes:
+      - ${YESOPEN_DATA:-/srv/yesopen}/models:/opt/ComfyUI/models
+      - ${YESOPEN_DATA:-/srv/yesopen}/comfy/input:/opt/ComfyUI/input
+      - ${YESOPEN_DATA:-/srv/yesopen}/comfy/output:/opt/ComfyUI/output
+      - ${YESOPEN_DATA:-/srv/yesopen}/comfy/user:/opt/ComfyUI/user
+    environment:
+      # every weight comes from fetch_models.py; nothing may download behind our back at run time
+      HF_HUB_OFFLINE: "1"
+    command: ${COMFY_COMMAND:-python main.py --listen 0.0.0.0 --port 8188 --disable-auto-launch}
+    shm_size: 16gb
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8188/system_stats', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+
+  editor:
+    build: ../editor
+    image: yesopen-editor:latest
+    profiles: ["edit"]
+    working_dir: /work
+    volumes:
+      - ${YESOPEN_DATA:-/srv/yesopen}/projects:/work
+      - ${YESOPEN_DATA:-/srv/yesopen}/skill:/skill:ro
+      - ${YESOPEN_DATA:-/srv/yesopen}/cache/whisper:/root/.cache/whisper

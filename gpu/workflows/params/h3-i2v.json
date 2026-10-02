@@ -1,0 +1,68 @@
+{
+  "template": "h3-i2v",
+  "doc": "Variant B, only with MiniMax's consent: image to video with native audio (MiniMax H3).",
+  "params": {
+    "image": {
+      "type": "image",
+      "targets": [
+        [
+          "114",
+          "image"
+        ]
+      ],
+      "required": true
+    },
+    "prompt": {
+      "type": "text",
+      "targets": [
+        [
+          "105:104",
+          "prompt"
+        ]
+      ],
+      "required": true
+    },
+    "aspect": {
+      "type": "enum",
+      "targets": [
+        [
+          "115",
+          "aspect_ratio"
+        ]
+      ],
+      "default": "9:16 (Portrait Widescreen)"
+    },
+    "seconds": {
+      "type": "float",
+      "targets": [
+        [
+          "105:111",
+          "value"
+        ]
+      ],
+      "required": true
+    },
+    "fast": {
+      "type": "bool",
+      "targets": [
+        [
+          "105:126",
+          "value"
+        ]
+      ],
+      "doc": "8-step turbo LoRA"
+    },
+    "seed": {
+      "type": "seed",
+      "targets": [
+        [
+          "105:15",
+          "noise_seed"
+        ]
+      ]
+    }
+  },
+  "outputs": {
+    "video": "92"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "template": "h3-r2v",
+  "doc": "Variant B, only with MiniMax's consent: video from reference images (MiniMax H3).",
+  "params": {
+    "ref_1": {
+      "type": "image",
+      "targets": [
+        [
+          "137",
+          "image"
+        ]
+      ],
+      "required": true
+    },
+    "ref_2": {
+      "type": "image",
+      "targets": [
+        [
+          "139",
+          "image"
+        ]
+      ],
+      "required": true
+    },
+    "prompt": {
+      "type": "text",
+      "targets": [
+        [
+          "138",
+          "value"
+        ]
+      ],
+      "required": true
+    },
+    "aspect": {
+      "type": "enum",
+      "targets": [
+        [
+          "115",
+          "aspect_ratio"
+        ]
+      ],
+      "default": "9:16 (Portrait Widescreen)"
+    },
+    "seconds": {
+      "type": "float",
+      "targets": [
+        [
+          "132",
+          "value"
+        ]
+      ],
+      "required": true
+    },
+    "fast": {
+      "type": "bool",
+      "targets": [
+        [
+          "146",
+          "value"
+        ]
+      ],
+      "doc": "4-step turbo LoRA"
+    },
+    "seed": {
+      "type": "seed",
+      "targets": [
+        [
+          "129",
+          "noise_seed"
+        ]
+      ]
+    }
+  },
+  "outputs": {
+    "video": "92"
+  }
+}

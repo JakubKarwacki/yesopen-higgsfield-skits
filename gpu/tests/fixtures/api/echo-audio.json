@@ -1,0 +1,42 @@
+{
+  "1": {
+    "class_type": "LoadAudio",
+    "inputs": {
+      "audio": "placeholder.wav"
+    },
+    "_meta": {
+      "title": "Load Audio"
+    }
+  },
+  "2": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "filename_prefix": "test/echo-audio",
+      "audio": [
+        "1",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Save"
+    }
+  },
+  "3": {
+    "class_type": "PrimitiveFloat",
+    "inputs": {
+      "value": 1.0
+    },
+    "_meta": {
+      "title": "Seconds"
+    }
+  },
+  "4": {
+    "class_type": "PrimitiveInt",
+    "inputs": {
+      "value": 24
+    },
+    "_meta": {
+      "title": "Fps"
+    }
+  }
+}

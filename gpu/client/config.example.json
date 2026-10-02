@@ -1,0 +1,26 @@
+{
+  "_doc": "Copy to ~/.config/yesopen-gpu/config.json (or $YESOPEN_GPU_HOME/config.json). For Verda fill verda.instance_type and verda.ssh_key_id; for any other server set host (or GPU_HOST) and leave verda alone.",
+  "comfy_url": "http://127.0.0.1:8188",
+  "host": null,
+  "_host": "the server's address when you made it yourself (any provider, or a machine in your office); gpu.py up fills it for Verda",
+  "ssh_user": "root",
+  "ssh_key": "~/.ssh/id_ed25519_yesopen_gpu",
+  "_ssh_key": "ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_yesopen_gpu -C yesopen-gpu; add the .pub key at your provider",
+  "skill_dir": null,
+  "_skill_dir": "the skit skill the editor runs; empty = the folder that holds this gpu/ folder",
+  "editor_image": "yesopen-editor:latest",
+  "verda": {
+    "hostname": "yesopen-gpu",
+    "instance_type": null,
+    "_instance_type": "1B200.30V: 1x B200 180 GB, $6.987 an hour on demand; fallback 1H200.141S.44V ($4.779); list: verda instance-types --gpu",
+    "ssh_key_id": null,
+    "_ssh_key_id": "verda ssh-key add --name yesopen-gpu --public-key \"$(cat ~/.ssh/id_ed25519_yesopen_gpu.pub)\", then verda ssh-key list. A team sharing one Verda project lists every member's key id here ([\"id-1\", \"id-2\"]), so whoever starts the machine lets the others connect to it too",
+    "location": "FIN-03",
+    "_location": "a location with a free card: verda availability --type <type>. The kept disk stays in the location of the first up, so later sessions start there too.",
+    "os": "ubuntu-24.04-cuda-13.0-open-docker",
+    "os_volume_size": 300,
+    "_os_volume_size": "GiB of NVMe, $0.20 per GiB a month while kept; Verda disks only grow, enlarge to 400 before variant B",
+    "os_volume_name": "yesopen-gpu-disk",
+    "contract": "pay_as_go"
+  }
+}

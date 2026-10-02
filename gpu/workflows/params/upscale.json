@@ -1,0 +1,49 @@
+{
+  "template": "upscale",
+  "doc": "Restore and upscale a finished shot (SeedVR2 3B, one step).",
+  "params": {
+    "video": {
+      "type": "video",
+      "targets": [
+        [
+          "73",
+          "file"
+        ]
+      ],
+      "required": true
+    },
+    "multiplier": {
+      "type": "float",
+      "targets": [
+        [
+          "66:57",
+          "resize_type.multiplier"
+        ]
+      ],
+      "default": 1.5,
+      "doc": "704x1280 x 1.5 = 1056x1920; the edit scales to 1080x1920"
+    },
+    "split_latent": {
+      "type": "bool",
+      "targets": [
+        [
+          "66:105",
+          "value"
+        ]
+      ],
+      "doc": "for long shots that do not fit"
+    },
+    "seed": {
+      "type": "seed",
+      "targets": [
+        [
+          "66:54",
+          "seed"
+        ]
+      ]
+    }
+  },
+  "outputs": {
+    "video": "76"
+  }
+}

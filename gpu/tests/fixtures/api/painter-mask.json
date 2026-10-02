@@ -1,0 +1,48 @@
+{
+  "1": {
+    "class_type": "Painter",
+    "inputs": {
+      "mask": "",
+      "width": 64,
+      "height": 64,
+      "bg_color": "#000000"
+    },
+    "_meta": {
+      "title": "Painter"
+    }
+  },
+  "2": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "test/painter",
+      "images": [
+        "1",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Save"
+    }
+  },
+  "3": {
+    "class_type": "PrimitiveStringMultiline",
+    "inputs": {
+      "value": "placeholder"
+    },
+    "_meta": {
+      "title": "Prompt"
+    }
+  },
+  "4": {
+    "class_type": "PreviewAny",
+    "inputs": {
+      "source": [
+        "3",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Preview as Text"
+    }
+  }
+}

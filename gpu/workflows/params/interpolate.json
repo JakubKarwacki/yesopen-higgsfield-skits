@@ -1,0 +1,38 @@
+{
+  "template": "interpolate",
+  "doc": "Extra in-between frames (FILM).",
+  "params": {
+    "video": {
+      "type": "video",
+      "targets": [
+        [
+          "4",
+          "file"
+        ]
+      ],
+      "required": true
+    },
+    "multiplier": {
+      "type": "int",
+      "targets": [
+        [
+          "16:9",
+          "value"
+        ]
+      ]
+    },
+    "multiply_fps": {
+      "type": "bool",
+      "targets": [
+        [
+          "16:13",
+          "value"
+        ]
+      ],
+      "doc": "true: same length, higher frame rate; false: slow motion"
+    }
+  },
+  "outputs": {
+    "video": "7"
+  }
+}

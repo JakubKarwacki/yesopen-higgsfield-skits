@@ -1,0 +1,99 @@
+{
+  "template": "music",
+  "doc": "Instrumental bed of a set length, tempo and key (ACE-Step 1.5 XL Turbo).",
+  "params": {
+    "tags": {
+      "type": "text",
+      "targets": [
+        [
+          "94",
+          "tags"
+        ]
+      ],
+      "required": true,
+      "doc": "style, instruments, mood; include 'instrumental'"
+    },
+    "lyrics": {
+      "type": "text",
+      "targets": [
+        [
+          "94",
+          "lyrics"
+        ]
+      ],
+      "default": "[Instrumental]"
+    },
+    "seconds": {
+      "type": "float",
+      "targets": [
+        [
+          "94",
+          "duration"
+        ],
+        [
+          "98",
+          "seconds"
+        ]
+      ],
+      "required": true
+    },
+    "bpm": {
+      "type": "int",
+      "targets": [
+        [
+          "94",
+          "bpm"
+        ]
+      ],
+      "required": true
+    },
+    "timesignature": {
+      "type": "enum",
+      "targets": [
+        [
+          "94",
+          "timesignature"
+        ]
+      ]
+    },
+    "keyscale": {
+      "type": "enum",
+      "targets": [
+        [
+          "94",
+          "keyscale"
+        ]
+      ]
+    },
+    "language": {
+      "type": "enum",
+      "targets": [
+        [
+          "94",
+          "language"
+        ]
+      ]
+    },
+    "steps": {
+      "type": "int",
+      "targets": [
+        [
+          "3",
+          "steps"
+        ]
+      ]
+    },
+    "seed": {
+      "type": "seed",
+      "targets": [
+        [
+          "109",
+          "value"
+        ]
+      ]
+    }
+  },
+  "outputs": {
+    "audio": "111"
+  }
+}

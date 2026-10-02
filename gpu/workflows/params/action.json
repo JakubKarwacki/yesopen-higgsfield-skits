@@ -1,0 +1,95 @@
+{
+  "template": "action",
+  "doc": "Silent reaction or B-roll from a still (LTX-2.5 image to video). Gated: needs the HF token.",
+  "params": {
+    "image": {
+      "type": "image",
+      "targets": [
+        [
+          "395",
+          "image"
+        ]
+      ],
+      "required": true
+    },
+    "prompt": {
+      "type": "text",
+      "targets": [
+        [
+          "398:376",
+          "value"
+        ]
+      ],
+      "required": true
+    },
+    "aspect": {
+      "type": "enum",
+      "targets": [
+        [
+          "403",
+          "aspect_ratio"
+        ]
+      ],
+      "default": "9:16 (Portrait Widescreen)"
+    },
+    "megapixels": {
+      "type": "float",
+      "targets": [
+        [
+          "403",
+          "megapixels"
+        ]
+      ]
+    },
+    "seconds": {
+      "type": "int",
+      "targets": [
+        [
+          "398:362",
+          "value"
+        ]
+      ],
+      "required": true
+    },
+    "fps": {
+      "type": "int",
+      "targets": [
+        [
+          "398:361",
+          "value"
+        ]
+      ],
+      "default": 24
+    },
+    "enhance_prompt": {
+      "type": "bool",
+      "targets": [
+        [
+          "398:383",
+          "value"
+        ]
+      ],
+      "default": false
+    },
+    "seed": {
+      "type": "seed",
+      "targets": [
+        [
+          "398:339",
+          "noise_seed"
+        ]
+      ]
+    }
+  },
+  "outputs": {
+    "video": "75",
+    "final_prompt": "398:381"
+  },
+  "rules": {
+    "ltx_frames": {
+      "seconds": "seconds",
+      "fps": "fps",
+      "pad_audio": []
+    }
+  }
+}

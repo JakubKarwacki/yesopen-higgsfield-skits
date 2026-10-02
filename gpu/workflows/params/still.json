@@ -1,0 +1,57 @@
+{
+  "template": "still",
+  "doc": "Character still from text (Z-Image Turbo, 8 steps).",
+  "params": {
+    "prompt": {
+      "type": "text",
+      "targets": [
+        [
+          "57:27",
+          "text"
+        ]
+      ],
+      "required": true
+    },
+    "width": {
+      "type": "int",
+      "targets": [
+        [
+          "57:13",
+          "width"
+        ]
+      ],
+      "default": 1088
+    },
+    "height": {
+      "type": "int",
+      "targets": [
+        [
+          "57:13",
+          "height"
+        ]
+      ],
+      "default": 1920
+    },
+    "steps": {
+      "type": "int",
+      "targets": [
+        [
+          "57:3",
+          "steps"
+        ]
+      ]
+    },
+    "seed": {
+      "type": "seed",
+      "targets": [
+        [
+          "57:3",
+          "seed"
+        ]
+      ]
+    }
+  },
+  "outputs": {
+    "image": "9"
+  }
+}

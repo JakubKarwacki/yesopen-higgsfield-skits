@@ -1,0 +1,106 @@
+{
+  "template": "action-flf",
+  "doc": "A move between a first and a last frame (LTX-2.5 FLF2V). Gated: needs the HF token.",
+  "params": {
+    "first": {
+      "type": "image",
+      "targets": [
+        [
+          "31",
+          "image"
+        ]
+      ],
+      "required": true
+    },
+    "last": {
+      "type": "image",
+      "targets": [
+        [
+          "39",
+          "image"
+        ]
+      ],
+      "required": true
+    },
+    "prompt": {
+      "type": "text",
+      "targets": [
+        [
+          "251:252",
+          "value"
+        ]
+      ],
+      "required": true
+    },
+    "width": {
+      "type": "int",
+      "targets": [
+        [
+          "251:215",
+          "value"
+        ]
+      ],
+      "default": 704
+    },
+    "height": {
+      "type": "int",
+      "targets": [
+        [
+          "251:216",
+          "value"
+        ]
+      ],
+      "default": 1280
+    },
+    "seconds": {
+      "type": "int",
+      "targets": [
+        [
+          "251:198",
+          "value"
+        ]
+      ],
+      "required": true
+    },
+    "fps": {
+      "type": "int",
+      "targets": [
+        [
+          "251:205",
+          "value"
+        ]
+      ],
+      "default": 24
+    },
+    "enhance_prompt": {
+      "type": "bool",
+      "targets": [
+        [
+          "251:250",
+          "value"
+        ]
+      ],
+      "default": false
+    },
+    "seed": {
+      "type": "seed",
+      "targets": [
+        [
+          "251:196",
+          "noise_seed"
+        ]
+      ]
+    }
+  },
+  "outputs": {
+    "video": "68",
+    "final_prompt": "251:249"
+  },
+  "rules": {
+    "ltx_frames": {
+      "seconds": "seconds",
+      "fps": "fps",
+      "pad_audio": []
+    }
+  }
+}

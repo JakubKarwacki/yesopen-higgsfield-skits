@@ -1,0 +1,47 @@
+{
+  "1": {
+    "inputs": {
+      "text": "Hola amigos, bienvenidos de nuevo a ComfyUI.\nHoy vamos a explorar Chatterbox, un flujo de trabajo de clonación de voz capaz de manejar múltiples voces y múltiples idiomas.",
+      "language": "English (en)",
+      "exaggeration": 0.5,
+      "cfg_weight": 0.5,
+      "temperature": 0.8,
+      "repetition_penalty": 2,
+      "min_p": 0.05,
+      "top_p": 1,
+      "seed": 163260306,
+      "use_cpu": false,
+      "keep_model_loaded": true,
+      "audio_prompt": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "FL_ChatterboxMultilingualTTS",
+    "_meta": {
+      "title": "FL Chatterbox Multilingual TTS"
+    }
+  },
+  "2": {
+    "inputs": {
+      "audio": "chatterbox_input_target_voice.mp3"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "Load Audio"
+    }
+  },
+  "3": {
+    "inputs": {
+      "filename_prefix": "audio/tts",
+      "audio": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "SaveAudio",
+    "_meta": {
+      "title": "Save Audio (FLAC)"
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "template": "echo-audio",
+  "doc": "test: audio in, FLAC out, padded like an LTX lip-sync line",
+  "params": {
+    "audio": {
+      "type": "audio",
+      "targets": [
+        [
+          "1",
+          "audio"
+        ]
+      ],
+      "required": true
+    },
+    "seconds": {
+      "type": "float",
+      "targets": [
+        [
+          "3",
+          "value"
+        ]
+      ],
+      "required": true
+    },
+    "fps": {
+      "type": "int",
+      "targets": [
+        [
+          "4",
+          "value"
+        ]
+      ],
+      "default": 24
+    }
+  },
+  "outputs": {
+    "audio": "2"
+  },
+  "rules": {
+    "ltx_frames": {
+      "seconds": "seconds",
+      "fps": "fps",
+      "pad_audio": [
+        "audio"
+      ]
+    }
+  }
+}

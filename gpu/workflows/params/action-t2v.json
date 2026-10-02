@@ -1,0 +1,85 @@
+{
+  "template": "action-t2v",
+  "doc": "Establishing shot from text (LTX-2.5 text to video). Gated: needs the HF token.",
+  "params": {
+    "prompt": {
+      "type": "text",
+      "targets": [
+        [
+          "405:376",
+          "value"
+        ]
+      ],
+      "required": true
+    },
+    "aspect": {
+      "type": "enum",
+      "targets": [
+        [
+          "409",
+          "aspect_ratio"
+        ]
+      ],
+      "default": "9:16 (Portrait Widescreen)"
+    },
+    "megapixels": {
+      "type": "float",
+      "targets": [
+        [
+          "409",
+          "megapixels"
+        ]
+      ]
+    },
+    "seconds": {
+      "type": "int",
+      "targets": [
+        [
+          "405:362",
+          "value"
+        ]
+      ],
+      "required": true
+    },
+    "fps": {
+      "type": "int",
+      "targets": [
+        [
+          "405:361",
+          "value"
+        ]
+      ],
+      "default": 24
+    },
+    "enhance_prompt": {
+      "type": "bool",
+      "targets": [
+        [
+          "405:383",
+          "value"
+        ]
+      ],
+      "default": false
+    },
+    "seed": {
+      "type": "seed",
+      "targets": [
+        [
+          "405:339",
+          "noise_seed"
+        ]
+      ]
+    }
+  },
+  "outputs": {
+    "video": "75",
+    "final_prompt": "405:381"
+  },
+  "rules": {
+    "ltx_frames": {
+      "seconds": "seconds",
+      "fps": "fps",
+      "pad_audio": []
+    }
+  }
+}

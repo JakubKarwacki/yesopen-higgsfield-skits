@@ -1,0 +1,76 @@
+{
+  "template": "tts",
+  "doc": "One line of speech in one of 23 languages, voice cloned from a sample (Chatterbox Multilingual).",
+  "params": {
+    "text": {
+      "type": "text",
+      "targets": [
+        [
+          "1",
+          "text"
+        ]
+      ],
+      "required": true
+    },
+    "language": {
+      "type": "enum",
+      "targets": [
+        [
+          "1",
+          "language"
+        ]
+      ],
+      "default": "Polish (pl)"
+    },
+    "voice": {
+      "type": "audio",
+      "targets": [
+        [
+          "2",
+          "audio"
+        ]
+      ],
+      "required": true,
+      "doc": "5-15 s of clean speech"
+    },
+    "exaggeration": {
+      "type": "float",
+      "targets": [
+        [
+          "1",
+          "exaggeration"
+        ]
+      ]
+    },
+    "cfg_weight": {
+      "type": "float",
+      "targets": [
+        [
+          "1",
+          "cfg_weight"
+        ]
+      ]
+    },
+    "temperature": {
+      "type": "float",
+      "targets": [
+        [
+          "1",
+          "temperature"
+        ]
+      ]
+    },
+    "seed": {
+      "type": "seed",
+      "targets": [
+        [
+          "1",
+          "seed"
+        ]
+      ]
+    }
+  },
+  "outputs": {
+    "audio": "3"
+  }
+}

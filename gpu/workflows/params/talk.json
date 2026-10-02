@@ -1,0 +1,110 @@
+{
+  "template": "talk",
+  "doc": "Lip-synced shot: a still plus a recorded line (LTX-2.3 image+audio to video, two stages).",
+  "params": {
+    "image": {
+      "type": "image",
+      "targets": [
+        [
+          "269",
+          "image"
+        ]
+      ],
+      "required": true
+    },
+    "audio": {
+      "type": "audio",
+      "targets": [
+        [
+          "276",
+          "audio"
+        ]
+      ],
+      "required": true,
+      "doc": "padded with silence to the shot length before upload"
+    },
+    "prompt": {
+      "type": "text",
+      "targets": [
+        [
+          "340:319",
+          "value"
+        ]
+      ],
+      "required": true
+    },
+    "width": {
+      "type": "int",
+      "targets": [
+        [
+          "340:330",
+          "value"
+        ]
+      ],
+      "default": 704
+    },
+    "height": {
+      "type": "int",
+      "targets": [
+        [
+          "340:324",
+          "value"
+        ]
+      ],
+      "default": 1280
+    },
+    "seconds": {
+      "type": "float",
+      "targets": [
+        [
+          "340:331",
+          "value"
+        ]
+      ],
+      "required": true
+    },
+    "fps": {
+      "type": "int",
+      "targets": [
+        [
+          "340:323",
+          "value"
+        ]
+      ],
+      "default": 24
+    },
+    "enhance_prompt": {
+      "type": "bool",
+      "targets": [
+        [
+          "340:349",
+          "value"
+        ]
+      ],
+      "default": false,
+      "doc": "let Gemma rewrite the prompt; off because our shot prompts are already complete"
+    },
+    "seed": {
+      "type": "seed",
+      "targets": [
+        [
+          "340:286",
+          "noise_seed"
+        ]
+      ]
+    }
+  },
+  "outputs": {
+    "video": "341",
+    "final_prompt": "340:347"
+  },
+  "rules": {
+    "ltx_frames": {
+      "seconds": "seconds",
+      "fps": "fps",
+      "pad_audio": [
+        "audio"
+      ]
+    }
+  }
+}

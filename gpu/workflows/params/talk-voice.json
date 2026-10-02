@@ -1,0 +1,106 @@
+{
+  "template": "talk-voice",
+  "doc": "Voice and lips in one pass from a still, a voice sample and a [VISUAL]/[SPEECH] prompt (LTX-2.3 ID-LoRA).",
+  "params": {
+    "image": {
+      "type": "image",
+      "targets": [
+        [
+          "269",
+          "image"
+        ]
+      ],
+      "required": true
+    },
+    "voice": {
+      "type": "audio",
+      "targets": [
+        [
+          "276",
+          "audio"
+        ]
+      ],
+      "required": true,
+      "doc": "reference voice sample"
+    },
+    "prompt": {
+      "type": "text",
+      "targets": [
+        [
+          "340:319",
+          "value"
+        ]
+      ],
+      "required": true,
+      "doc": "[VISUAL]: what we see. [SPEECH]: the exact line"
+    },
+    "width": {
+      "type": "int",
+      "targets": [
+        [
+          "340:330",
+          "value"
+        ]
+      ],
+      "default": 704
+    },
+    "height": {
+      "type": "int",
+      "targets": [
+        [
+          "340:324",
+          "value"
+        ]
+      ],
+      "default": 1280
+    },
+    "seconds": {
+      "type": "float",
+      "targets": [
+        [
+          "340:331",
+          "value"
+        ]
+      ],
+      "required": true
+    },
+    "fps": {
+      "type": "int",
+      "targets": [
+        [
+          "340:323",
+          "value"
+        ]
+      ],
+      "default": 24
+    },
+    "identity_guidance": {
+      "type": "float",
+      "targets": [
+        [
+          "340:349",
+          "identity_guidance_scale"
+        ]
+      ]
+    },
+    "seed": {
+      "type": "seed",
+      "targets": [
+        [
+          "340:286",
+          "noise_seed"
+        ]
+      ]
+    }
+  },
+  "outputs": {
+    "video": "341"
+  },
+  "rules": {
+    "ltx_frames": {
+      "seconds": "seconds",
+      "fps": "fps",
+      "pad_audio": []
+    }
+  }
+}

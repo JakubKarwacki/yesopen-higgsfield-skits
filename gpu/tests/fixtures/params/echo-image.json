@@ -1,0 +1,19 @@
+{
+  "template": "echo-image",
+  "doc": "test: image in, PNG out",
+  "params": {
+    "image": {
+      "type": "image",
+      "targets": [
+        [
+          "1",
+          "image"
+        ]
+      ],
+      "required": true
+    }
+  },
+  "outputs": {
+    "image": "2"
+  }
+}

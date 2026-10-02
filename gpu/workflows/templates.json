@@ -1,0 +1,55 @@
+{
+  "source": {
+    "repo": "Comfy-Org/workflow_templates",
+    "commit": "0bfbbbfa260e76f69137f5aa37b7553199c73bc0",
+    "date": "2026-09-30"
+  },
+  "comfyui": "0.35.0",
+  "templates": [
+    {"id": "still", "name": "image_z_image_turbo_int8", "stage": "cast", "variant": "A", "load": "before_start",
+     "role": "character stills, 9:16"},
+    {"id": "still-edit", "name": "image_qwen_image_edit_2511_int8", "stage": "cast", "variant": "A", "load": "after_start",
+     "role": "the same character in another pose, expression or framing"},
+    {"id": "tts", "name": "audio-chatterbox_tts_multilingual", "stage": "voice", "variant": "A", "load": "before_start",
+     "role": "one line in 23 languages (Polish, English, German...), voice cloned from a sample"},
+    {"id": "tts-dialog", "name": "audio-chatterbox_tts_dialog", "stage": "voice", "variant": "A", "load": "before_start",
+     "role": "a whole conversation, up to 4 voices, one isolated track per speaker"},
+    {"id": "talk", "name": "video_ltx2_3_ia2v", "stage": "takes", "variant": "A", "load": "before_start",
+     "role": "image + recorded line -> lip-synced shot"},
+    {"id": "talk-voice", "name": "video_ltx2_3_id_lora", "stage": "takes", "variant": "A", "load": "after_start",
+     "role": "image + voice sample + [VISUAL]/[SPEECH] prompt -> voice and lips in one pass, like Seedance"},
+    {"id": "action", "name": "video_ltx2_5_i2v", "stage": "takes", "variant": "A", "load": "after_start",
+     "role": "silent reactions and B-roll from a still", "needs_hf_token": true},
+    {"id": "action-t2v", "name": "video_ltx2_5_t2v", "stage": "takes", "variant": "A", "load": "after_start",
+     "role": "establishing shots from text", "needs_hf_token": true},
+    {"id": "action-flf", "name": "video_ltx2_5_flf2v", "stage": "takes", "variant": "A", "load": "after_start",
+     "role": "a move between a first and a last frame", "needs_hf_token": true},
+    {"id": "music", "name": "audio_ace_step1_5_xl_turbo", "stage": "music", "variant": "A", "load": "after_start",
+     "role": "instrumental bed with a set length and BPM"},
+    {"id": "upscale", "name": "utility_seedvr2_3b_int8_upscale_video", "stage": "finish", "variant": "A", "load": "after_start",
+     "role": "restore and upscale a shot to 1080p"},
+    {"id": "interpolate", "name": "utility_video_frame_interpolation", "stage": "finish", "variant": "A", "load": "after_start",
+     "role": "extra frames (FILM or RIFE)"},
+    {"id": "two-shot", "name": "video_wan2_1_infinitetalk", "stage": "takes", "variant": "A", "load": "manual",
+     "role": "two people in frame, one audio track each (option)"},
+    {"id": "h3-i2v", "name": "video_minimax_h3_i2v", "stage": "takes", "variant": "B", "load": "manual",
+     "role": "MiniMax H3 image -> video with native audio; only with MiniMax's consent"},
+    {"id": "h3-r2v", "name": "video_minimax_h3_r2v", "stage": "takes", "variant": "B", "load": "manual",
+     "role": "MiniMax H3 from references (identity, voice); only with MiniMax's consent"}
+  ],
+  "custom_nodes": [
+    {"pack": "comfyui_fill-chatterbox", "repo": "https://github.com/filliptm/ComfyUI_Fill-ChatterBox",
+     "commit": "f7d7a16187430abcaf91a3039b9c83aa9960816a", "license": "MIT"}
+  ],
+  "extra_models": {
+    "_why": "the Chatterbox nodes download these on first use into models/chatterbox/<model>/; preloading them keeps the first request fast",
+    "tts": {"repo": "ResembleAI/chatterbox", "directory": "chatterbox/chatterbox_multilingual",
+            "files": ["ve.pt", "t3_mtl23ls_v2.safetensors", "s3gen.pt", "grapheme_mtl_merged_expanded_v1.json", "conds.pt", "Cangjie5_TC.json"]},
+    "tts-dialog": {"repo": "ResembleAI/chatterbox", "directory": "chatterbox/chatterbox",
+                   "files": ["ve.safetensors", "t3_cfg.safetensors", "s3gen.safetensors", "tokenizer.json", "conds.pt"]}
+  },
+  "url_overrides": {
+    "https://huggingface.co/Comfy-Org/HunyuanVideo_1.5_repackaged/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors":
+      "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors"
+  }
+}
