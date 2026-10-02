@@ -86,6 +86,13 @@ boot the team's kept disk rather than install from scratch, put its id into your
 `{"os_volume_id": "<disk id>"}` (`verda volume list`). `stop --yes` deletes the machine for everyone, so agree
 who ends the session.
 
+**Teammates without a Verda account** need only their own SSH key. They send their public key
+(`~/.ssh/id_ed25519_yesopen_gpu.pub`, never a private key). Whoever has the account adds it to the project, gives
+the machine every key (in the console, or through the list in `verda.ssh_key_id`), starts and later deletes the
+machine, and passes on its address for each session. The teammate runs `gpu.py use <address>` and `gpu.py start`;
+at the end `gpu.py stop` closes their tunnel and `gpu.py use --clear` forgets the address. Every key holder is root
+on the machine and can read the Hugging Face token stored there, so give access only to people you trust.
+
 ## 3. A session
 
 ```bash
