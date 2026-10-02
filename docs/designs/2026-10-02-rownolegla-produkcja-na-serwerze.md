@@ -105,6 +105,42 @@ Lokalne wykonanie wybieramy wyłącznie przy konkretnej korzyści operacyjnej: n
 - Przy braku pamięci wstrzymać nowe przydziały danej klasy, zapisać błąd i zachować pozostałe zadania. Bez automatycznej pętli ponownych generacji i bez restartowania procesu obsługującego inny film. [R5, R6]
 - Utrzymywanie modeli wymaga potwierdzenia zachowania loaderów; rozdzielenie ComfyUI i `keep_model_loaded` nie jest gwarancją rezydencji wszystkich wag. Mierzyć ładowania i przeładowania. [R3]
 
+### Implementacja ograniczenia przeładowań: zdjęcia i powiększanie
+
+Uzupełnienie 2026-10-03. Wymaganie R3 obejmuje także parę modeli zdjęć i powiększania, a nie tylko TTS/LTX. Użytkownik podał obserwacje: około 9 s na zdjęcie w pracy mieszanej wobec 2,8 s w serii samych zdjęć; średnie wykorzystanie 68%, 465 W, VRAM 27–33 GB, RAM 39 GB i 50–56 °C. To zgłoszony objaw, bez surowego śladu potwierdzającego przyczynę. Procent użycia i moc nie dowodzą, że całą różnicę czasu powoduje przeładowanie. Najpierw rozdzielić czas oczekiwania, ładowania, transferów i obliczeń. [R3]
+
+#### Konkretny zakres zmian
+
+| Miejsce | Zmiana do implementacji | Wymagania |
+| --- | --- | --- |
+| `gpu/server/compose.yaml`, bootstrap, healthchecki | Dodać opcjonalny profil procesów `still` i `upscale` na jednej karcie, z odrębnymi portami loopback, katalogami runtime i wspólnymi niezmiennymi wagami. Nie uruchamiać automatycznie wszystkich profili TTS/LTX/Whisper/still/upscale naraz. | R3, R5 |
+| Koordynator i konfiguracja wykonawców | Mapa template → grupa modeli → proces; `still` do procesu zdjęć, `upscale` do procesu powiększania. Zachować powiązanie procesu i rewizji modeli między zadaniami obu filmów. Nie wybierać przypadkowego wolnego procesu, jeżeli spowoduje przeładowanie. | R1, R3, R5 |
+| `gpu/client/gpu.py:cmd_health`, `cmd_tunnel`, start/stop | Obsługa wielu skonfigurowanych endpointów i ich gotowości po stronie serwera. Czat nadal zleca koordynatorowi; nie zarządza sam portami ani cyklem życia współdzielonych procesów. | R1, R5 |
+| Loadery w `gpu/workflows/api/still.json` i `upscale.json` | Sprawdzić zarządzanie pamięcią i cache w przypiętej wersji ComfyUI. Zachować niezmienne parametry loaderów między zadaniami; warm-up ma obejmować rzeczywiste wykonanie, nie samo zbudowanie grafu. | R3 |
+| `gpu/workflows/patches.json`, narzędzia konwersji i testy workflowów | Jeżeli potrzebna jest zmiana grafu, wprowadzić ją przez istniejący mechanizm patchy i regenerację, nie tylko ręcznie w API JSON. Obecne `keep_model_loaded` dotyczy Chatterbox; nie dopisywać tego pola do standardowych loaderów, które go nie obsługują. | R3, R7 |
+| Scheduler i pomiary | Osobno kontrolować rezydencję wag oraz pozwolenie na wykonywanie obliczeń. Zbierać zdarzenia ładowania/odładowania, czasy etapów i szczyty pamięci dla danego profilu. | R3, R6 |
+
+W sprawdzonym grafie `still` grupa obejmuje UNET `57:28` (`z_image_turbo_int8_convrot.safetensors`), CLIP `57:30` (`qwen_3_4b_fp8_mixed.safetensors`) i VAE `57:29` (`ae.safetensors`). `upscale` obejmuje UNET `66:52` (`seedvr2_3b_int8_convrot.safetensors`) i VAE `66:51` (`seedvr2_ema_vae_fp16.safetensors`). Rezydencję należy mierzyć dla całej grupy i buforów, nie tylko głównego UNET. Identyfikatory węzłów dotyczą bazowego commitu i należy je zweryfikować przy aktualizacji workflowów. [R3, R7]
+
+Obecny `upscale` przyjmuje **wideo**, nie pojedyncze zdjęcie. Przed odtworzeniem zgłoszonego przypadku ustalić z logu template i rewizję workflowu powiększania. Jeżeli użytkownik pracował innym workflowem zdjęciowym, przypisać jego rzeczywiste loadery do profilu; nie zamieniać zgłoszonego przypadku na benchmark innego modelu. Zmiana kontraktu wejścia nie jest częścią tego uzupełnienia. [R3, R7]
+
+#### Rezydencja i dopuszczanie pracy
+
+1. Weryfikacja profilu obejmuje zgodność wag i wersji silnika, warm-up obu grup oraz pomiar ich wspólnego szczytu pamięci. Oddzielne procesy nie gwarantują rezydencji: potwierdzić brak odładowania/offloadu przy zmianie typu zadania. Nie włączać globalnie flag wymuszających wszystko w VRAM bez pomiaru. [R3]
+2. Najpierw przetestować wariant **obie grupy pozostają w pamięci, obliczenia wykonują się kolejno**. To usuwa potencjalny koszt przełączania bez dokładania konkurencji obliczeniowej. Dopiero potem przetestować jednoczesne obliczenia obu procesów. [R3]
+3. Przydział pracy rezerwuje globalny budżet VRAM: pamięć wszystkich rezydentnych grup, zmierzony przyrost aktywnych zadań i rezerwę. Uwzględnić też TTS/LTX/Whisper, konteksty CUDA oraz RAM zajęty przez offload. Profile mają określony zakres długości/rozdzielczości; zadanie poza zakresem nie korzysta z niezweryfikowanego nakładania. [R3, R5]
+4. Jeśli trzeba zwolnić wagi, robi to koordynator wyłącznie na bezczynnym procesie. Czeka na potwierdzone zwolnienie pamięci i nie narusza aktywnego zadania innego filmu. Gdy profil nie mieści się bezpiecznie, korzystać ze sprawdzonego profilu sekwencyjnego zamiast wymuszać rezydencję. [R3, R5, R6]
+5. Jeśli rozdzielenie procesów nie pomaga, wariantem porównawczym jest jeden proces z zachowaniem obu grup w cache, o ile wspiera to używana wersja, albo grupowanie kilku zadań tego samego modelu. Grupowanie musi mieć skończony limit zadań i oczekiwania, aby nie zagłodzić drugiego filmu; wartości ustalić w benchmarku. [R3, R5]
+
+#### Benchmark i kryteria odbioru tej optymalizacji
+
+- Zapis wejść, seedów, rewizji wag i grafów, parametrów rozdzielczości/długości oraz harmonogramu dwóch klientów. Użyć rzeczywistego workflowu ze zgłoszenia. [R3, R7]
+- Porównać: serię samych zdjęć, sam upscale, naprzemienne zadania na obecnym workerze, dwa rezydentne procesy z sekwencyjnymi obliczeniami oraz dwa procesy z obliczeniami nakładanymi. Do każdego wariantu osobny cold start i kilka powtórzeń warm; nie zaliczać ponownie zwróconego gotowego wyniku cache jako nowej inferencji. [R3]
+- Rejestrować identyfikatory filmu/zadania/procesu, kolejkę, model-load/offload, inferencję, transfer i zapis, czas całej serii, opóźnienia obu filmów oraz szczyty VRAM/RAM. Instrumentacja musi odróżniać czas oczekiwania od wykonania; `run_job.seconds` sam nie rozdziela tych przyczyn. [R3, R5]
+- Po warm-up przejście zdjęcie → upscale → zdjęcie nie może powodować dodatkowego pełnego ładowania wag w zatwierdzonym profilu rezydentnym. Wykazać to śladem wykonawców; brak zmiany VRAM lub obecność obiektu w cache nie wystarczają. [R3]
+- Akceptacja: krótszy łączny czas ponad zmienność powtórzeń, zachowane QA, brak OOM, poprawny postęp obu filmów oraz brak wzrostu liczby prób. Podane 2,8 s jest historycznym punktem odniesienia, nie SLA. Jeśli jednoczesne obliczenia są wolniejsze, zachować dwa rezydentne modele z sekwencyjnym wykonaniem. [R3–R7]
+- Walidacja obejmuje kontrolowane osiągnięcie limitu pamięci, zatrzymanie jednego klienta i wznowienie; drugi film ma pozostać poprawny. Wdrożenie profilu dopiero po pomiarach w uzgodnionym oknie. [R5, R6]
+
 ### Stan, własność i odzyskiwanie
 
 - Film otrzymuje trwały `project_id`, uruchomienie `run_id`, a zadanie `task_id` oraz numer próby. Nazwa folderu, ujęcia czy czatu nie stanowi unikalnego identyfikatora. [R1, R6]
