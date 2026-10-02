@@ -109,11 +109,25 @@ Lokalne wykonanie wybieramy wyłącznie przy konkretnej korzyści operacyjnej: n
 
 Uzupełnienie 2026-10-03. Wymaganie R3 obejmuje także parę modeli zdjęć i powiększania, a nie tylko TTS/LTX. Użytkownik podał obserwacje: około 9 s na zdjęcie w pracy mieszanej wobec 2,8 s w serii samych zdjęć; średnie wykorzystanie 68%, 465 W, VRAM 27–33 GB, RAM 39 GB i 50–56 °C. To zgłoszony objaw, bez surowego śladu potwierdzającego przyczynę. Procent użycia i moc nie dowodzą, że całą różnicę czasu powoduje przeładowanie. Najpierw rozdzielić czas oczekiwania, ładowania, transferów i obliczeń. [R3]
 
-#### Konkretny zakres zmian
+#### Pierwszy krok: konfiguracja cache jednego procesu
+
+Przed dodaniem procesów zdjęć i powiększania wykonać próbę `--cache-ram 10 24` w istniejącym ComfyUI. To podstawowy wariant naprawy zgłoszonych przeładowań; osobne procesy są eskalacją tylko wtedy, gdy konfiguracja cache nie wystarczy lub ich przewaga zostanie zmierzona. [R3, R7]
+
+W oficjalnym tagu ComfyUI `v0.35.0` pierwszy argument określa zapas dostępnego RAM dla cache aktywnego (10 GiB), drugi dla cache nieaktywnego (24 GiB). Domyślny drugi próg to minimum ze 128 GiB i całkowitego RAM, czyli na opisywanej maszynie 128 GiB. Usuwanie nieaktywnych wyników cache priorytetowo traktuje obiekty modeli z poprzednich workflowów. Obniżenie progu może zachować je między zmianami zadań. Nie jest to limit rozmiaru cache ani gwarancja rezydencji modeli w VRAM; presja GPU, jawne zwalnianie i zachowanie loaderów nadal mogą powodować odładowanie. [R3]
+
+Źródła: [argumenty CLI](https://github.com/Comfy-Org/ComfyUI/blob/v0.35.0/comfy/cli_args.py#L140), [domyślne progi](https://github.com/Comfy-Org/ComfyUI/blob/v0.35.0/main.py#L351), [RAMPressureCache](https://github.com/Comfy-Org/ComfyUI/blob/v0.35.0/comfy_execution/caching.py#L550). To weryfikacja kodu tagu, nie potwierdzenie bieżącej instalacji serwera. [R3, R7]
+
+Zmiana implementacyjna dotyczy polecenia startowego `comfyui` w `gpu/server/compose.yaml`: do istniejących argumentów dopisać `--cache-ram 10 24`. Sprawdzić także `COMFY_COMMAND`, ponieważ jego ustawienie zastępuje domyślną komendę z compose i może ominąć dopisany parametr. Nie podawać równocześnie wykluczających trybów cache, a ewentualne `--high-ram` sprawdzić, ponieważ w tej wersji wymusza cache klasyczny. Potwierdzić rzeczywiste argv działającego procesu po uruchomieniu. [R3, R7]
+
+Procedura próby: potwierdzić tożsamość i wersję serwera, zapisać efektywną konfigurację i serię bazową, wstrzymać nowe przydziały i odczekać na zakończenie aktywnych prac, zmienić parametr i odtworzyć wyłącznie usługę ComfyUI. To wymaga restartu procesu, więc nie wykonywać w trakcie cudzej generacji. Sprawdzić gotowość workflowów, wykonać identyczną serię mieszaną i zmierzyć czasy, liczbę ładowań oraz RAM/VRAM. Przy regresji wrócić do zapisanej komendy w takim samym kontrolowanym oknie. W tej rozmowie dostęp SSH został zatrzymany z powodu zmienionego klucza hosta; przed próbą potwierdzić fingerprint z zaufanego źródła, bez wyłączania weryfikacji. [R3, R5–R7]
+
+Jeżeli ta zmiana usuwa przeładowania i poprawia wynik bez regresji, pozostawić jeden proces dla tej pary. Przeplatanie filmów może korzystać z jego kolejki; sama flaga nie zapewnia współbieżnego wykonywania grafów, sprawiedliwości, izolacji projektów ani odzyskiwania zadań. Wspólny koordynator i pozostałe wymagania nadal obowiązują. [R1, R3, R5, R6]
+
+#### Konkretny zakres zmian po wyniku próby cache
 
 | Miejsce | Zmiana do implementacji | Wymagania |
 | --- | --- | --- |
-| `gpu/server/compose.yaml`, bootstrap, healthchecki | Dodać opcjonalny profil procesów `still` i `upscale` na jednej karcie, z odrębnymi portami loopback, katalogami runtime i wspólnymi niezmiennymi wagami. Nie uruchamiać automatycznie wszystkich profili TTS/LTX/Whisper/still/upscale naraz. | R3, R5 |
+| `gpu/server/compose.yaml`, bootstrap, healthchecki | Jeżeli próba pojedynczego procesu nie spełni kryteriów: dodać opcjonalny profil procesów `still` i `upscale` na jednej karcie, z odrębnymi portami loopback, katalogami runtime i wspólnymi niezmiennymi wagami. Nie uruchamiać automatycznie wszystkich profili TTS/LTX/Whisper/still/upscale naraz. | R3, R5 |
 | Koordynator i konfiguracja wykonawców | Mapa template → grupa modeli → proces; `still` do procesu zdjęć, `upscale` do procesu powiększania. Zachować powiązanie procesu i rewizji modeli między zadaniami obu filmów. Nie wybierać przypadkowego wolnego procesu, jeżeli spowoduje przeładowanie. | R1, R3, R5 |
 | `gpu/client/gpu.py:cmd_health`, `cmd_tunnel`, start/stop | Obsługa wielu skonfigurowanych endpointów i ich gotowości po stronie serwera. Czat nadal zleca koordynatorowi; nie zarządza sam portami ani cyklem życia współdzielonych procesów. | R1, R5 |
 | Loadery w `gpu/workflows/api/still.json` i `upscale.json` | Sprawdzić zarządzanie pamięcią i cache w przypiętej wersji ComfyUI. Zachować niezmienne parametry loaderów między zadaniami; warm-up ma obejmować rzeczywiste wykonanie, nie samo zbudowanie grafu. | R3 |
@@ -127,7 +141,7 @@ Obecny `upscale` przyjmuje **wideo**, nie pojedyncze zdjęcie. Przed odtworzenie
 #### Rezydencja i dopuszczanie pracy
 
 1. Weryfikacja profilu obejmuje zgodność wag i wersji silnika, warm-up obu grup oraz pomiar ich wspólnego szczytu pamięci. Oddzielne procesy nie gwarantują rezydencji: potwierdzić brak odładowania/offloadu przy zmianie typu zadania. Nie włączać globalnie flag wymuszających wszystko w VRAM bez pomiaru. [R3]
-2. Najpierw przetestować wariant **obie grupy pozostają w pamięci, obliczenia wykonują się kolejno**. To usuwa potencjalny koszt przełączania bez dokładania konkurencji obliczeniowej. Dopiero potem przetestować jednoczesne obliczenia obu procesów. [R3]
+2. Dopiero po ocenie pojedynczego procesu z `--cache-ram 10 24`, jeśli potrzebna jest eskalacja, przetestować wariant **obie grupy pozostają w pamięci w dwóch procesach, obliczenia wykonują się kolejno**. To usuwa potencjalny koszt przełączania bez dokładania konkurencji obliczeniowej. Dopiero potem przetestować jednoczesne obliczenia obu procesów. [R3]
 3. Przydział pracy rezerwuje globalny budżet VRAM: pamięć wszystkich rezydentnych grup, zmierzony przyrost aktywnych zadań i rezerwę. Uwzględnić też TTS/LTX/Whisper, konteksty CUDA oraz RAM zajęty przez offload. Profile mają określony zakres długości/rozdzielczości; zadanie poza zakresem nie korzysta z niezweryfikowanego nakładania. [R3, R5]
 4. Jeśli trzeba zwolnić wagi, robi to koordynator wyłącznie na bezczynnym procesie. Czeka na potwierdzone zwolnienie pamięci i nie narusza aktywnego zadania innego filmu. Gdy profil nie mieści się bezpiecznie, korzystać ze sprawdzonego profilu sekwencyjnego zamiast wymuszać rezydencję. [R3, R5, R6]
 5. Jeśli rozdzielenie procesów nie pomaga, wariantem porównawczym jest jeden proces z zachowaniem obu grup w cache, o ile wspiera to używana wersja, albo grupowanie kilku zadań tego samego modelu. Grupowanie musi mieć skończony limit zadań i oczekiwania, aby nie zagłodzić drugiego filmu; wartości ustalić w benchmarku. [R3, R5]
@@ -135,10 +149,10 @@ Obecny `upscale` przyjmuje **wideo**, nie pojedyncze zdjęcie. Przed odtworzenie
 #### Benchmark i kryteria odbioru tej optymalizacji
 
 - Zapis wejść, seedów, rewizji wag i grafów, parametrów rozdzielczości/długości oraz harmonogramu dwóch klientów. Użyć rzeczywistego workflowu ze zgłoszenia. [R3, R7]
-- Porównać: serię samych zdjęć, sam upscale, naprzemienne zadania na obecnym workerze, dwa rezydentne procesy z sekwencyjnymi obliczeniami oraz dwa procesy z obliczeniami nakładanymi. Do każdego wariantu osobny cold start i kilka powtórzeń warm; nie zaliczać ponownie zwróconego gotowego wyniku cache jako nowej inferencji. [R3]
+- Porównać: serię samych zdjęć, sam upscale, naprzemienne zadania na obecnym workerze oraz na tym samym workerze z `--cache-ram 10 24`. Tylko jeśli wynik uzasadnia eskalację, dodać dwa rezydentne procesy z sekwencyjnymi obliczeniami i dwa procesy z obliczeniami nakładanymi. Do każdego wariantu osobny cold start i kilka powtórzeń warm; nie zaliczać ponownie zwróconego gotowego wyniku cache jako nowej inferencji. [R3]
 - Rejestrować identyfikatory filmu/zadania/procesu, kolejkę, model-load/offload, inferencję, transfer i zapis, czas całej serii, opóźnienia obu filmów oraz szczyty VRAM/RAM. Instrumentacja musi odróżniać czas oczekiwania od wykonania; `run_job.seconds` sam nie rozdziela tych przyczyn. [R3, R5]
 - Po warm-up przejście zdjęcie → upscale → zdjęcie nie może powodować dodatkowego pełnego ładowania wag w zatwierdzonym profilu rezydentnym. Wykazać to śladem wykonawców; brak zmiany VRAM lub obecność obiektu w cache nie wystarczają. [R3]
-- Akceptacja: krótszy łączny czas ponad zmienność powtórzeń, zachowane QA, brak OOM, poprawny postęp obu filmów oraz brak wzrostu liczby prób. Podane 2,8 s jest historycznym punktem odniesienia, nie SLA. Jeśli jednoczesne obliczenia są wolniejsze, zachować dwa rezydentne modele z sekwencyjnym wykonaniem. [R3–R7]
+- Akceptacja: krótszy łączny czas ponad zmienność powtórzeń, zachowane QA, brak OOM, poprawny postęp obu filmów oraz brak wzrostu liczby prób. Podane 2,8 s jest historycznym punktem odniesienia, nie SLA. Wybrać najprostszy profil spełniający kryteria: jeden proces ze zmienionym cache ma pierwszeństwo, jeżeli daje wystarczający wynik. Jeśli jednoczesne obliczenia są wolniejsze, nie wymuszać ich. [R3–R7]
 - Walidacja obejmuje kontrolowane osiągnięcie limitu pamięci, zatrzymanie jednego klienta i wznowienie; drugi film ma pozostać poprawny. Wdrożenie profilu dopiero po pomiarach w uzgodnionym oknie. [R5, R6]
 
 ### Stan, własność i odzyskiwanie
@@ -207,7 +221,7 @@ Testy jednostkowe obejmują scheduler, zależności, klucze ponownego zgłoszeni
 
 ## Implementation Steps
 
-1. Utrwalić reprezentatywne wejścia benchmarku i pomiary sekwencyjne; sprawdzić stan aktualnej maszyny bez zmiany trwającej produkcji. [R3, R7]
+1. Utrwalić reprezentatywne wejścia benchmarku i pomiary sekwencyjne; sprawdzić stan aktualnej maszyny bez zmiany trwającej produkcji. Dla problemu zdjęcia/upscale najpierw wykonać kontrolowaną próbę jednego procesu z `--cache-ram 10 24`; nie uzależniać tej małej optymalizacji od budowy całego koordynatora. [R3, R7]
 2. Dodać koordynator, trwały stan i niezależne identyfikatory; sprawdzić na symulowanych wykonawcach dwóch klientów i awarie. [R1, R5, R6]
 3. Podłączyć istniejący jeden proces ComfyUI do koordynatora; potwierdzić odzyskiwanie zadań i zgodność wyników. [R6, R7]
 4. Przenieść cały ciąg audio → kontrola → ujęcie → montaż → finalne QA na serwer; zintegrować wspólny proces Whisper i wersjonowane zasoby. [R2, R4]
