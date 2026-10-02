@@ -6,14 +6,14 @@ Data: 2026-10-02.
 
 ## Problem Statement
 
-Kilka czatów ma niezależnie prowadzić różne filmy, korzystając z jednego serwera. Komputer użytkownika nie powinien wykonywać ciężkiego przetwarzania. Celem jest nakładanie pracy etapów i ograniczenie przeładowywania modeli, przy zachowaniu jakości oraz niezależności produkcji.
+Kilka czatów ma niezależnie prowadzić różne filmy, korzystając z jednego serwera. Komputer użytkownika nie musi wykonywać ciężkiego przetwarzania; wykonanie lokalne jest dopuszczone jako świadomie wybrana opcja. Celem jest nakładanie pracy etapów i ograniczenie przeładowywania modeli, przy zachowaniu jakości oraz niezależności produkcji.
 
 ### Uzgodnione wymagania
 
 | ID | Wymaganie |
 | --- | --- |
 | R1 | Jeden czat prowadzi jeden film; co najmniej dwa czaty mogą równocześnie zlecać i odbierać pracę. |
-| R2 | Generowanie głosu i wideo, kontrola oraz dopasowanie audio, montaż i eksport odbywają się na serwerze. |
+| R2 | Domyślnie generowanie głosu i wideo, kontrola oraz dopasowanie audio, montaż i eksport odbywają się na serwerze. Użytkownik może opcjonalnie wybrać wykonanie wybranych etapów na swoim komputerze; słaby klient nadal obsługuje cały proces zdalnie. |
 | R3 | GPU wykorzystujemy tylko tam, gdzie pomiary potwierdzają poprawę wydajności bez pogorszenia stabilności lub jakości; modele mogą pozostawać w pamięci. Nie wymuszamy akceleracji. |
 | R4 | Etapy różnych ujęć i filmów mogą postępować równolegle z zachowaniem zależności i kontroli jakości. |
 | R5 | Wspólna kolejka sprawiedliwie obsługuje filmy; zatrzymanie jednego nie przerywa drugiego ani nie wyłącza używanego serwera. |
@@ -86,6 +86,14 @@ Strzałki pokazują zależności jednej kwestii. Różne kwestie i filmy znajduj
 Priorytet decyzji: poprawność i stabilność, następnie płynność obsługi obu filmów i czas ukończenia. Awaria wariantu GPU nie uruchamia automatycznie drugiej próby, dopóki stan pierwszej nie jest rozstrzygnięty. Po takim rozstrzygnięciu wolno przejść tylko na wcześniej zweryfikowany profil CPU lub sekwencyjny, z zachowaniem wejść i QA; w przeciwnym razie wstrzymać etap z czytelnym statusem. Nie eksperymentować nowymi profilami na trwających produkcjach. [R3–R6]
 
 Montaż na serwerze nie oznacza wymuszenia GPU dla każdego filtra czy kodera. Zmiana kodeka lub filtrów na wariant GPU wymaga wykazania poprawy czasu i zachowania jakości na tym sprzęcie. [R2, R3, R7]
+
+### Opcjonalne wykonanie na komputerze użytkownika
+
+Użytkownik dopuścił komputer lokalny jako opcję. Serwer pozostaje domyślnym miejscem ciężkich prac; błąd GPU, brak pamięci lub rozłączenie nie uruchamia automatycznie obliczeń na komputerze użytkownika. Wybór dotyczy konkretnego etapu i wymaga sprawdzenia jego zależności oraz zasobów sprzętowych. Nie deklarujemy, że każdy model GPU działa na dowolnym laptopie. [R2, R3]
+
+Koordynator pozostaje źródłem stanu także dla lokalnego wykonawcy. Przypisuje próbę do wybranego urządzenia; wyniki wracają z identyfikatorami rewizji wejść i sumami kontrolnymi. Lokalnej i serwerowej próby tego samego zadania nie wolno uruchamiać równocześnie przez przypadek. Rozłączenie lokalnego wykonawcy oznacza stan wymagający uzgodnienia, a nie automatyczne powtórzenie na serwerze. Gwarancja pracy po odłączeniu komputera dotyczy etapów serwerowych; lokalny etap wymaga działającego komputera. [R1, R4, R6]
+
+Pierwsze kandydaty do lokalnego wykonania to istniejące skrypty montażu i kontroli audio, po preflight zależności. Nie instalować automatycznie dużych modeli ani pakietów bez wyboru takiego trybu. Test akceptacyjny: świadomy wybór etapu lokalnego, powrót wyników do wspólnego procesu, przerwane połączenie i brak duplikacji; równolegle drugi film nadal działa na serwerze. [R2, R5–R7]
 
 ### Kolejkowanie i pamięć
 
@@ -183,7 +191,7 @@ Testy jednostkowe obejmują scheduler, zależności, klucze ponownego zgłoszeni
 - Kilka klientów wysyłających bezpośrednio do jednego ComfyUI: pozwala kolejkować, lecz nie nakłada wykonywania modeli i nie rozwiązuje własności ani odzyskiwania. [R1, R3, R6]
 - Osobny komplet modeli na każdy film: mnoży pamięć i przeładowania, zamiast współdzielić wyspecjalizowane procesy. [R3]
 - Wiele ciężkich generacji LTX naraz: do osobnego benchmarku po pomiarze wariantu TTS+LTX; nie jest warunkiem równoległej pracy dwóch użytkowników. [R1, R3]
-- Lokalny Whisper lub montaż: nie spełnia zaakceptowanego wymagania słabego komputera użytkownika. [R2]
+- Lokalny Whisper lub montaż jako obowiązkowy etap: nie spełnia wymagania słabego komputera. Jako świadomie wybrana, sprawdzona opcja jest dopuszczony zgodnie z R2. [R2]
 
 ## Przekazanie Adrianowi
 
