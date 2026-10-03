@@ -14,11 +14,11 @@ installed release contains each required command, dependency and input, and that
 writable. Do not treat an untracked local script as a published capability. Fix reproducibility gaps before
 relying on unattended production; never publish private reference footage or credentials.
 
-Language support is a preflight check. The local shared planner reviewed on 2026-10-03 rejects non-English
-projects; the published shutdown fix does not supply a complete Polish pipeline. Do not merely remove a
-language guard. Validate Polish normalization (including diacritics and numbers), ASR language, audio fitting
-and captions together on a short sample. Preserve the validated implementation and version. If unavailable,
-report the specific capability gap before paid video generation. Do not silently run English QA on Polish.
+Language support is a preflight check. Follow [multilingual setup](multilingual.md): the updated local
+pipeline propagates supported language codes and selects Chatterbox Multilingual V3. Verify that the deployed
+release actually contains these changes. Validate normalization (including diacritics and numbers), ASR,
+audio fitting and captions together on a short real sample. Portable tests do not certify pronunciation.
+Preserve the implementation version and sample results; never silently run English QA on another language.
 
 ## 2. Lock audio and estimate the real edit length
 

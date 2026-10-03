@@ -51,8 +51,11 @@ def caption_sheet(video, chunks, out, cols=6, width=240):
     return out
 
 
-def norm_words(text):
-    return [re.sub(r"[^a-z0-9#']", "", w.lower()) for w in text.split() if re.sub(r"[^a-z0-9#']", "", w.lower())]
+from languages import comparison, project_language
+
+
+def norm_words(text, language='en', number_aliases=None):
+    return list(comparison(text, language, number_aliases))
 
 
 def main():
@@ -62,10 +65,13 @@ def main():
     ap.add_argument("--edl")
     ap.add_argument("--video")
     ap.add_argument("--whisper", action="store_true")
+    ap.add_argument("--out", help="write a machine-readable QA report")
     ap.add_argument("--no-sheet", action="store_true")
     a = ap.parse_args()
     project = find_project(a.project)
     cfg = load_project(project)
+    lines_path = project / 'lines.json'
+    lang = project_language(cfg, json.loads(lines_path.read_text()) if lines_path.exists() else {})
     layout = get_format(a.format)
     edl = json.loads(pathlib.Path(a.edl or project / "edit" / "edl.json").read_text())
     fps = edl.get("fps", 30)
@@ -90,26 +96,35 @@ def main():
                                 and (lo["true_peak_dbtp"] or 0) <= -1.0)
 
     style = {**cfg.get("captions", {}).get("style", {}), **edl.get("caption_style", {})}
-    chunks = chunks_of(edl.get("caption_words", []), **style)
+    chunks = chunks_of(edl.get("caption_words", []), **{**style, "language": lang})
     report["caption_chunks"] = len(chunks)
     if chunks and not a.no_sheet:
         out = project / "edit" / "frames" / f"qa-{layout['slug']}-captions.jpg"
         report["caption_sheet"] = str(caption_sheet(video, chunks, out))
 
     if a.whisper:
-        import whisper
+        import speech
         with tempfile.TemporaryDirectory() as tmp:
             wav = pathlib.Path(tmp) / "a.wav"
             subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(video), "-vn", "-ac", "1", "-ar", "16000", str(wav)], check=True)
-            result = whisper.load_model("large-v3-turbo").transcribe(str(wav), language=cfg.get("language", "en"),
+            result = speech.load_model("large-v3-turbo").transcribe(str(wav), language=lang,
                                                                      condition_on_previous_text=False)
         heard = result["text"].strip()
         expected = " ".join(w["w"] for w in edl.get("caption_words", []))
-        a_words, b_words = norm_words(expected), norm_words(heard)
+        if not expected and lines_path.exists():
+            lines = {line['id']: line['text'] for line in json.loads(lines_path.read_text()).get('lines', [])}
+            expected = ' '.join(lines.get(segment['take'], '') for segment in edl['segments'])
+        expected = cfg.get('speech', {}).get('expected_text', expected)
+        aliases = cfg.get('speech', {}).get('number_aliases', {})
+        a_words, b_words = norm_words(expected, lang, aliases), norm_words(heard, lang, aliases)
         diff = [f"{op}: {' '.join(a_words[i1:i2])} -> {' '.join(b_words[j1:j2])}"
-                for op, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a_words, b_words).get_opcodes() if op != "equal"]
+                for op, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a_words, b_words, autojunk=False).get_opcodes() if op != "equal"]
         report["whisper"] = {"heard": heard, "differences_vs_captions": diff,
-                             "word_match": round(difflib.SequenceMatcher(None, a_words, b_words).ratio(), 3)}
+                             "language": lang, "metric": "unicode_character_match",
+                             "character_match": round(difflib.SequenceMatcher(None, a_words, b_words, autojunk=False).ratio(), 3),
+                             "ok": (bool(a_words and b_words) or not (a_words or b_words)) and difflib.SequenceMatcher(None, a_words, b_words, autojunk=False).ratio() >= cfg.get('speech', {}).get('min_match', 0.9)}
+    if a.out:
+        pathlib.Path(a.out).write_text(json.dumps(report, indent=1) + "\n")
     print(json.dumps(report, indent=1))
 
 

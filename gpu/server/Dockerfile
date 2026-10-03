@@ -18,6 +18,10 @@ RUN rm -rf custom_nodes/ComfyUI-Manager \
       -r custom_nodes/ComfyUI_Fill-ChatterBox/requirements.txt \
  && python -c "import torch, torchaudio; print('torch', torch.__version__, 'torchaudio', torchaudio.__version__)"
 
+# Explicit V3 loader; checked against pinned vendored source, never silently V2.
+COPY patch_chatterbox_v3.py /tmp/patch_chatterbox_v3.py
+RUN python /tmp/patch_chatterbox_v3.py custom_nodes/ComfyUI_Fill-ChatterBox
+
 # torchaudio 2.9+ reads and writes files only through TorchCodec, which loads the system FFmpeg libraries. The
 # base image has neither, and the Chatterbox dialog node saves its voice prompts with torchaudio.save, so without
 # them tts-dialog fails as soon as it runs (validation alone does not show it). Ubuntu 24.04 ships FFmpeg 6.1.

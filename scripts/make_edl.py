@@ -21,13 +21,17 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from media import envelope, find_project, load_project, refine  # noqa: E402
 
 
-def norm(w):
-    return re.sub(r"[^a-z0-9#]", "", w.lower())
+from languages import normalize, project_language
+
+
+def norm(w, language='en'):
+    return normalize(w, language)
 
 
 class Takes:
     def __init__(self, project, cfg):
         self.paths = {k: (project / v).resolve() for k, v in cfg["takes"].items()}
+        self.language = project_language(cfg)
         self.words, self.env = {}, {}
         for k, p in self.paths.items():
             wj = p.with_suffix(".words.json")
@@ -42,8 +46,8 @@ class Takes:
         """Start of the next `first` word and end of the following `last` word, checked against the audio."""
         words = self.words[take]
         try:
-            i = next(j for j in range(self.cursor[take], len(words)) if norm(words[j]["w"]) == norm(first))
-            k = next(j for j in range(i, len(words)) if norm(words[j]["w"]) == norm(last))
+            i = next(j for j in range(self.cursor[take], len(words)) if norm(words[j]["w"], self.language) == norm(first, self.language))
+            k = next(j for j in range(i, len(words)) if norm(words[j]["w"], self.language) == norm(last, self.language))
         except StopIteration:
             raise SystemExit(f"take {take}: no '{first} … {last}' after word #{self.cursor[take]}; check the cut order and .words.json")
         self.cursor[take] = k + 1
@@ -77,7 +81,7 @@ def build(project, cfg, cuts_doc, upto=None, with_endcard=True, out_dir=None):
                          "zoom": cut.get("zoom", 1.0), "cx": cut.get("cx", 0.5), "cy": cut.get("cy", default_cy),
                          "cut": n + 1})
         fixes = fixes_all.get(take, {})
-        for w in takes.words[take]:
+        for w in (takes.words[take] if cfg.get("captions", {}).get("enabled", True) else []):
             if start <= (w["s"] + w["e"]) / 2 <= end:
                 caption_words.append({"w": fixes.get(w["w"], w["w"]),
                                       "s": round(t + max(w["s"], start) - start, 3),
@@ -114,6 +118,7 @@ def build(project, cfg, cuts_doc, upto=None, with_endcard=True, out_dir=None):
         "ding": "edit/assets/ding.wav",
         "ding_volume": cfg.get("ding_volume", 0.55),
         "caption_words": caption_words,
+        "language": project_language(cfg),
         "caption_fixes": fixes_all,
         "caption_style": cfg.get("captions", {}).get("style", {}),
         "endcard": {"name": "endcard", "dur": endcard.get("dur", 2.6)} if with_endcard and endcard else None,

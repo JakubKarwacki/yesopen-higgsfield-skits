@@ -125,14 +125,16 @@ def video_filter(src, layout, zoom=1.0, cx=0.5, cy=0.4, fps=30):
     return crop_filter(sw, sh, W, H, zoom, cx, cy) + f",setsar=1,fps={fps}:start_time=0"
 
 
-def chunks_of(words, max_words=3, max_chars=18, gap=0.35, tail=0.12, min_dur=0.35):
+def chunks_of(words, max_words=3, max_chars=18, gap=0.35, tail=0.12, min_dur=0.35, language="en"):
     """Group caption words into on-screen chunks of up to `max_words` words / `max_chars` characters.
     A chunk also ends after punctuation or a pause longer than `gap`. Each chunk stays up `tail` s
     after its last word, at least `min_dur` s, and never past the next chunk's start."""
+    from languages import language_code
+    separator = '' if language_code(language) in {'zh', 'ja'} else ' '
     chunks, cur = [], []
     for w in words:
-        if cur and (len(cur) >= max_words or len(" ".join(x["w"] for x in cur + [w])) > max_chars
-                    or cur[-1]["w"][-1:] in ".?!,…" or w["s"] - cur[-1]["e"] > gap):
+        if cur and (len(cur) >= max_words or len(separator.join(x["w"] for x in cur + [w])) > max_chars
+                    or cur[-1]["w"][-1:] in ".?!,…。？！،؟" or w["s"] - cur[-1]["e"] > gap):
             chunks.append(cur)
             cur = []
         cur.append(w)
@@ -144,7 +146,7 @@ def chunks_of(words, max_words=3, max_chars=18, gap=0.35, tail=0.12, min_dur=0.3
         end = c[-1]["e"] + tail
         if i + 1 < len(chunks):
             end = min(max(end, start + min_dur), chunks[i + 1][0]["s"])
-        out.append({"text": " ".join(x["w"] for x in c), "s": start, "e": end})
+        out.append({"text": separator.join(x["w"] for x in c), "s": start, "e": end})
     return out
 
 

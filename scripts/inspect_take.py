@@ -10,6 +10,7 @@ refined against the audio envelope, plus the take's room tone, so you can see cl
 starts and pick the speech threshold before cutting.
 """
 import argparse
+import hashlib
 import json
 import pathlib
 import subprocess
@@ -23,12 +24,17 @@ from brand import font  # noqa: E402
 from media import HOP, envelope, refine  # noqa: E402
 
 
+from languages import language_for_path, language_code, verify_whisper_model
+
+
 def transcribe(src, lang, model_name):
-    import whisper
+    lang = language_code(lang)
+    verify_whisper_model(model_name, lang)
+    import speech
     with tempfile.TemporaryDirectory() as tmp:
         wav = pathlib.Path(tmp) / "a.wav"
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-vn", "-ac", "1", "-ar", "16000", str(wav)], check=True)
-        model = whisper.load_model(model_name)
+        model = speech.load_model(model_name)
         result = model.transcribe(str(wav), language=lang, word_timestamps=True, condition_on_previous_text=False)
     return [{"w": w["word"].strip(), "s": round(w["start"], 2), "e": round(w["end"], 2)}
             for seg in result["segments"] for w in seg["words"]]
@@ -84,7 +90,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("take")
     ap.add_argument("--step", type=float, default=0.5)
-    ap.add_argument("--lang", default="en")
+    ap.add_argument("--lang", help="language code; defaults to enclosing project, otherwise en")
     ap.add_argument("--model", default="large-v3-turbo")
     ap.add_argument("--thr", type=float, default=-26.0, help="speech threshold in dB for the refined times")
     ap.add_argument("--frames-dir")
@@ -93,12 +99,22 @@ def main():
     a = ap.parse_args()
 
     src = pathlib.Path(a.take).resolve()
+    lang = language_for_path(src, a.lang)
     words_path = src.with_suffix(".words.json")
-    if a.no_whisper and words_path.exists():
+    meta_path = src.with_suffix('.words.meta.json')
+    digest = hashlib.sha256()
+    with src.open('rb') as source:
+        for block in iter(lambda: source.read(1024 * 1024), b''):
+            digest.update(block)
+    provenance = {'sha256': digest.hexdigest(), 'language': lang, 'model': a.model}
+    if a.no_whisper:
+        if not words_path.exists() or not meta_path.exists() or json.loads(meta_path.read_text()) != provenance:
+            raise ValueError('Transcript cache does not match audio/language/model; rerun without --no-whisper')
         words = json.loads(words_path.read_text())
     else:
-        words = transcribe(src, a.lang, a.model)
-        words_path.write_text(json.dumps(words, indent=1))
+        words = transcribe(src, lang, a.model)
+        words_path.write_text(json.dumps(words, indent=1, ensure_ascii=False))
+        meta_path.write_text(json.dumps(provenance, indent=1))
 
     sheet = None
     if not a.no_sheet:

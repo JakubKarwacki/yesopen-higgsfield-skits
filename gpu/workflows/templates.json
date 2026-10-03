@@ -11,7 +11,7 @@
     {"id": "still-edit", "name": "image_qwen_image_edit_2511_int8", "stage": "cast", "variant": "A", "load": "after_start",
      "role": "the same character in another pose, expression or framing"},
     {"id": "tts", "name": "audio-chatterbox_tts_multilingual", "stage": "voice", "variant": "A", "load": "before_start",
-     "role": "one line in 23 languages (Polish, English, German...), voice cloned from a sample"},
+     "role": "Chatterbox Multilingual V3: one line in 23 languages (Polish, English, German...), voice cloned from a sample"},
     {"id": "tts-dialog", "name": "audio-chatterbox_tts_dialog", "stage": "voice", "variant": "A", "load": "before_start",
      "role": "a whole conversation, up to 4 voices, one isolated track per speaker"},
     {"id": "talk", "name": "video_ltx2_3_ia2v", "stage": "takes", "variant": "A", "load": "before_start",
@@ -44,7 +44,7 @@
   "extra_models": {
     "_why": "the Chatterbox nodes download these on first use into models/chatterbox/<model>/; preloading them keeps the first request fast",
     "tts": {"repo": "ResembleAI/chatterbox", "directory": "chatterbox/chatterbox_multilingual",
-            "files": ["ve.pt", "t3_mtl23ls_v2.safetensors", "s3gen.pt", "grapheme_mtl_merged_expanded_v1.json", "conds.pt", "Cangjie5_TC.json"]},
+            "files": ["ve.pt", "t3_mtl23ls_v3.safetensors", "s3gen.pt", "grapheme_mtl_merged_expanded_v1.json", "conds.pt", "Cangjie5_TC.json"]},
     "tts-dialog": {"repo": "ResembleAI/chatterbox", "directory": "chatterbox/chatterbox",
                    "files": ["ve.safetensors", "t3_cfg.safetensors", "s3gen.safetensors", "tokenizer.json", "conds.pt"]}
   },

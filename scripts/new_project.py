@@ -19,6 +19,8 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from brand import SKILL, localesto_root  # noqa: E402
 
+from languages import language_code, language_label
+
 TEMPLATES = SKILL / "templates"
 
 # templates/project.json is written for the GPU engine; a Higgsfield project names its stills, voices and
@@ -46,6 +48,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("slug")
     ap.add_argument("--engine", choices=("gpu", "higgsfield"), default="gpu")
+    ap.add_argument("--language", type=language_code, default="en")
     ap.add_argument("--date", default=datetime.date.today().isoformat())
     ap.add_argument("--root")
     ap.add_argument("--title", default="")
@@ -62,6 +65,7 @@ def main():
     cfg["slug"], cfg["date"] = a.slug, a.date
     cfg["name"] = a.slug
     cfg["engine"] = a.engine
+    cfg["language"] = a.language
     if a.engine == "higgsfield":
         cfg.update(HIGGSFIELD)
     if a.title:
@@ -71,7 +75,9 @@ def main():
     shutil.copyfile(TEMPLATES / "analysis.md", project / "reference" / "analysis.md")
     shutil.copyfile(TEMPLATES / "cuts.json", project / "edit" / "cuts.json")
     if a.engine == "gpu":
-        shutil.copyfile(TEMPLATES / "lines.json", project / "lines.json")
+        lines = json.loads((TEMPLATES / 'lines.json').read_text())
+        lines['language'] = language_label(a.language)
+        (project / 'lines.json').write_text(json.dumps(lines, ensure_ascii=False, indent=1) + '\n')
     else:
         for name in ("still.json", "take.json"):
             shutil.copyfile(TEMPLATES / "args" / name, project / "args" / name)

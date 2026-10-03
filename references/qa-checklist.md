@@ -45,6 +45,14 @@ engine only.
 - [ ] Higgsfield: `stills/picked.json` and the args saved. GPU: the pick in `lines.json` →
       `characters.<name>.still`; the batch file and `jobs.jsonl` kept; phones with their back to the camera.
 
+## Voice-quality gate before lip-sync generation
+
+- [ ] `references/voice-validation.md` followed; report copied from `templates/voice-validation.md`.
+- [ ] Actual runtime/model version confirmed; representative voice samples reviewed per target language.
+- [ ] Every selected fitted line listened to against the approved script: pronunciation, meaning, acting, identity, signal and boundaries.
+- [ ] Names/numbers checked independently of ASR similarity; no critical defect or missing required listening check.
+- [ ] Accepted audio hashes locked; changing audio invalidates affected word times and lip-sync takes.
+
 ## Gate 4: takes
 
 - [ ] Actual submitted prompts contain START, ACTION, END and HOLD, including each beat of a long take.
@@ -77,7 +85,8 @@ engine only.
 
 - [ ] `qa_report.py`: frames actual = planned (`frames.ok`), loudness −14 ±1 LUFS, true peak ≤ −1.0 dBTP.
 - [ ] `--whisper` on the 9:16 master: word match ≈ 1.0 with the caption words (the gym skit: 1.0, no differences).
-- [ ] Watched once from start to end with sound.
+- [ ] Watched once from start to end with sound; final voice-validation report records reviewer/method, file hash, lip sync, joins, identity and mix.
+- [ ] Final ASR compared to approved edited dialogue; no incorrect meaning accepted because of a high similarity score.
 - [ ] 4:5, 1:1, 16:9 checked with sheets: faces framed, captions readable, banners clear of faces.
 
 ## Gate 7: delivery

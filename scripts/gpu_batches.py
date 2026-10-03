@@ -47,11 +47,17 @@ GPU_SECONDS = {"still": (9.6, 2.8), "still-edit": (15.7, 5.0), "tts": (10.8, 4.0
                "music": (17.8, 17.8)}
 
 
+from languages import project_language, language_label, language_code, require_speech
+
+
 def load(project: Path) -> dict:
     path = project / "lines.json"
     if not path.exists():
         raise SystemExit(f"no {path}: copy $SK/templates/lines.json there and fill it")
     doc = json.loads(path.read_text())
+    cfg_path = project / 'project.json'
+    cfg = json.loads(cfg_path.read_text()) if cfg_path.exists() else {}
+    doc['language'] = language_label(project_language(cfg, doc))
     ids = [line["id"] for line in doc.get("lines", [])]
     if len(ids) != len(set(ids)):
         raise SystemExit("lines.json: every line needs its own id")
@@ -126,10 +132,15 @@ def cmd_stills(project: Path, doc: dict, args) -> None:
 
 def tts_job(project: Path, doc: dict, line: dict, seed: int, text=None, exaggeration=None) -> dict:
     char = doc["characters"][line["who"]]
+    lang = project_language({}, doc)
+    if 'language' in line and language_code(line['language']) != lang:
+        raise ValueError('Mixed-language lines require separate project revisions')
+    require_speech(text or line['text'], lang)
     return {"name": f"{line['id']}-s{seed}", "template": "tts",
-            "set": {"text": text or line["text"], "language": doc.get("language", "English (en)"),
+            "set": {"text": text or line["text"], "language": language_label(lang),
                     "voice": rel(project, "voice", char["voice"]),
                     "exaggeration": exaggeration if exaggeration is not None else line.get("exaggeration", 0.5),
+                    "cfg_weight": line.get("cfg_weight", doc.get("voice", {}).get("cfg_weight", 0.5)),
                     "seed": seed}}
 
 

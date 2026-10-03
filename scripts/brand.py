@@ -94,7 +94,7 @@ def manrope_path() -> str:
             fnt = ImageFont.truetype(str(path), 40)
         except OSError:
             continue
-        if "Manrope" not in (fnt.getname()[0] or ""):
+        if not os.environ.get("YESOPEN_FONT") and "Manrope" not in (fnt.getname()[0] or ""):
             continue
         missing = glyph(fnt, chr(0xE000))
         if all(glyph(fnt, ch) != missing for ch in "YesOpenIt'syourinvoices"):
@@ -140,8 +140,27 @@ def tracked_width(parts, fnt, tracking):
     return sum(fnt.getlength(ch) + tracking for text, _ in parts for ch in text) - tracking
 
 
+@lru_cache(maxsize=256)
+def validate_caption_glyphs(text):
+    """Fail on missing glyphs instead of exporting tofu for another writing system."""
+    import unicodedata
+    from PIL import features
+    fnt = font(40, 800)
+    missing = bytes(fnt.getmask(chr(0x10FFFF)))
+    absent = sorted({c for c in text if not c.isspace()
+                     and unicodedata.category(c) not in {'Cf', 'Cc'}
+                     and bytes(fnt.getmask(c)) == missing})
+    if absent:
+        raise ValueError('Caption font lacks glyphs: ' + ''.join(absent)
+                         + '; set YESOPEN_FONT to a font covering this language')
+    if any(unicodedata.bidirectional(c) in {'R', 'AL'} or '\u0900' <= c <= '\u097f' for c in text):
+        if not features.check_feature('raqm'):
+            raise ValueError('This caption script requires Pillow with RAQM shaping')
+
+
 def caption(text: str, width: int = 1080, size: int = 66) -> Image.Image:
     """Yellow caption with a black outline, centred on a transparent strip `width` px wide."""
+    validate_caption_glyphs(text)
     while True:
         fnt = font(size, 800)
         stroke = max(3, round(size * 8 / 66))

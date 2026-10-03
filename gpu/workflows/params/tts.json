@@ -1,6 +1,6 @@
 {
   "template": "tts",
-  "doc": "One line of speech in one of 23 languages, voice cloned from a sample (Chatterbox Multilingual).",
+  "doc": "One line of speech in one of 23 languages, voice cloned from a sample (Chatterbox Multilingual V3).",
   "params": {
     "text": {
       "type": "text",

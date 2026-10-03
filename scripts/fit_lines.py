@@ -24,14 +24,12 @@ from pathlib import Path
 
 import numpy as np
 
-NUMS = {"0": "zero", "1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six", "7": "seven",
-        "8": "eight", "9": "nine", "10": "ten", "12": "twelve"}
+from languages import (normalize, project_language, language_code, require_speech,
+                       verify_whisper_model)
 
 
-def letters(text: str) -> str:
-    text = text.lower().replace("’", "'")
-    text = re.sub(r"\d+", lambda m: NUMS.get(m.group(0), m.group(0)), text)
-    return re.sub(r"[^a-z]", "", text)
+def letters(text: str, language='en', number_aliases=None) -> str:
+    return normalize(text, language, number_aliases)
 
 
 def load(path: Path, rate=48000) -> np.ndarray:
@@ -99,30 +97,44 @@ def main():
     ap.add_argument("--lead", type=float, default=0.3)
     ap.add_argument("--tail", type=float, default=0.12)
     ap.add_argument("--model", default="large-v3-turbo")
+    ap.add_argument("--lang", help="explicit ASR language; must match declared project language")
     ap.add_argument("--only", help="comma-separated line ids")
     ap.add_argument("--max-pause", type=float, default=0.75,
                     help="silences between the line's words longer than this are shortened to it")
     a = ap.parse_args()
-    import whisper
-    model = whisper.load_model(a.model)
-    lines = json.loads(Path(a.lines).read_text())["lines"]
+    doc = json.loads(Path(a.lines).read_text())
+    cfg_path = Path(a.lines).parent / 'project.json'
+    cfg = json.loads(cfg_path.read_text()) if cfg_path.exists() else {}
+    lang = project_language(cfg, doc)
+    if a.lang:
+        explicit = language_code(a.lang)
+        if ('language' in doc or 'language' in cfg) and explicit != lang:
+            raise ValueError('--lang conflicts with project language')
+        lang = explicit
+    verify_whisper_model(a.model, lang)
+    lines = doc['lines']
+    for line in lines:
+        require_speech(line['text'], lang)
+    import speech
+    model = speech.load_model(a.model)
     if a.only:
         lines = [l for l in lines if l["id"] in a.only.split(",")]
     out = Path(a.out_dir)
     out.mkdir(parents=True, exist_ok=True)
     report_path = out / "fit.json"
     report = json.loads(report_path.read_text()) if report_path.exists() else {}
+    aliases = cfg.get('speech', {}).get('number_aliases', {})
     for line in lines:
-        want = letters(line["text"])
+        want = letters(line["text"], lang, aliases)
         best = None
         for take in sorted(Path(a.voice_dir).glob(f"{line['id']}-s*.audio.flac")):
-            result = model.transcribe(str(take), language="en", word_timestamps=True,
+            result = model.transcribe(str(take), language=lang, word_timestamps=True,
                                       condition_on_previous_text=False, fp16=False)
             words = [w for s in result["segments"] for w in s["words"]]
             got, k_best, ratio_best = "", 0, 0.0
             for k, w in enumerate(words, 1):
-                got += letters(w["word"])
-                ratio = difflib.SequenceMatcher(None, want, got).ratio()
+                got += letters(w["word"], lang, aliases)
+                ratio = difflib.SequenceMatcher(None, want, got, autojunk=False).ratio()
                 if ratio > ratio_best:
                     k_best, ratio_best = k, ratio
             if not k_best:
@@ -160,7 +172,11 @@ def main():
                 best = cand
         if best is None:
             print(f"{line['id']}: FAILED, reseed")
-            report[line["id"]] = {"ok": False}
+            report[line["id"]] = {"ok": False, "language": lang}
+            (out / f"{line['id']}.wav").unlink(missing_ok=True)
+            temporary = report_path.with_suffix('.json.tmp')
+            temporary.write_text(json.dumps(report, ensure_ascii=False, indent=1))
+            temporary.replace(report_path)
             continue
         src = Path(a.voice_dir) / best["take"]
         dst = out / f"{line['id']}.wav"
@@ -173,11 +189,19 @@ def main():
                         str(dst)], input=audio.tobytes(), check=True)
         best["pauses_removed"] = round(removed, 2)
         best["file"] = dst.name
+        best["language"] = lang
         best["seconds"] = round(len(audio) / 48000, 2)
         report[line["id"]] = best
+        temporary = report_path.with_suffix('.json.tmp')
+        temporary.write_text(json.dumps(report, ensure_ascii=False, indent=1))
+        temporary.replace(report_path)
         print(f"{line['id']}: {best['take']} -> {dst.name} ({best['seconds']} s"
               + (f", {removed:.2f} s of pause removed" if removed else "") + ")")
-    report_path.write_text(json.dumps(report, indent=1, ensure_ascii=False))
+    temporary = report_path.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(report, indent=1, ensure_ascii=False))
+    temporary.replace(report_path)
+    if any(not report.get(line['id'], {}).get('ok') for line in lines):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

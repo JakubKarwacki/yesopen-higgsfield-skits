@@ -35,6 +35,17 @@ supersede the older timing estimates and automatic shutdown shortcuts below. Fol
 [gpu/SHUTDOWN.md](gpu/SHUTDOWN.md) for shared-host shutdown. Do not assume that local uncommitted shared
 pipeline features exist in the published release; verify the installed version and commands first.
 
+## Voice quality: mandatory validation
+
+Apply [the integrated Chatterbox practices](references/chatterbox-practice.md), adapted from the reviewed
+Demoforge voice-cloning skill and checked against the model documentation.
+
+Read [references/voice-validation.md](references/voice-validation.md) before any dialogue batch or voice/language/model
+change. Use [templates/voice-validation.md](templates/voice-validation.md) for sample selection, per-line listening
+and final-film acceptance. ASR pass alone is not voice-quality approval. Missing listening evidence stays
+`needs_review`; do not claim that it passed. Use [references/multilingual.md](references/multilingual.md) for
+Chatterbox Multilingual V3 setup and supported language codes.
+
 ## Non-negotiables
 
 1. **A comedy skit, not a product presentation.** From the first brief: "to nie jest prezentacja produktu".
@@ -406,6 +417,8 @@ returns no cost and there is no balance endpoint.
 | `references/edit-pipeline.md` | Phase 5: every field of `project.json`, `cuts.json`, `edl.json`, the filters, known traps |
 | `references/formats-delivery.md` | Phases 6–7 |
 | `references/qa-checklist.md` | the gates |
+| `references/voice-validation.md` | required voice audition, pronunciation, listening and final acceptance |
+| `references/multilingual.md` | language propagation and V3 setup |
 | `references/production-procedure.md` | preflight, pilots, recovery, scheduling and retirement |
 | `references/asset-catalog.md` | logo, icon, fonts, banners, end cards, sound, cast and voice samples, B-roll, product graphics |
 

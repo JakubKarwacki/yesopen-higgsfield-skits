@@ -42,13 +42,16 @@ def render_segments(edl, root, layout, work, fps):
     return dialogue
 
 
+from languages import language_code, language_for_path
+
+
 def whisper_words(audio_src, work, language="en"):
     """Fallback when the EDL has no caption words: transcribe the cut dialogue."""
-    import whisper
+    import speech
     wav = work / "dialogue.wav"
     run(["-i", audio_src, "-vn", "-ac", "1", "-ar", "16000", wav])
-    model = whisper.load_model("large-v3-turbo")
-    result = model.transcribe(str(wav), language=language, word_timestamps=True, condition_on_previous_text=False)
+    model = speech.load_model("large-v3-turbo")
+    result = model.transcribe(str(wav), language=language_code(language), word_timestamps=True, condition_on_previous_text=False)
     return [{"w": w["word"].strip(), "s": w["start"], "e": w["end"]} for seg in result["segments"] for w in seg["words"]]
 
 
@@ -100,10 +103,10 @@ def assemble(project, layout, edl_path=None, out_path=None, captions=True, whisp
     if captions:
         words = edl.get("caption_words")
         if not words or whisper_captions:
-            words = whisper_words(dialogue, work, cfg.get("language", "en"))
+            words = whisper_words(dialogue, work, language_for_path(project / "project.json"))
         (work / "caption-words.json").write_text(json.dumps(words, indent=1))
         style = {**cfg.get("captions", {}).get("style", {}), **edl.get("caption_style", {})}
-        chunks = chunks_of(words, **style)
+        chunks = chunks_of(words, **{**style, "language": language_for_path(project / "project.json")})
         (work / "caption-chunks.json").write_text(json.dumps(chunks, indent=1))
         cap_y = round(layout["caption_y"] * H)
         for k, ch in enumerate(chunks):
@@ -117,7 +120,7 @@ def assemble(project, layout, edl_path=None, out_path=None, captions=True, whisp
 
     ding = root / edl["ding"]
     dings = edl.get("dings", [])
-    audio = "[0:a]"
+    audio = "0:a"  # direct stream mapping; brackets are only for filter outputs
     if dings:
         inputs += ["-i", ding]
         filters.append(f"[{n}:a]asplit={len(dings)}" + "".join(f"[d{k}]" for k in range(len(dings))))
