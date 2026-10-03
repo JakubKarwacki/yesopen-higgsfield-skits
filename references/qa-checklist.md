@@ -11,6 +11,9 @@ engine only.
 
 ## Gate 2: script (needs the owner's explicit approval)
 
+- [ ] Every edit shot has START, ACTION / DIALOGUE, END, HOLD and NEXT; endings are observable completed events.
+- [ ] Adjacent shots and recurring characters preserve pose, gaze, prop state and screen direction; duration includes speech, completed action and hold.
+
 - [ ] It is a skit, not a product demo: the first 10 seconds contain no feature.
 - [ ] One familiar frame, one engine, 3–4 escalation steps, a turn, a button, an end-card line.
 - [ ] Every product claim is in the claims table with a file and line in `business-card/messages/en`.
@@ -22,7 +25,19 @@ engine only.
       synthetic voice) and a still or a `look`.
 - [ ] Approval recorded in `script.md` (who, date). GPU: the yes covers starting the machine for this session.
 
+## Pre-batch gate: readiness, audio and representative pilots
+
+- [ ] Installed code/model/config versions and actual language support verified; no unpublished dependency assumed.
+- [ ] Polish normalization, ASR, fitting and captions validated on a short sample if producing PL.
+- [ ] Actual audio duration plus action, holds and end card calculated; any conflict with approved duration resolved.
+- [ ] Representative dialogue and every distinct risky action tested before its full batch (e.g. prop placement and standing).
+- [ ] Pilots checked for invented text, framing, identity, speech, completed action, hold and next-shot continuity.
+- [ ] Shared failure corrected and pilot rechecked before submitting affected remaining takes.
+- [ ] Checkpoints identify accepted inputs, attempts, job IDs and the next pending step.
+
 ## Gate 3: cast stills
+
+- [ ] Every shot starting image matches its planned entry state; changed poses/props are not reset to the original cast portrait.
 
 - [ ] Four candidates per character on one sheet.
 - [ ] Picked still: no logos, no readable text, neutral face with lips closed, prop visible, face large enough
@@ -32,6 +47,9 @@ engine only.
 
 ## Gate 4: takes
 
+- [ ] Actual submitted prompts contain START, ACTION, END and HOLD, including each beat of a long take.
+- [ ] Visually verified each required ending and usable settling beat; checked last frame against the next entry. A prompt or longer tail alone is not proof.
+
 - [ ] Higgsfield: `hf-job` used (jobs.jsonl has every request id).
 - [ ] GPU: `fit_lines.py` passed every line before any take was made (`lines/fit.json`); the key lines
       (`key_shots`) listened to: right words, the script's "?" and "!", no mumbling.
@@ -40,10 +58,13 @@ engine only.
 - [ ] GPU: no zoom or push-in at the end of a take; no phone screen facing the camera.
 - [ ] Silent actions happened where the jokes need them.
 - [ ] Room tone at least 3 dB under `speech.thr`.
-- [ ] GPU: once the takes, the retakes and the music are in, `gpu.py stop --yes` has run and no machine is
-      left (`gpu.py status` with Verda, otherwise the provider's console).
+- [ ] Host requirements for remaining editing/QA are recorded; retirement follows the authorized operation,
+      verified downloads and actual shared workload, not merely the end of GPU generation.
 
 ## Gate 5: edit
+
+- [ ] Every cut follows completed speech/action and retains the scripted reaction; reviewed both sides of every join, including off-screen prop continuity.
+- [ ] Missing required endings were corrected in the take; regenerated takes had their cut boundaries reviewed again.
 
 - [ ] Preview of the first 8–10 cuts shown and approved before the full edit when the pacing is new.
 - [ ] Every cut has a `note` with the script line.
@@ -65,3 +86,13 @@ engine only.
 - [ ] Web version sent for preview; Artifact page only if asked.
 - [ ] Nothing posted publicly without an explicit request.
 - [ ] `script.md` updated with what changed in production and the final files.
+
+## Gate 8: infrastructure completion
+
+- [ ] Required finals and correction sources downloaded; manifest, sizes and hashes verified.
+- [ ] Current user instruction identifies Stop versus Delete and protected disks/resources.
+- [ ] All shared compute/export/transfer work reconciled; waiting final review not mislabeled as running work.
+- [ ] Admission drained where supported; actual queues/processes checked; unrelated work preserved.
+- [ ] Authorized provider operation performed and resulting state verified with timestamp and instance ID.
+- [ ] Current checkpoint has no obsolete active blocker; history retained separately.
+- [ ] Retained resources and possible disk charges reported accurately.

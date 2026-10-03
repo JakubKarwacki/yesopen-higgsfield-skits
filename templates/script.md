@@ -33,6 +33,21 @@ Nie kopiujemy kwestii, kadrów ani nazw z wzoru.
 
 Banery powiadomień, napisy i planszę nakładamy w montażu. Model wideo nie pisze tekstu na ekranie.
 
+## Ciągłość każdego ujęcia — przed zdjęciami startowymi
+
+Każde cięcie ma własny identyfikator. Rozdziel dialog dwóch osób na ujęcia, chyba że zaplanowano wspólny kadr.
+
+| ID | START: kadr, pozycja, spojrzenie, dłonie i rekwizyty | AKCJA / DIALOG: kolejność | END: zakończone zdarzenie i dokładny stan końcowy | HOLD: czas na wybrzmienie po akcji | NEXT: ID i zgodny stan wejścia / rodzaj cięcia |
+| --- | --- | --- | --- | --- | --- |
+| U01 | ... | ... | ... | ... | U02: ... |
+
+- Stałe planu: oś rozmowy, miejsca postaci, ubrania, światło, położenie i ręka trzymająca każdy rekwizyt.
+- Stan postaci poza kadrem pozostaje ciągły; zmiany opisujemy jawnie.
+- Każdy prompt generacyjny zawiera START, AKCJĘ, END i HOLD; zdjęcie startowe odpowiada temu ujęciu.
+- Długość obejmuje pełną kwestię, zakończenie ruchu i reakcję. Potwierdzamy ją na nagranym dialogu.
+- Przed montażem: obejrzyj ukończenie akcji, końcową klatkę i wejście następnego ujęcia.
+- Nie tniemy w połowie słowa, podnoszenia przedmiotu ani wstawania. Brakujący finał wymaga poprawienia ujęcia.
+
 ## Co jest prawdą o produkcie
 
 Każdą puentę o funkcji YesOpen sprawdzam w `business-card/messages/en/*.json` (strona i aplikacja):
@@ -57,7 +72,7 @@ Serwer GPU (`gpu`):
 - **Głos:** Chatterbox, głos sklonowany z próbki w `voices/`; każda kwestia dwa razy, potem `fit_lines.py` sprawdza słowa i przycina.
 - **Ujęcia z mową:** LTX-2.3 do gotowej kwestii, jedno ujęcie na kwestię; kadr się nie zmienia, telefon tyłem do kamery.
 - **Montaż:** skrypty skilla (`make_edl.py`, `assemble.py`), formaty 9:16, 4:5, 1:1, 16:9.
-- **Szacunkowy koszt:** minuty GPU z `gpu_batches.py estimate` i czas całej sesji razy cena maszyny za godzinę; maszynę usuwamy zaraz po ostatnim ujęciu.
+- **Szacunkowy koszt:** minuty GPU z `gpu_batches.py estimate` i czas całej sesji razy cena maszyny za godzinę; koniec pracy serwera zgodnie z bieżącą dyspozycją, pobraniem materiałów i sprawdzeniem wspólnej kolejki.
 
 Higgsfield (`higgsfield`):
 
@@ -65,3 +80,25 @@ Higgsfield (`higgsfield`):
 - **Ujęcia z mową:** Seedance 2.5 image-to-video, `generate_audio: true`, 720p; każda postać mówi swoje kwestie w 1–2 długich ujęciach, z pauzami na słuchanie.
 - **Montaż:** skrypty skilla (`make_edl.py`, `assemble.py`), formaty 9:16, 4:5, 1:1, 16:9.
 - **Szacunkowy koszt:** suma z `hf-job cost` dla każdego ujęcia; stawka za sekundę zależy od rozdzielczości.
+
+## Gotowość przed pełną partią
+
+- Wersja kodu, modeli i konfiguracji: ...
+- Język i wynik próbki audio → dopasowanie → napisy: ...
+- Rzeczywisty czas dialogu: ...; dodatkowe ruchy i pauzy bez podwójnego liczenia: ...; plansza: ...; suma: ...
+- Zgodność z zaakceptowaną długością / rozstrzygnięta zmiana: ...
+
+| Próba (ID ujęcia) | Ryzyko: dialog / rekwizyt / ruch ciała | Wynik, wybrany plik i dowód obejrzenia końca | Poprawka / zgoda na pozostałą partię |
+| --- | --- | --- | --- |
+| ... | ... | ... | ... |
+
+## Wznawianie i zakończenie
+
+- Checkpoint, ostatni potwierdzony etap, identyfikatory zadań: ...
+- Wybrane wersje ujęć i granice montażu: ...
+- Bieżąca dyspozycja infrastruktury: Stop / Delete / pozostawić; źródło i czas: ...
+- Zasoby chronione, w tym dyski: ...
+- Pobrane pliki i dowód kompletności: ...
+- Rzeczywiste zadania blokujące zakończenie (puste po rozliczeniu): ...
+- Wynik operacji dostawcy, czas, identyfikator instancji i dowód: ...
+- Zachowane zasoby i możliwe dalsze opłaty: ...

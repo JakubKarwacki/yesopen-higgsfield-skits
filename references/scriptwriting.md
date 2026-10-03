@@ -132,3 +132,35 @@ Each keeps the same engine: a familiar frame, the owner as the straight man, Yes
   the phone: "#1 for pizza near me".
 - **Breakup, part 2.** The agency account manager comes back with a new offer; she is now the one
   with the phone (sequel with the same cast from `assets/cast/`).
+
+
+## 8. Complete shot endings and continuity (required)
+
+User feedback, 2026-10-03: clips feel cut off when only the starting frame and the action are described.
+Define the ending before generating the starting still. For **each edit shot**, including silent beats,
+write START, ACTION / DIALOGUE, END, HOLD and NEXT. A dialogue beat containing two speakers is two shots
+unless it is explicitly staged as one continuous two-person shot.
+
+END must be an observable result: not "gets up", but "stands fully upright beside the now empty chair,
+holding the same cup in the same hand; movement has settled". Include pose, gaze, expression, framing,
+hand/prop positions and off-screen state. HOLD is a deliberate settling/listening beat after the last word
+and completed movement; plan its duration, allow enough generated footage, then choose the actual cut visually.
+Do not shorten away the payoff to hit an estimated runtime. Time the recorded dialogue plus actions and
+holds before committing to the final duration; report a conflict with an approved runtime.
+
+For each NEXT link compare the outgoing state with the incoming state. A reverse shot changes viewpoint,
+not elapsed action, prop hand, character position or wardrobe. Resume a recurring character in their last
+established state, including movements explicitly performed off screen. Avoid crossing the dialogue axis.
+Do not reset every shot to the original portrait. Same-view continuation may start with the accepted last
+frame; reverse views require a matching reference in that angle. Keep references consistent in face,
+wardrobe, lighting and set. Do not infer support for an end-frame parameter from the phrase "last frame".
+
+Transfer the full shot contract into the actual generation prompt. GPU uses the existing `prompt` or
+`action` fields; generation `tail` must cover post-speech action plus hold, while edit `cut.tail` / `out`
+independently retains it. Inspect the resulting batch prompt before submission. For long Higgsfield takes,
+apply an ending/listening state after each numbered line, not only to the last frame of the entire take.
+No model-generated transitions, fades, captions or spontaneous new actions after the scripted ending.
+
+Example: START seated, cup on the table. ACTION picks the cup up with the right hand, stands, steps beside
+the chair. END upright, cup steady in right hand, chair completely clear. HOLD the settled state visibly.
+NEXT a wide shot preserves that state. Reject a take ending with bent knees or a half-lifted cup.

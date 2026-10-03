@@ -27,15 +27,24 @@ the finals. Read the case study before your first skit.
 `G="python3 $SK/gpu/client/gpu.py"`. Talk to the user in their language; the dialogue of the video is English
 unless they ask otherwise.
 
+## Production procedure and runtime boundaries
+
+Read [references/production-procedure.md](references/production-procedure.md) before paid work or resuming
+an interrupted film. Its pilot, language, timing, recovery and retirement checks apply to both engines and
+supersede the older timing estimates and automatic shutdown shortcuts below. Follow
+[gpu/SHUTDOWN.md](gpu/SHUTDOWN.md) for shared-host shutdown. Do not assume that local uncommitted shared
+pipeline features exist in the published release; verify the installed version and commands first.
+
 ## Non-negotiables
 
 1. **A comedy skit, not a product presentation.** From the first brief: "to nie jest prezentacja produktu".
    People share a joke, not a feature tour. The product is the reason for the laugh (a notification, one honest
    line), and the brand closes the video on the end card. If YesOpen could be cut out without losing a joke, it is
    an ad.
-2. **Nothing paid before an explicit yes to the script.** GPU: the machine bills by the hour from the moment it
-   exists until it is deleted. Make it only after that yes and the user's yes for the session, and always end the
-   session with `$G stop --yes`, also after a failure. Higgsfield: stills cost cents and may be made while the
+2. **Nothing paid before an explicit yes to the script.** GPU: obtain authorization for the script and paid session before provisioning.
+   Record the authorized retirement operation and protected resources. Verify provider billing semantics;
+   Stop and Delete differ, and retained disks may continue to incur charges. Follow the production procedure
+   after completion or failure; never infer permission to delete from a request to stop. Higgsfield: stills cost cents and may be made while the
    script is discussed; takes cost dollars and wait for the yes.
 3. **Only true claims.** Every product punchline must point to the product copy in
    `business-card/messages/en/*.json` (file and line) of the Localesto checkout, or come from the user. Unknown
@@ -55,6 +64,30 @@ unless they ask otherwise.
    exact and on brand. Take prompts end with "no text on screen".
 8. **Nothing is posted anywhere without an explicit request for that post.** Deliver files; links to the local
    files come first.
+
+## Shot continuity: required before stills and takes
+
+Every script shot must specify **START → ACTION / DIALOGUE → END → HOLD → NEXT**.
+A starting still and an action description alone are incomplete. Read
+`references/scriptwriting.md`, section 8, and fill the continuity table in `templates/script.md`.
+
+- START: framing, character position, pose, gaze, expression, hands and prop locations.
+- ACTION / DIALOGUE: ordered speech and movement, with enough time to finish both.
+- END: observable completed event and exact final pose, gaze, expression and prop state.
+- HOLD: a planned readable settling/listening beat after completion, included in generation duration
+  and retained in the edit; no new gesture, speech, zoom or fade during it.
+- NEXT: next shot ID and its matching entry state, or an explicit reverse shot / motivated transition.
+  Track off-screen characters and props too: a reverse shot must not reset their state.
+
+Before generating, copy these directions into the actual model prompt, not just the script document.
+Use existing GPU `prompt` / `action` fields and timing controls; do not invent unsupported API fields.
+A different pose/prop state requires a matching starting image. Reuse the actual accepted final frame
+when the next clip continues the same view; for reverse angles use a matching reference, not the wrong angle.
+Use an end-frame input only when the selected model and wrapper actually support it. A written END is
+still mandatory and must be verified visually; a prompt is not proof.
+
+Validate continuity at Gates 2, 3, 4 and 5. Missing completion requires correction of the take, not a cutaway
+that hides the missing event. After regeneration, review and select the edit boundaries again.
 
 ## What you need
 
@@ -187,7 +220,11 @@ python3 $SK/scripts/contact_sheet.py stills/still-owner-*.png -o stills/sheet-ow
 to `lines.json` → `characters.<name>.still` (GPU) or `stills/picked.json` (Higgsfield), and to `project.json` →
 `cast`. Returning characters come from `assets/cast/` with their stills and voice samples. Gate 3.
 
-### Phase 4: Takes (about 15 min on GPU, 10 min on Higgsfield)
+### Phase 4: Takes (historical estimates, not a runtime promise)
+
+Before the full take batch: validate language support, fit and listen to audio, calculate the proposed edit
+length, then review representative pilots as specified in `references/production-procedure.md`.
+The commands below describe batch mechanics; do not submit the full batch until the pilot check passes.
 
 **GPU engine** (`gpu-engine.md`, section 6): audio first, then one lip-synced take per line.
 
@@ -205,8 +242,8 @@ from our own earlier take). Listen to the lines that carry the joke (`key_shots`
 picture follows the sound, so a wrong word, or a question where the script has a full stop, is fixed here for
 seconds of GPU time. A silent beat before a line: `silence_before` on that line, with a whole `prompt` that says
 what happens first. Make the music bed in the same session if the skit wants one (`gpu-engine.md`, section 7).
-When Gate 4 has passed and the retakes and the music are in, end the session: `$G stop --yes`. The edit needs no
-GPU.
+After Gate 4, retire resources only when the remaining edit/QA no longer needs that host and the
+production procedure permits it. A shared machine may still have CPU/export work.
 
 **Higgsfield engine.** Read `references/takes-seedance.md`. One character per take, all their lines in order with
 "Pause" lines between them, 20–30 s, from `templates/args/take.json`: "Single continuous handheld vertical
@@ -288,8 +325,8 @@ python3 $SK/scripts/encode_variants.py final/<name>-9x16.mp4       # -share.mp4 
 ### Phase 8: Wrap-up
 
 - Add "Po produkcji" to `script.md`: what changed from the approved script, the final files, the QA numbers.
-- GPU: make sure no machine is left (`$G status` with Verda, otherwise the provider's console). The kept disk bills
-  every month; delete it at the provider when no skit is planned.
+- GPU: execute the authorized retirement operation after verifying downloads and actual shared workload.
+  Verify provider state, record the evidence and retained resources. Never delete a disk without explicit authorization.
 - Keep reusable material: cast stills to `assets/cast/` (with their prompt or Soul args) and voice samples as
   `assets/cast/<name>.voice.wav`, reaction shots to `assets/broll/`
   (`python3 $SK/scripts/extract_clip.py <take> <in> <dur> <out> --native`), new banners with
@@ -312,8 +349,7 @@ python3 $SK/scripts/encode_variants.py final/<name>-9x16.mp4       # -share.mp4 
 | Edit, all formats, QA | on your computer, as for Higgsfield | |
 
 The skit itself took 10.4 min of GPU time; the hours around it are what costs. Have `lines.json`, the looks and
-the voice samples ready before `start`, run the batches back to back, and `stop` right after the last take and the
-music. `gpu_batches.py estimate` prints the GPU minutes of a new skit.
+the voice samples ready before `start`, run approved batches without unnecessary gaps, and follow the retirement checks when host work ends. `gpu_batches.py estimate` prints the GPU minutes of a new skit.
 
 **Higgsfield engine**, list prices on 2026-10-01:
 
@@ -370,6 +406,7 @@ returns no cost and there is no balance endpoint.
 | `references/edit-pipeline.md` | Phase 5: every field of `project.json`, `cuts.json`, `edl.json`, the filters, known traps |
 | `references/formats-delivery.md` | Phases 6–7 |
 | `references/qa-checklist.md` | the gates |
+| `references/production-procedure.md` | preflight, pilots, recovery, scheduling and retirement |
 | `references/asset-catalog.md` | logo, icon, fonts, banners, end cards, sound, cast and voice samples, B-roll, product graphics |
 
 ## Lessons that cost time or money
@@ -387,7 +424,7 @@ returns no cost and there is no balance endpoint.
 - GPU: LTX-2.3 pushes in on the face at the end of a take unless the prompt says the framing stays the same, and
   a phone screen facing the camera gets an invented app on it.
 - GPU: the machine is the cost, not the jobs (10 min of GPU time in a 1 h session); prepare everything before
-  `start` and `stop` right after the last take.
+  `start`; retire resources according to the authorized operation and verified workload.
 
 ## Updating this skill and the public repository
 
