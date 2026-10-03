@@ -3,6 +3,11 @@ name: yesopen-higgsfield-skits
 description: Make short, funny YesOpen video skits for TikTok, Reels and Shorts on your own GPU server with open models (ComfyUI: Chatterbox voices, LTX lip sync, Z-Image, ACE-Step music) or with Higgsfield. Take a reference video's comedy mechanics, write a skit where YesOpen is only the punchline, cast it, record every line and film it to that sound, cut it with scripted ffmpeg (captions, notification banners, end card, music on the beat) and deliver 9:16, 4:5, 1:1 and 16:9. Its client finds, connects to or orders the GPU machine and sets it up. Use whenever the user shares a YouTube, TikTok or Instagram link and asks for "taką scenkę", "coś takiego dla YesOpen", a funny video, short, reel, skit, filmik or ad for YesOpen or local businesses (gyms, restaurants, salons, shops), wants it "na naszym serwerze", "lokalnie", "na GPU" or with Higgsfield, or wants to re-cut, reformat or continue the gym breakup skit ("It's not you. It's your invoices."). Not for product demos, screen recordings or feature explainers.
 ---
 
+## GPU retirement and API-first operation
+
+Standing user instruction: after use, DELETE the idle GPU instance and PRESERVE ALL disks, including OS and detached volumes. This supersedes earlier stop-only and leave-running instructions. Verify real shared workloads; pending review is not compute. Use CLI/API first. Follow [Verda operations](references/verda-operations.md) and [retirement checks](gpu/SHUTDOWN.md).
+
+
 # YesOpen skits on your own GPU server or Higgsfield
 
 This skill turns "make something like this for YesOpen" plus a link into a finished, funny vertical video and its
@@ -62,7 +67,7 @@ Do not turn a user's temporary inability to listen into repeated approval reques
 2. **Nothing paid before an explicit yes to the script.** GPU: obtain authorization for the script and paid session before provisioning.
    Record the authorized retirement operation and protected resources. Verify provider billing semantics;
    Stop and Delete differ, and retained disks may continue to incur charges. Follow the production procedure
-   after completion or failure; never infer permission to delete from a request to stop. Higgsfield: stills cost cents and may be made while the
+   after completion or failure; the standing YesOpen instruction explicitly authorizes instance deletion with all disks retained. Higgsfield: stills cost cents and may be made while the
    script is discussed; takes cost dollars and wait for the yes.
 3. **Only true claims.** Every product punchline must point to the product copy in
    `business-card/messages/en/*.json` (file and line) of the Localesto checkout, or come from the user. Unknown

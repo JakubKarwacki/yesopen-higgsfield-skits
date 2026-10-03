@@ -42,7 +42,7 @@ speaker assignment) instead of blindly generating more seeds. Reuse the locked d
 - Check delivered master and compressed copy: frame count, complete dialogue, levels, captions and filenames.
   Verify local downloads with hashes. Use native local previews and truthful status messages.
 - Send only to the explicitly requested destination; WhatsApp steps are in [formats-delivery.md](formats-delivery.md).
-- Follow the latest server instruction. An explicit leave-running instruction forbids automatic drain/stop/delete.
+- After use, delete idle GPU compute and preserve all disks under the standing user instruction. Older leave-running/stop-only instructions are superseded. Verify shared workload and use CLI/API first; see [Verda operations](verda-operations.md).
 
 ## Implementation boundaries
 

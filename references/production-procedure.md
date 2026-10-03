@@ -103,13 +103,9 @@ the host. Follow [the shutdown checks](../gpu/SHUTDOWN.md). A finished film wait
 not represent running computation. The drain result describes coordinator tasks, so also check actual
 ComfyUI queues, CPU exports and transfers across all projects. Never interrupt unrelated work.
 
-Execute the operation already authorized by the user. If the latest instruction is to leave the shared server
-running, do not drain, stop, delete or change its services when this film ends, even if its queue is empty.
-Record `leave_running` as the current instruction and preserve prior stop/delete requests only as history. A request to stop does not authorize Delete/Terminate;
-protect every disk the user asked to retain. Verify provider state after the operation and write the evidence
-to the current checkpoint. Report retained resources and possible storage charges. Do not claim all billing
-has ended merely because computation stopped. A pending review must not become a reason to request redundant
-permission or leave an otherwise idle paid host running.
+The standing YesOpen instruction is DELETE the GPU instance after use and PRESERVE ALL disks, including OS and detached volumes. Older stop-only and leave-running instructions are superseded. Do not request repeated permission. Verify real active/queued compute across the shared host and protect other active work. Pending review does not block retirement. If no coordinator is deployed, use native queue and process evidence rather than inventing a drain result.
+
+Use CLI/API first as described in [Verda operations](verda-operations.md). Verda Shutdown leaves a billable instance and does not fulfill retirement. Delete without volume deletion, verify instance absence and every previously recorded disk retained, and save timestamp, IDs and evidence in checkpoint.json. Retained disks still incur storage charges.
 
 ## Acceptance of this procedure
 

@@ -1,6 +1,6 @@
 # Shutdown checks for the shared coordinator
 
-An explicit user request authorizes shutdown. A completed film waiting for human
+Standing user authorization: DELETE idle GPU instances after use and PRESERVE ALL disks. Verda Shutdown continues instance billing and is not retirement. Prefer CLI/API; see [Verda operations](../references/verda-operations.md). A completed film waiting for human
 review must not keep a paid server running.
 
 `State.drain()` stops admission of new runs and returns:
@@ -32,3 +32,5 @@ python3 -m unittest discover -s gpu/tests -p test_shutdown_drain.py -v
 Regression coverage includes a completed film awaiting review, a second film
 with queued compute, active and unknown attempts after cancellation, work behind
 a gate, admission blocking, resume, and preservation of review state/artifacts.
+
+If no coordinator is deployed, inspect native ComfyUI queues and CPU/GPU/export/transfer processes. Record this evidence honestly; do not claim a coordinator drain occurred. Before deletion inventory every disk ID; afterward verify instance absence and all disk IDs retained.
