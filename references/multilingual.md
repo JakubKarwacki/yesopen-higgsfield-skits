@@ -44,9 +44,9 @@ languages. When ASR consistently writes digits, an approved project setting can 
 ```
 
 This is a project-specific reading, not a general Polish inflection rule. Unmapped numerical differences
-remain visible; they are not erased. For a captionless spoken edit, QA uses selected line IDs or explicit
-`speech.expected_text`; provide that text for edits whose take IDs do not match script lines. A silent edit
-passes speech comparison only if its expected and recognized normalized texts are both empty.
+remain visible; they are not erased. Final QA uses approved script lines in edit order, or explicit `speech.expected_text`; it never treats
+ASR-derived captions as an independent reference. Provide expected_text for partial edits, unmatched take IDs
+and silent films (explicit empty string). Silent speech QA passes only when recognized text is also empty.
 
 `inspect_take.py --no-whisper` requires a transcript metadata sidecar matching source hash, language and
 Whisper model. Old transcripts without provenance must be regenerated once. Japanese/Chinese caption chunks
@@ -70,3 +70,8 @@ status. Do not mark a language quality-validated from unit tests alone. No paid 
 
 Voice-quality acceptance follows [the dedicated validation procedure](voice-validation.md), with an explicit
 listening record from [the report template](../templates/voice-validation.md).
+
+Review hardening: fitted results are saved per line and merged under a process lock, so parallel workers do
+not overwrite other lines. Padded-audio reuse requires the source hash and silence settings to match, not
+only duration. New projects include the voice-validation report automatically. Editing inherits the declared
+language from either project file and rejects conflicting declarations.

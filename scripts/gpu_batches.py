@@ -28,6 +28,7 @@ gpu.py batch skips a job whose name is already in the folder's jobs.jsonl, so a 
 fit needs new names (reseed) or a separate batch run with --force; this script warns when that would happen.
 """
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -189,12 +190,18 @@ def duration(path: Path) -> float:
 def pad_line(project: Path, line_id: str, before: float) -> str:
     """lines/<id>-pad.wav: `before` seconds of silence, then the fitted line (the character acts, then speaks)."""
     src, dst = project / "lines" / f"{line_id}.wav", project / "lines" / f"{line_id}-pad.wav"
-    if dst.exists() and abs(duration(dst) - before - duration(src)) < 0.01:
-        return f"lines/{line_id}-pad.wav"  # made before from this line: keep the file the take was made from
+    meta = dst.with_suffix('.source.json')
+    digest = hashlib.sha256(src.read_bytes()).hexdigest()
+    expected = {'source_sha256': digest, 'silence_before': before}
+    if (dst.exists() and meta.exists() and json.loads(meta.read_text()) == expected
+            and abs(duration(dst) - before - duration(src)) < 0.01):
+        return f"lines/{line_id}-pad.wav"
+    meta.unlink(missing_ok=True)
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-t", f"{before}", "-i",
                     "anullsrc=r=48000:cl=mono", "-i", str(src), "-filter_complex",
                     "[1:a]aformat=sample_rates=48000:channel_layouts=mono[l];[0:a][l]concat=n=2:v=0:a=1",
                     str(dst)], check=True)
+    meta.write_text(json.dumps(expected))
     return f"lines/{line_id}-pad.wav"
 
 

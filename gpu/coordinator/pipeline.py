@@ -127,8 +127,7 @@ def execute_stage(root, spec, log_path):
         if kind == 'fit':
             lid = identifier(spec['line'])
             run_script('fit_lines.py', [root/'lines.json', root/'voice', root/'lines', '--only', lid])
-            fit = json.loads((root/'lines/fit.json').read_text())
-            (root/f'lines/{lid}.fit.json').write_text(json.dumps({lid:fit[lid]}))
+            fit = json.loads((root/f'lines/{lid}.fit.json').read_text())
             outputs = [root/f'lines/{lid}.wav', root/f'lines/{lid}.fit.json']
             if not fit[lid].get('ok'):
                 raise RuntimeError('audio QA rejected; no automatic extra paid attempt')

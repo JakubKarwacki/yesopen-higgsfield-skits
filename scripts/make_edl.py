@@ -31,7 +31,7 @@ def norm(w, language='en'):
 class Takes:
     def __init__(self, project, cfg):
         self.paths = {k: (project / v).resolve() for k, v in cfg["takes"].items()}
-        self.language = project_language(cfg)
+        self.language = project_language(cfg, json.loads((project / 'lines.json').read_text()) if (project / 'lines.json').exists() else {})
         self.words, self.env = {}, {}
         for k, p in self.paths.items():
             wj = p.with_suffix(".words.json")
@@ -118,7 +118,7 @@ def build(project, cfg, cuts_doc, upto=None, with_endcard=True, out_dir=None):
         "ding": "edit/assets/ding.wav",
         "ding_volume": cfg.get("ding_volume", 0.55),
         "caption_words": caption_words,
-        "language": project_language(cfg),
+        "language": takes.language,
         "caption_fixes": fixes_all,
         "caption_style": cfg.get("captions", {}).get("style", {}),
         "endcard": {"name": "endcard", "dur": endcard.get("dur", 2.6)} if with_endcard and endcard else None,

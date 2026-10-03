@@ -62,6 +62,7 @@ class LanguageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             proc=subprocess.run([sys.executable,str(ROOT/'scripts/new_project.py'),'demo','--root',tmp,'--language','pl'],capture_output=True,text=True,check=True)
             root=Path(proc.stdout.strip())
+            self.assertTrue((root/'voice-validation.md').is_file())
             self.assertEqual(project_language(json.loads((root/'project.json').read_text()),json.loads((root/'lines.json').read_text())),'pl')
 
     def test_all_languages_reach_tts_and_inspection_in_plan(self):

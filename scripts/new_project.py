@@ -72,6 +72,7 @@ def main():
         cfg["title"] = a.title
     (project / "project.json").write_text(json.dumps(cfg, indent=1, ensure_ascii=False) + "\n")
     shutil.copyfile(TEMPLATES / "script.md", project / "script.md")
+    shutil.copyfile(TEMPLATES / "voice-validation.md", project / "voice-validation.md")
     shutil.copyfile(TEMPLATES / "analysis.md", project / "reference" / "analysis.md")
     shutil.copyfile(TEMPLATES / "cuts.json", project / "edit" / "cuts.json")
     if a.engine == "gpu":

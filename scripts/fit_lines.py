@@ -16,6 +16,7 @@ last word carries the script's "?" or "!" wins a tie. OUT_DIR/fit.json records e
 passing take print FAILED: run their tts job again with other seeds.
 """
 import argparse
+import fcntl
 import difflib
 import json
 import re
@@ -89,6 +90,20 @@ def shorten_pauses(audio: np.ndarray, spans: list, max_pause: float, rate=48000,
     return np.concatenate(pieces), sum(b - a for a, b in cuts)
 
 
+def save_fit_result(out, line_id, result):
+    """Merge under a process lock so independent line workers cannot lose results."""
+    out = Path(out)
+    report_path = out / 'fit.json'
+    with (out / '.fit.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        report = json.loads(report_path.read_text()) if report_path.exists() else {}
+        report[line_id] = result
+        for path, data in [(out / f'{line_id}.fit.json', {line_id: result}), (report_path, report)]:
+            temporary = path.with_suffix(path.suffix + '.tmp')
+            temporary.write_text(json.dumps(data, ensure_ascii=False, indent=1))
+            temporary.replace(path)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("lines")
@@ -118,7 +133,10 @@ def main():
     import speech
     model = speech.load_model(a.model)
     if a.only:
-        lines = [l for l in lines if l["id"] in a.only.split(",")]
+        requested = set(a.only.split(','))
+        if not requested <= {line['id'] for line in lines}:
+            raise ValueError('--only contains unknown line IDs')
+        lines = [l for l in lines if l['id'] in requested]
     out = Path(a.out_dir)
     out.mkdir(parents=True, exist_ok=True)
     report_path = out / "fit.json"
@@ -174,9 +192,7 @@ def main():
             print(f"{line['id']}: FAILED, reseed")
             report[line["id"]] = {"ok": False, "language": lang}
             (out / f"{line['id']}.wav").unlink(missing_ok=True)
-            temporary = report_path.with_suffix('.json.tmp')
-            temporary.write_text(json.dumps(report, ensure_ascii=False, indent=1))
-            temporary.replace(report_path)
+            save_fit_result(out, line['id'], report[line['id']])
             continue
         src = Path(a.voice_dir) / best["take"]
         dst = out / f"{line['id']}.wav"
@@ -192,14 +208,9 @@ def main():
         best["language"] = lang
         best["seconds"] = round(len(audio) / 48000, 2)
         report[line["id"]] = best
-        temporary = report_path.with_suffix('.json.tmp')
-        temporary.write_text(json.dumps(report, ensure_ascii=False, indent=1))
-        temporary.replace(report_path)
+        save_fit_result(out, line['id'], best)
         print(f"{line['id']}: {best['take']} -> {dst.name} ({best['seconds']} s"
               + (f", {removed:.2f} s of pause removed" if removed else "") + ")")
-    temporary = report_path.with_suffix(".json.tmp")
-    temporary.write_text(json.dumps(report, indent=1, ensure_ascii=False))
-    temporary.replace(report_path)
     if any(not report.get(line['id'], {}).get('ok') for line in lines):
         raise SystemExit(1)
 
