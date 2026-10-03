@@ -217,3 +217,16 @@ Measured on the gym skit with a synthetic 101.3 bpm track (`bpm` given as 100), 
 | final loudness and true peak | −14.4 LUFS, −1.5 dBTP (without music −14.2 LUFS, −1.4 dBTP) |
 | video stream against the render without music | bit-identical |
 | render without `music`, and with `--no-music` | MD5 `095ffdca450db823b26fd76fa89a1204`, unchanged |
+
+## Reuse typography and locked dialogue
+
+Use `brand.font(size, weight)` and the existing caption/asset renderers in custom integrations. The bundled
+variable Manrope defaults to weight 200 when opened directly with Pillow; omitting its weight produced thin,
+hard-to-read subtitles in the Polish salon film. Render a representative long, accented caption at phone-sized
+preview before the full export; check weight, clipping, face clearance and platform overlays. Do not regenerate
+video to fix typography. Retain the earlier export, rerender the overlay, and recheck the delivered file.
+
+For audio-first talk shots, the selected fitted WAV is the dialogue source of truth. Preserve its timing and
+lead-in when replacing generated video audio; never mix both copies of the dialogue. Recheck final ASR,
+complete word boundaries, loudness and visible lip sync after assembly. An ASR score or frame sheet alone is
+not proof of perceived lip sync or voice naturalness.

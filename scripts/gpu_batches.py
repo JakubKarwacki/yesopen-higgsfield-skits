@@ -227,6 +227,11 @@ def cmd_takes(project: Path, doc: dict, args) -> None:
                              "audio": rel(project, "takes", audio), "prompt": prompt,
                              "seconds": line.get("seconds", round(seconds + tail, 2)),
                              "seed": line.get("seed", take["seed"] + i + 1)}})
+    for job in jobs:
+        line = next(item for item in doc["lines"] if item["id"] == job["name"])
+        for option in ("enhance_prompt", "cfg_first", "negative_prompt"):
+            if option in line or option in take:
+                job["set"][option] = line.get(option, take.get(option))
     if not jobs:
         raise SystemExit("no lines matched --only")
     write(project, args.out or "takes/batch.json", jobs)

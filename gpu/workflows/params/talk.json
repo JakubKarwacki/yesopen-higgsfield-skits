@@ -92,6 +92,27 @@
           "noise_seed"
         ]
       ]
+    },
+    "cfg_first": {
+      "type": "float",
+      "targets": [
+        [
+          "340:315",
+          "cfg"
+        ]
+      ],
+      "default": 1.0,
+      "doc": "First-stage CFG (initial sampler); second-stage CFG stays unchanged. Experimental: compare a pilot before changing the default."
+    },
+    "negative_prompt": {
+      "type": "text",
+      "targets": [
+        [
+          "340:314",
+          "text"
+        ]
+      ],
+      "doc": "Optional negative conditioning for the talk workflow. Preserve template conditioning when omitted; verify the actual output visually."
     }
   },
   "outputs": {

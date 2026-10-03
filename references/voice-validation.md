@@ -110,3 +110,46 @@ or enforces human listening approval. Existing runtime review gates must be used
 After verification and confirmed local downloads, execute the current authorized retirement operation and
 preserve protected disks. Waiting for final review is not active compute; follow `gpu/SHUTDOWN.md` rather than
 leaving an idle paid server running solely for listening/review.
+
+## Explicitly deferred listening
+
+If the user explicitly asks to continue without their current voice audition and review the finished film later,
+record the instruction, date and scope in the checkpoint and voice report. Continue authorized generation and
+editing after automatic checks and operator visual inspection. Keep listening-dependent fields `not_reviewed`,
+voice quality `technical_only`, and final acceptance `needs_review`. Do not mark a runtime human-review gate
+approved, fabricate a reviewer, or silently bypass a coordinator gate that does not support this state. Prepare
+independent work and report the exact runtime limitation if such a gate truly blocks execution.
+
+This is permission to defer missing listening evidence, not permission to ignore known wrong words, missing
+syllables, clipping, unknown voice rights or a budget limit. Record uncertain brand pronunciation separately;
+never add an ASR alias merely to obtain a passing score. User unavailability alone is not this authorization.
+Do not repeat audition requests covered by the instruction. A later request to send the finished file to a
+specified group authorizes that delivery; it does not retroactively prove listening or erase QA limitations.
+
+## Source verification before the first TTS/video batch
+
+For each selected character, record in `voices/provenance.json`: selected local file, SHA-256, original source,
+synthetic origin or written consent evidence, intended character/voice description, and review state. Inspect the
+actual catalog or consent evidence; a filename such as `customer-synthetic.wav` is not sufficient provenance.
+Check that `lines.json` and `project.json` point to the same selected voice. A reused voice from another film
+must pass this check again for the intended role before spending time on its TTS and lip-sync takes.
+
+Record the selected reference hash with the line generation inputs, then lock each selected fitted WAV hash
+before video generation. A changed reference invalidates that character's generated lines, corresponding
+lip-sync takes, edit selections and QA; a changed WAV invalidates its take and descendants. Preserve old files
+as rejected/superseded, give replacements new job identities, and explicitly exclude old selections from the
+final manifest. These are required operator checks, not a claim that all legacy clients enforce them.
+
+Before preparing or submitting dialogue batches, run this free local preflight and retain its output:
+
+```bash
+python3 "$SK/scripts/verify_voice_sources.py" "$PROJECT"
+```
+
+The selected record requires `character`, `candidate`, `sha256`, `source`, `rights_basis` (`synthetic` or
+`written_consent`), `evidence` (catalog/consent reference) and `voice_description` (intended role and voice).
+Historical manifests lacking these fields must be reconciled against actual evidence, never auto-filled from
+a filename. The checker rejects missing/ambiguous records, mismatched cast paths and changed file hashes.
+It validates declarations and identity, not their truth, acoustic gender, audition quality or written consent
+itself. The operator must read the evidence. This standalone check does not automatically intercept direct
+ComfyUI requests or coordinator submissions; run it explicitly before both TTS and take batches.

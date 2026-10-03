@@ -2,7 +2,11 @@
 
 - **Status:** szkic do akceptacji. Bez akceptacji nie uruchamiamy maszyny GPU ani nie wydajemy kredytów na wideo.
 - **Pomysł:** jedno zdanie o sytuacji z życia i o tym, gdzie jest żart. YesOpen pojawia się tylko jako puenta, nie jako prezentacja.
-- **Długość:** około 45 s, pionowo 9:16, po angielsku (inne formaty robimy z tego samego montażu).
+- **Długość:** ... s łącznie z planszą końcową; ... fps; ... klatek.
+- **Język dialogu:** ...; **formaty zamówione przez użytkownika:** ... .
+- **Wersja / data scenariusza i źródło akceptacji:** ... .
+- **Tryb odsłuchu:** bieżący / odroczony wyraźnym poleceniem użytkownika; treść, data i zakres: ... .
+- **Założenia:** brak / konkretna lista wymagająca rozstrzygnięcia przed produkcją.
 
 ## Wzór
 
@@ -19,17 +23,18 @@ Nie kopiujemy kwestii, kadrów ani nazw z wzoru.
 - **POSTAĆ 1:**
   - wiek, wygląd, strój bez logo, rekwizyt;
   - miejsce (lokalny biznes, konkretne detale planu);
-  - sposób mówienia i to, jak zmienia się w trakcie.
+  - sposób mówienia i to, jak zmienia się w trakcie;
+  - źródło głosu, dowód uprawnienia, plik i SHA-256 w `voices/provenance.json`.
 - **POSTAĆ 2:** ...
 
 ## Scenariusz
 
-| # | Kto | Kwestia | Gra i ujęcie |
+| ID | Kto | Kwestia | Gra i ujęcie |
 | --- | --- | --- | --- |
-| 1 | POSTAĆ 1 | ... | ... |
-| 2 | POSTAĆ 2 | ... | ... |
+| U01 | POSTAĆ 1 | ... | ... |
+| U02 | POSTAĆ 2 | ... | ... |
 | ... | | | |
-| N | plansza | YesOpen · zdanie z planszy · yesopens.com | 2,6 s |
+| plansza | plansza | YesOpen · zatwierdzone zdanie i opcjonalny adres | ... s |
 
 Banery powiadomień, napisy i planszę nakładamy w montażu. Model wideo nie pisze tekstu na ekranie.
 
@@ -69,17 +74,29 @@ Zostaw wariant silnika, którego używasz (`project.json` → `engine`).
 Serwer GPU (`gpu`):
 
 - **Zdjęcia startowe:** Z-Image ze wstępem o kadrze, 4 kandydatów na postać (`gpu_batches.py stills`); powracające postacie z `assets/cast/`.
-- **Głos:** Chatterbox, głos sklonowany z próbki w `voices/`; każda kwestia dwa razy, potem `fit_lines.py` sprawdza słowa i przycina.
+- **Głos:** Chatterbox Multilingual V3 dla obsługiwanych języków, głos sklonowany z próbki w `voices/`; każda kwestia dwa razy, potem `fit_lines.py` sprawdza słowa i przycina.
 - **Ujęcia z mową:** LTX-2.3 do gotowej kwestii, jedno ujęcie na kwestię; kadr się nie zmienia, telefon tyłem do kamery.
-- **Montaż:** skrypty skilla (`make_edl.py`, `assemble.py`), formaty 9:16, 4:5, 1:1, 16:9.
+- **Montaż:** skrypty skilla (`make_edl.py`, `assemble.py`), wyłącznie zamówione formaty z `project.json`.
 - **Szacunkowy koszt:** minuty GPU z `gpu_batches.py estimate` i czas całej sesji razy cena maszyny za godzinę; koniec pracy serwera zgodnie z bieżącą dyspozycją, pobraniem materiałów i sprawdzeniem wspólnej kolejki.
 
 Higgsfield (`higgsfield`):
 
 - **Zdjęcia startowe:** Soul 2, 9:16, 1080p, `batch_size` 4, `enhance_prompt: false`.
 - **Ujęcia z mową:** Seedance 2.5 image-to-video, `generate_audio: true`, 720p; każda postać mówi swoje kwestie w 1–2 długich ujęciach, z pauzami na słuchanie.
-- **Montaż:** skrypty skilla (`make_edl.py`, `assemble.py`), formaty 9:16, 4:5, 1:1, 16:9.
+- **Montaż:** skrypty skilla (`make_edl.py`, `assemble.py`), wyłącznie zamówione formaty z `project.json`.
 - **Szacunkowy koszt:** suma z `hf-job cost` dla każdego ujęcia; stawka za sekundę zależy od rozdzielczości.
+
+## Plan czasu po dopasowaniu głosu
+
+| ID | Czas wejścia–wyjścia | Gotowy dialog (s) | Ruch / reakcja bez podwójnego liczenia (s) | HOLD (s) | Razem (klatki) |
+| --- | --- | --- | --- | --- | --- |
+| U01 | ... | ... | ... | ... | ... |
+| plansza | ... | — | — | ... | ... |
+| SUMA | ... | | | | ... |
+
+Suma obejmuje planszę; czas liczymy z wybranych WAV i pełnych zakończeń ujęć. Tabela dialogu,
+ciągłości i czasu używa tych samych ID. Tryb odroczonego odsłuchu nie oznacza `accepted`:
+kontrole słuchowe pozostają `not_reviewed`; wyniki techniczne zapisujemy oddzielnie.
 
 ## Gotowość przed pełną partią
 

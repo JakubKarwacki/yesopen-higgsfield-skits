@@ -23,7 +23,9 @@ Preserve the implementation version and sample results; never silently run Engli
 ## 2. Lock audio and estimate the real edit length
 
 Generate and fit voices before their video takes. Listen to key lines for wording, intonation and pauses;
-ASR alone does not assess acting or naturalness. Reuse accepted audio when correcting only visual action.
+ASR alone does not assess acting or naturalness. An explicit user instruction may defer listening as described
+in [voice-validation.md](voice-validation.md); retain honest review states and continue within that scope.
+Verify source provenance and character mapping before the first TTS batch. Reuse accepted audio when correcting only visual action.
 
 Calculate the timeline from actual fitted audio, silent beats, completed movements, holds and the end card.
 Count speech and movement that happen simultaneously only once. Record each shot's duration and the sum.
@@ -51,7 +53,12 @@ Cropping invented text must not remove faces or necessary action; regenerate whe
 
 ## 4. Schedule and resume without paying twice
 
-Use one scheduler for a shared host. Do not mix unmanaged batches with coordinator work. Keep one GPU worker
+Use one scheduler for a shared host. Do not mix unmanaged batches with coordinator work.
+First identify the running scheduler and installed release. If the user authorizes concurrent work on an existing
+native ComfyUI-only host, verify there is no managed coordinator, then enqueue isolated, durably logged jobs
+through that same native queue. Do not bootstrap/restart the host or add a second GPU worker to make it conform
+to a local configuration. Record this deployment mode explicitly; never claim managed-run guarantees for it.
+A stale host/IP in local config must be reconciled with provider identity and SSH host-key verification. Keep one GPU worker
 until a controlled measurement supports more. Overlap supported CPU QA, downloads and edit preparation with
 GPU generation within measured host capacity. Group model-compatible work where this does not bypass pilots,
 starve another production or delay necessary feedback.
@@ -96,7 +103,9 @@ the host. Follow [the shutdown checks](../gpu/SHUTDOWN.md). A finished film wait
 not represent running computation. The drain result describes coordinator tasks, so also check actual
 ComfyUI queues, CPU exports and transfers across all projects. Never interrupt unrelated work.
 
-Execute the operation already authorized by the user. A request to stop does not authorize Delete/Terminate;
+Execute the operation already authorized by the user. If the latest instruction is to leave the shared server
+running, do not drain, stop, delete or change its services when this film ends, even if its queue is empty.
+Record `leave_running` as the current instruction and preserve prior stop/delete requests only as history. A request to stop does not authorize Delete/Terminate;
 protect every disk the user asked to retain. Verify provider state after the operation and write the evidence
 to the current checkpoint. Report retained resources and possible storage charges. Do not claim all billing
 has ended merely because computation stopped. A pending review must not become a reason to request redundant

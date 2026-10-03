@@ -46,6 +46,13 @@ and final-film acceptance. ASR pass alone is not voice-quality approval. Missing
 `needs_review`; do not claim that it passed. Use [references/multilingual.md](references/multilingual.md) for
 Chatterbox Multilingual V3 setup and supported language codes.
 
+## Production hardening from the Polish salon film
+
+Read [references/production-hardening.md](references/production-hardening.md) when resuming shared production,
+selecting voice sources, diagnosing talk shots or preparing delivery. It covers explicit user-deferred listening,
+source verification before generation, corrected first-stage CFG, readable typography and WhatsApp delivery.
+Do not turn a user's temporary inability to listen into repeated approval requests or invented listening evidence.
+
 ## Non-negotiables
 
 1. **A comedy skit, not a product presentation.** From the first brief: "to nie jest prezentacja produktu".
@@ -159,6 +166,8 @@ Start one with `python3 $SK/scripts/new_project.py <slug> --title "<end-card lin
 ## The workflow
 
 Every phase ends with a gate from `references/qa-checklist.md`. A failed gate stops the next paid step.
+Explicit user-deferred listening follows the scoped continuation rule in `references/voice-validation.md`;
+known defects and missing voice rights still block the affected work.
 
 ### Phase 0: Start
 
@@ -329,7 +338,8 @@ python3 $SK/scripts/encode_variants.py final/<name>-9x16.mp4       # -share.mp4 
 ```
 
 1. Reply with clickable links to the local files first: master, share copy, web copies.
-2. Send the 9:16 web copy with SendUserFile so it plays on any device.
+2. Show the 9:16 web copy using the current app’s supported local video preview (absolute-path Markdown in Codex).
+   Use SendUserFile only when that tool is actually available; never stall delivery looking for a missing tool.
 3. A shareable page only on request (a private claude.ai Artifact with the web mp4 and poster).
 4. No posting to any platform without an explicit request. Gate 7.
 
@@ -386,6 +396,7 @@ returns no cost and there is no balance endpoint.
 | `contact_sheet.py` | labelled grid of images or frames |
 | `gpu/client/gpu.py` | GPU engine: `start` / `stop` a session (finds, connects to or orders the machine, installs the stack, opens the tunnel), `run` and `batch` jobs, `health`, `templates`, `edit`; a `jobs.jsonl` line per job |
 | `gpu_batches.py` | GPU engine: the batch files for stills, voices, reseeds and takes from `lines.json`, and the GPU-time estimate |
+| `verify_voice_sources.py` | free source preflight: provenance declarations, selected cast paths and SHA-256; not listening approval |
 | `fit_lines.py` | GPU engine: checks every recorded take against its line, cuts what the model added, picks the take |
 | `hf-job` (`hf_job.py`) | Higgsfield: `submit`, `resume`, `status`, `upload`, `cost`; checkpoints in `jobs.jsonl` |
 | `inspect_take.py` | Whisper words, frame sheet, refined line times, room tone of a take |
@@ -460,10 +471,12 @@ excludes the folder locally (`.git/info/exclude`).
    T="$(security find-generic-password -s huggingface -a token -w 2>/dev/null)"; [ -z "$T" ] || git ls-files -co --exclude-standard -z | xargs -0 grep -I -l -F -e "$T"; unset T
    ```
 
-4. Commit as `behavio1` and push:
+4. When remote publication is authorized, commit as `behavio1` and push only the reviewed task changes.
+   Inspect the existing dirty work first; never sweep unrelated changes into the commit. The commands below
+   require an explicitly reviewed file list, not `git add -A`:
 
    ```bash
-   git -C $SK add -A
+   git -C $SK add -- <reviewed-files>
    git -C $SK commit -m "<what changed and why>"
    git -C $SK push
    ```

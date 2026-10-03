@@ -60,10 +60,27 @@ python3 $SK/scripts/encode_variants.py final/<name>-9x16.mp4
 1. **Clickable local links first.** Give the absolute paths of the master, share and web files as Markdown
    links in the reply, before anything else. Marcin asked for this explicitly ("gdzie są pliki na dysku");
    do not make him wait for an upload or a page.
-2. **A preview in chat**: send the web version with `SendUserFile` (render) so it plays on any device.
+2. **A preview in chat**: use the current app’s supported local video preview. In Codex, use Markdown image
+   syntax with the absolute MP4 path. Use `SendUserFile` only when available; do not search indefinitely for an
+   unavailable tool. Verify files exist locally and compare their hashes with the server copies first.
 3. **A page to share** (optional, when asked): a private claude.ai Artifact with the web mp4 and the poster
    (each file under 15 MB). Use the Artifact tool's own flow; do not detour through other hosting.
 4. **Never post** to TikTok, Instagram, YouTube or any account without an explicit request for that post.
 
 Report: length, formats, loudness (−14 LUFS), the files with links, and anything that differs from the
 approved script.
+
+## WhatsApp delivery when explicitly requested
+
+Use the requested computer-use interface and the native WhatsApp app when available. Confirm the group name
+in the open chat and again in the media preview; do not infer a recipient from chat recency. Select the verified
+final master with Photos and videos. In the macOS file dialog, open Go to Folder, inspect its current state,
+set the path field explicitly, and verify the selected basename/path before Open. A paste attempt is not proof
+that the file picker received the intended path.
+
+Check the preview shows the intended full duration, unmuted audio and one correct attachment. Select HD for
+normal video sharing; this may still recompress the video and is not byte-identical master delivery. If the user
+requires the exact original, send it as a file/document instead. Do not invent a caption or additional recipients.
+Send under the user's existing specific authorization. Wait for upload completion and inspect Sent/Delivered;
+report exactly the status shown. Uploading, a local bubble or a clicked Send button alone is not delivery.
+Never retry an uncertain send without first reconciling the existing message, to avoid duplicates.

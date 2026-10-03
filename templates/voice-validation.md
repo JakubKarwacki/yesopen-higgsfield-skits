@@ -3,11 +3,20 @@
 Status: technical_only / needs_review / rejected / accepted
 Nie wpisuj `accepted`, dopóki wymagane kontrole i rzeczywisty odsłuch nie są zakończone.
 
+## Tryb oceny i autoryzacja
+
+- Tryb: bieżący odsłuch / odsłuch odroczony wyraźnym poleceniem użytkownika.
+- Treść, data i zakres polecenia odroczenia (jeśli dotyczy):
+- Wykonane kontrole automatyczne / niepewności wymagające odsłuchu:
+- Zgoda na kontynuację produkcji nie jest dowodem odsłuchu ani zgodą na publikację.
+- Przy odroczeniu: odsłuch `not_reviewed`, jakość `technical_only`, akceptacja `needs_review`.
+
 ## Ustalenia i pochodzenie
 
 - Język / uzgodniony akcent / postać / emocja i tempo:
 - Wersja zatwierdzonego scenariusza i zamierzona wymowa nazw/liczb:
-- Podstawa uprawnienia do użycia głosu:
+- Podstawa uprawnienia do użycia głosu, oryginalne źródło i dowód katalogowy/zgoda:
+- Zweryfikowana zgodność postaci i ścieżki głosu w lines.json, project.json i voices/provenance.json:
 - Porównanie dwóch fragmentów referencyjnych: ten sam tekst, ustawienia i seed; wyniki:
 - Próbka referencyjna, SHA-256, wynik jej odsłuchu:
 - Commit kodu / stan wdrożenia / model / rewizja / SHA-256 wag:
