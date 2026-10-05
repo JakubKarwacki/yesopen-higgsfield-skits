@@ -119,7 +119,8 @@ that hides the missing event. After regeneration, review and select the edit bou
 | `ffmpeg`, `ffprobe` | 8.x; no `drawtext` or `libass` needed (all text is drawn with Pillow) |
 | Python 3.11 | `pip install pillow numpy openai-whisper` (`large-v3-turbo` downloads on first use) |
 | GPU engine | a GPU server: one NVIDIA card with 80 GB or more, an Ubuntu 24.04 VM with Docker and the NVIDIA Container Toolkit, root login by SSH key, a 300 GB disk. Verda, another provider or your own machine: `references/gpu-engine.md`, section 2. Here: `ssh`, `rsync`, an SSH key and the settings in `~/.config/yesopen-gpu/config.json` |
-| GPU engine, optional | the `verda` CLI with API credentials (`start` then orders and `stop` deletes the machine by itself); a Hugging Face token for silent `action` shots (LTX-2.5); Docker here for the editor container |
+| GPU engine at Verda, required | the `verda` CLI, set up by the user: installed, logged in with API credentials of the Verda project, and `verda.instance_type` and `verda.ssh_key_id` filled in the config. Before the first GPU step run `python3 $SK/gpu/client/gpu.py verda-check`. When it says the CLI is not set up, stop and tell the user plainly that they must set it up first, and give them the steps it prints. The user runs `verda auth login` in their own terminal; never ask for the client secret, never take it in the chat and never read it. The credentials may also reach the CLI from the environment (`VERDA_CLIENT_ID`, `VERDA_CLIENT_SECRET`), the way `scripts/verda-vault.py` passes the team vault entry (`references/verda-operations.md`); `verda-check` tests them with a read-only call. `start`, `stop`, `up`, `down` and `status` refuse to run until the check passes. A server elsewhere, or a machine a teammate starts for you: `"provider": "other"` in the config |
+| GPU engine, optional | a Hugging Face token for silent `action` shots (LTX-2.5); Docker here for the editor container |
 | Higgsfield engine | an account with credit and an API key `<key-id>:<secret>` in the Keychain (service `higgsfield`, account `api-key`) or `HF_KEY`; `hf-job` finds or creates a venv with `higgsfield-client` |
 | Ego Browser | captures the reference (global skill `ego-browser`); without it, save frames and the transcript by hand into `reference/private/` |
 | Localesto checkout | optional: product copy for claims and the default project root; `LOCALESTO_ROOT` if it is not a parent folder |
@@ -266,7 +267,9 @@ Voice samples: `voices/<character>.wav`, 5–15 s of one clean synthetic voice (
 from our own earlier take). Listen to the lines that carry the joke (`key_shots`) before any picture is made: the
 picture follows the sound, so a wrong word, or a question where the script has a full stop, is fixed here for
 seconds of GPU time. A silent beat before a line: `silence_before` on that line, with a whole `prompt` that says
-what happens first. Make the music bed in the same session if the skit wants one (`gpu-engine.md`, section 7).
+what happens first. The takes are LTX-2.3 by default; with MiniMax's consent a film (or one line) can be made on
+MiniMax H3 instead: `"model": "h3"` in `lines.json` → `take`, or `gpu_batches.py takes --model h3` (`gpu-engine.md`,
+section 6). Make the music bed in the same session if the skit wants one (`gpu-engine.md`, section 7).
 After Gate 4, retire resources only when the remaining edit/QA no longer needs that host and the
 production procedure permits it. A shared machine may still have CPU/export work.
 

@@ -8,19 +8,29 @@ usage (PROJECT is the skit folder, default the current one):
   python3 gpu_batches.py reseed ID [PROJECT] [--n 4] [--first-seed N] [--text "..."] [--exaggeration 0.5]
                                                            voice/batch-<ID>.json: new tts takes of one line, also
                                                            with another spelling ("2 AM") or performance
-  python3 gpu_batches.py takes [PROJECT] [--only l16] [--out takes/batch-l16.json]
+  python3 gpu_batches.py takes [PROJECT] [--only l16] [--out takes/batch-l16.json] [--model ltx|h3]
                                                            takes/batch.json: one talk take per fitted line
-  python3 gpu_batches.py estimate [PROJECT]                the jobs and the GPU minutes, before a session
+  python3 gpu_batches.py estimate [PROJECT] [--model ltx|h3]
+                                                           the jobs and the GPU minutes, before a session
 
 Run every file with `gpu.py batch <file>`. lines.json (start from templates/lines.json):
 
   language     the tts language: "English (en)", "Polish (pl)", "German (de)", ...
   characters   per character: voice (a 5-15 s sample), still (the picked image), who / where / him (the take
                prompt: "The bearded gym owner", "in his small gym", "him" or "her"), look (the Z-Image prompt)
-  take         template with {who} {where} {him} {action}, tail (seconds of acting after the line), seed (base)
+  take         model: "ltx" (talk, LTX-2.3, the default) or "h3" (h3-talk, MiniMax H3, only with MiniMax's
+               consent); template / h3_template with {who} {where} {him} {he} {He} {his} {action} {text}, tail
+               (seconds of acting after the line), seed (base); for ltx also negative_prompt, cfg_first and
+               enhance_prompt (also per line); for h3 also fast (8 steps instead of 20) and megapixels
+               (0.98 = 768x1344)
   lines        id, who, text, exaggeration, acting; optional: action (what we see in the take, default acting),
-               still (another picture of the character), tail, seed, prompt (the whole take prompt),
-               silence_before (seconds the character acts before speaking), seconds (the whole take)
+               still (another picture of the character), tail, seed, prompt (the whole take prompt; h3_prompt
+               for MiniMax), silence_before (seconds the character acts before speaking), seconds (the whole
+               take), model (this line on the other model)
+
+--model replaces the film's model for one batch (a line's own model still wins), e.g. a MiniMax version of a
+film next to its LTX takes: `takes --model h3 --out takes-h3/batch.json`. MiniMax H3 is trained on 5.2-15 s: a
+shorter take is made 5.2 s long (the edit cuts it after the line, as any take) and a longer line gets a warning.
 
 Seeds are fixed, so a batch written twice is the same batch: tts takes 100 + 2i and 101 + 2i for line i
 (counted from 0), takes `take.seed` + line number, stills 1000 + 10 x character number + candidate.
@@ -40,10 +50,28 @@ TAKE_TEMPLATE = (
     "natural handheld movement, the framing stays the same with no zoom and no push-in. {who} stays in place "
     "{where} and talks directly into the camera lens as if to the person filming {him}, {action}. Natural, "
     "understated comedic acting. No other people, no text on screen.")
-DEFAULT_TAKE = {"template": TAKE_TEMPLATE, "tail": 0.6, "seed": 500}
+# MiniMax H3 reads the shot the way its official templates write it: <Picture 1> is the still, SHOT 1 opens on it,
+# and the dialogue is quoted. The recorded line is anchored as the soundtrack (h3-talk), so the voice stays ours.
+H3_TAKE_TEMPLATE = (
+    "Vertical smartphone video, one continuous handheld shot with no cuts. <Picture 1>: {who} {where}. The place "
+    "and the light stay the same throughout.\n"
+    "SHOT 1: The scene opens exactly on image 1. The camera stays at eye level facing {him} with slight natural "
+    "handheld movement; the framing stays the same, no zoom, no push-in. {who} stays in place and talks directly "
+    "into the camera lens as if to the person filming {him}, {action}. {He} says: \"{text}\" Natural, expressive "
+    "comedic acting with clear facial expressions. No other people, no text on screen.\n"
+    "Audio: only {his} voice, close to the phone's microphone, in a quiet room; no music.")
+DEFAULT_TAKE = {"template": TAKE_TEMPLATE, "h3_template": H3_TAKE_TEMPLATE, "tail": 0.6, "seed": 500,
+                "model": "ltx"}
+MODELS = {"ltx": "talk", "h3": "h3-talk"}
+LTX_OPTIONS = ("enhance_prompt", "cfg_first", "negative_prompt")  # talk only (references/performance-controls.md)
+PRONOUNS = {"him": ("he", "his"), "her": ("she", "her"), "them": ("they", "their")}
+# the trained range, 124 to 362 frames at 24 fps; 5.166 s, not 5.17, so the client does not round up to 141 frames
+H3_MIN_SECONDS, H3_MAX_SECONDS = 5.166, 362 / 24
+# a take comes out up to one frame group longer than asked (the model's frame grid at 24 fps)
+GRID_SECONDS = {"talk": 8 / 24, "h3-talk": 17 / 24}
 
 # GPU seconds per job on one H200, from ComfyUI's own history (2 October 2026): (first job, loading the model;
-# every later job). The B200 is not measured yet.
+# every later job). The B200 is not measured yet, nor is h3-talk.
 GPU_SECONDS = {"still": (9.6, 2.8), "still-edit": (15.7, 5.0), "tts": (10.8, 4.0), "talk": (35.4, 13.4),
                "music": (17.8, 17.8)}
 
@@ -91,24 +119,32 @@ def warn_done(folder: Path, jobs: list) -> None:
     for row in log.read_text().splitlines():
         if row.strip():
             item = json.loads(row)
-            made[item["name"]] = item.get("values", {})
-    def differs(key, old, new):
+            made[item["name"]] = (item.get("template"), item.get("values", {}))
+    def differs(template, key, old, new):
         if isinstance(new, str) and new.startswith(("../", "./", "/")):
             return False  # files: the log holds absolute paths
         if key == "seconds":
-            # the client rounds a talk take up to whole groups of 8 frames at 24 fps, less than 1/3 s more
-            return not (float(old) - 1 / 3 - 1e-6 < float(new) <= float(old) + 1e-6)
+            # the client rounds a take up to the model's frame grid at 24 fps
+            grid = GRID_SECONDS.get(template, 1 / 3)
+            return not (float(old) - grid - 1e-6 < float(new) <= float(old) + 1e-6)
         return old != new
 
     for job in jobs:
-        before = made.get(job["name"])
-        if before is None:
+        if job["name"] not in made:
             continue
-        changed = [key for key, value in job["set"].items() if key in before and differs(key, before[key], value)]
+        template, before = made[job["name"]]
+        if template and template != job["template"]:
+            changed = [f"template ({template})"]
+        else:
+            changed = [key for key, value in job["set"].items()
+                       if key in before and differs(job["template"], key, before[key], value)]
         if not changed:
             continue
         if job["template"] == "tts":
             fix = "make new takes with gpu_batches.py reseed"
+        elif template and template != job["template"]:
+            fix = (f"to keep both versions write this batch into another folder (--out {folder.name}-h3/batch.json), "
+                   f"or move the old {job['name']} files to {folder.name}/old/ and run the batch with --force")
         else:
             fix = (f"move the old {job['name']} files to {folder.name}/old/, write a batch of that job alone "
                    f"(--only {job['name']} --out {folder.name}/batch-{job['name']}.json) and run it with --force")
@@ -205,13 +241,24 @@ def pad_line(project: Path, line_id: str, before: float) -> str:
     return f"lines/{line_id}-pad.wav"
 
 
+def line_model(take: dict, line: dict, film_model) -> str:
+    """The model of a line's take: the line's own, else --model, else the film's (take.model)."""
+    model = line.get("model") or film_model or take["model"]
+    if model not in MODELS:
+        raise SystemExit(f"{line['id']}: model {model!r} is not one of {', '.join(MODELS)}")
+    return model
+
+
 def cmd_takes(project: Path, doc: dict, args) -> None:
     take = {**DEFAULT_TAKE, **doc.get("take", {})}
     only = set(args.only.split(",")) if args.only else None
-    jobs = []
+    out = args.out or "takes/batch.json"
+    folder = os.path.dirname(out) or "."
+    jobs, ltx_only = [], set()
     for i, line in enumerate(doc["lines"]):
         if only and line["id"] not in only:
             continue
+        model = line_model(take, line, getattr(args, "model", None))
         char = doc["characters"][line["who"]]
         seconds = line_seconds(project, line["id"])
         audio = f"lines/{line['id']}.wav"
@@ -219,39 +266,59 @@ def cmd_takes(project: Path, doc: dict, args) -> None:
             audio = pad_line(project, line["id"], line["silence_before"])
             seconds += line["silence_before"]
         tail = line.get("tail", take["tail"])
-        prompt = line.get("prompt") or take["template"].format(
-            who=char["who"], where=char["where"], him=char.get("him", "him"),
-            action=line.get("action", line.get("acting", "")))
-        jobs.append({"name": line["id"], "template": "talk",
-                     "set": {"image": rel(project, "takes", line.get("still") or char["still"]),
-                             "audio": rel(project, "takes", audio), "prompt": prompt,
-                             "seconds": line.get("seconds", round(seconds + tail, 2)),
-                             "seed": line.get("seed", take["seed"] + i + 1)}})
-    for job in jobs:
-        line = next(item for item in doc["lines"] if item["id"] == job["name"])
-        for option in ("enhance_prompt", "cfg_first", "negative_prompt"):
-            if option in line or option in take:
-                job["set"][option] = line.get(option, take.get(option))
+        him = char.get("him", "him")
+        he, his = PRONOUNS.get(him, ("he", "his"))
+        fields = {"who": char["who"], "where": char["where"], "him": him, "he": he, "He": he.capitalize(),
+                  "his": his, "action": line.get("action", line.get("acting", "")), "text": line["text"]}
+        if model == "h3":
+            prompt = line.get("h3_prompt") or line.get("prompt") or take["h3_template"].format(**fields)
+        else:
+            prompt = line.get("prompt") or take["template"].format(**fields)
+        values = {"image": rel(project, folder, line.get("still") or char["still"]),
+                  "audio": rel(project, folder, audio), "prompt": prompt,
+                  "seconds": line.get("seconds", round(seconds + tail, 2)),
+                  "seed": line.get("seed", take["seed"] + i + 1)}
+        if model == "h3":
+            if values["seconds"] > H3_MAX_SECONDS:
+                print(f"  {line['id']}: {values['seconds']} s is longer than the {H3_MAX_SECONDS:.1f} s MiniMax H3 "
+                      f"was trained on; split the line, or make it with LTX (\"model\": \"ltx\" on the line)",
+                      file=sys.stderr)
+            values["seconds"] = max(values["seconds"], H3_MIN_SECONDS)
+            values.update({key: take[key] for key in ("fast", "megapixels") if key in take})
+            ltx_only.update(key for key in LTX_OPTIONS if key in line or key in take)
+        else:
+            values.update({key: line.get(key, take.get(key)) for key in LTX_OPTIONS if key in line or key in take})
+        jobs.append({"name": line["id"], "template": MODELS[model], "set": values})
+    if ltx_only:
+        print(f"  {', '.join(sorted(ltx_only))}: LTX settings, left out of the MiniMax H3 takes (h3-talk has no such "
+              f"parameter)", file=sys.stderr)
     if not jobs:
         raise SystemExit("no lines matched --only")
-    write(project, args.out or "takes/batch.json", jobs)
+    write(project, out, jobs)
 
 
 def cmd_estimate(project: Path, doc: dict, args) -> None:
+    take = {**DEFAULT_TAKE, **doc.get("take", {})}
     n_lines = len(doc["lines"])
+    n_h3 = sum(line_model(take, line, getattr(args, "model", None)) == "h3" for line in doc["lines"])
     new_chars = [c for c in doc["characters"].values()
                  if not (c.get("still") and (project / c["still"]).exists())]
-    count = {"still": 4 * len(new_chars), "tts": 2 * n_lines, "talk": n_lines,
+    count = {"still": 4 * len(new_chars), "tts": 2 * n_lines, "talk": n_lines - n_h3, "h3-talk": n_h3,
              "music": 1 if json.loads((project / "project.json").read_text()).get("music") else 0}
     total = 0.0
     for template, n in count.items():
-        if n:
-            first, later = GPU_SECONDS[template]
-            seconds = first + later * (n - 1)
-            total += seconds
-            print(f"{template:6} {n:3} jobs  {seconds / 60:5.1f} min")
-    print(f"GPU time about {total / 60:.0f} min on an H200, plus reseeds and retakes (the pilot: 10.4 min for 21 "
-          f"lines). The machine bills from start to delete: the pilot's whole session took about 1 h.")
+        if not n:
+            continue
+        if template not in GPU_SECONDS:
+            print(f"{template:7} {n:3} jobs  not measured yet")
+            continue
+        first, later = GPU_SECONDS[template]
+        seconds = first + later * (n - 1)
+        total += seconds
+        print(f"{template:7} {n:3} jobs  {seconds / 60:5.1f} min")
+    print(f"GPU time about {total / 60:.0f} min on an H200{' without the MiniMax takes' if n_h3 else ''}, plus "
+          f"reseeds and retakes (the pilot: 10.4 min for 21 lines). The machine bills from start to delete: the "
+          f"pilot's whole session took about 1 h.")
 
 
 def main() -> None:
@@ -269,7 +336,9 @@ def main() -> None:
     p = sub.add_parser("takes")
     p.add_argument("--only", help="comma-separated line ids")
     p.add_argument("--out", help="batch file, relative to the project (default takes/batch.json)")
-    sub.add_parser("estimate")
+    p.add_argument("--model", choices=sorted(MODELS), help="the film's model for this batch (default: take.model)")
+    p = sub.add_parser("estimate")
+    p.add_argument("--model", choices=sorted(MODELS), help="the film's model for this batch (default: take.model)")
     for p in sub.choices.values():
         p.add_argument("project", nargs="?", default=".")
     args = ap.parse_args()

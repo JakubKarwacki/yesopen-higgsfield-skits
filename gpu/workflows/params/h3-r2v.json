@@ -42,6 +42,17 @@
       ],
       "default": "9:16 (Portrait Widescreen)"
     },
+    "megapixels": {
+      "type": "float",
+      "targets": [
+        [
+          "115",
+          "megapixels"
+        ]
+      ],
+      "default": 0.98,
+      "doc": "0.98 = 768x1344 at 9:16, the model's largest trained canvas (the template's 0.4 gives 480x864)"
+    },
     "seconds": {
       "type": "float",
       "targets": [
@@ -60,7 +71,7 @@
           "value"
         ]
       ],
-      "doc": "4-step turbo LoRA"
+      "doc": "4-step turbo LoRA instead of 20 steps"
     },
     "seed": {
       "type": "seed",
@@ -74,5 +85,10 @@
   },
   "outputs": {
     "video": "92"
+  },
+  "rules": {
+    "h3_frames": {
+      "seconds": "seconds"
+    }
   }
 }

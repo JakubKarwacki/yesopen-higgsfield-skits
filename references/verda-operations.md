@@ -22,6 +22,8 @@ python3 scripts/verda-vault.py vm shutdown INSTANCE_ID --yes --agent
 python3 scripts/verda-vault.py vm delete INSTANCE_ID --yes --agent
 ```
 
+`gpu/client/gpu.py` (`start`, `stop`, `up`, `down`, `status`) drives the same CLI and makes machines too (`vm create`, which this helper does not allow). It needs the CLI's own login (`verda auth login`, done by the account holder) or the two variables in its environment; `python3 gpu/client/gpu.py verda-check` says which is missing, and the session commands refuse to run until it passes.
+
 `shutdown` is a temporary operational pause and continues instance billing. Retirement uses `delete`, NEVER `--with-volumes`. Deleted compute must be recreated for a future authorized session using retained disks; `start` only starts an existing instance.
 
 Before deletion: download and verify required artifacts; record all disk IDs; verify project/instance; drain coordinator if deployed; check native queues and CPU/GPU/export/transfer processes across projects. Resident models or historical CPU averages do not establish active work. Unknown live state requires reconciliation, not an invented active job.

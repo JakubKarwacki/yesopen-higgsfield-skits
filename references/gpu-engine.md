@@ -49,7 +49,11 @@ G="python3 $SK/gpu/client/gpu.py"
 - **Model licences.** The LTX-2 Community License covers `talk`, `talk-voice` and `action*`: free for a company with
   less than $10 million a year in revenue, no deepfakes of real people without their consent, and content made with
   it must be marked as generated. Every model's licence is listed in `gpu/README.md`.
-- **Variant B (MiniMax H3)** stays off until MiniMax confirms the licence in writing (`--variant-b` downloads it).
+- **Variant B (MiniMax H3)** only with MiniMax's written consent. Its standard licence excludes the EU, the UK, the
+  US and South Korea (using the model there and showing its videos there need MiniMax's authorization), asks for a
+  separate authorization above $20 million of yearly revenue, and requires every video made with it to be clearly
+  marked as machine-generated when it is published. Download it once onto the kept disk:
+  `gpu.py fetch h3-talk,h3-i2v,h3-r2v --variant-b` (section 6).
 
 ## 2. The server: what it needs and where to get it
 
@@ -74,9 +78,12 @@ as fast, not measured yet.
 
 | Way | Setup | Start and end of a session |
 | --- | --- | --- |
-| Verda, from this computer (recommended) | a Verda account with a prepaid balance (top-ups from $20 plus VAT); `brew install verda-cloud/tap/verda-cli`; API credentials from the Verda console (Project → Credentials) and `verda auth login`; `verda ssh-key add --name yesopen-gpu --public-key "$(cat ~/.ssh/id_ed25519_yesopen_gpu.pub)"`; then `verda.ssh_key_id` (`verda ssh-key list`), `verda.instance_type` and `verda.location` (a location with a free card: `verda availability --type <type>`) in the config | `gpu.py start --yes` finds the machine or orders it, boots the kept disk, installs what is missing and connects; `gpu.py stop --yes` deletes it and keeps the disk |
-| Verda console, without API credentials | the SSH key added in the console (Deploy → "Add new key") | deploy by hand: the GPU type, the image "Ubuntu 24.04 + CUDA 13.0 Open + Docker" (later: the kept disk as its OS disk), 300 GB, your key; then `gpu.py use <address>` and `gpu.py start`. At the end `gpu.py stop`, delete the machine in the console with the disk kept, `gpu.py use --clear` |
-| Another provider, or a machine in your office | a VM that meets the list above; your public key for root | `gpu.py use <address>`, `gpu.py start`; at the end `gpu.py stop`, delete or free the machine, `gpu.py use --clear`. The install turns on the firewall (only SSH comes in) and turns off SSH passwords, so give it a machine of its own |
+| Verda (the default `provider`; the Verda CLI is required) | a Verda account with a prepaid balance (top-ups from $20 plus VAT); `brew install verda-cloud/tap/verda-cli`; API credentials made by the account holder in the Verda console (Project management → Credentials) and saved by them with `verda auth login` in their own terminal, never through a chat or an agent (or given to the CLI as `VERDA_CLIENT_ID` and `VERDA_CLIENT_SECRET` in the environment, as `scripts/verda-vault.py` does from the team vault, never on a command line; `verda-check` then tests them with a read-only call); `verda ssh-key add --name yesopen-gpu --public-key "$(cat ~/.ssh/id_ed25519_yesopen_gpu.pub)"`; then `verda.ssh_key_id` (`verda --agent ssh-key list -o json`), `verda.instance_type` and `verda.location` (a location with a free card: `verda availability --type <type>`) in the config. Check it all with `gpu.py verda-check` | `gpu.py start --yes` finds the machine or orders it, boots the kept disk, installs what is missing and connects; `gpu.py stop --yes` deletes it and keeps the disk. Until `verda-check` passes, `start`, `stop`, `up`, `down` and `status` stop and print the setup steps; only an API outage (Verda's maintenance windows) just warns and goes on with the known address |
+| Another provider, or a machine in your office | `"provider": "other"` in the config; a VM that meets the list above; your public key for root | `gpu.py use <address>`, `gpu.py start`; at the end `gpu.py stop`, delete or free the machine, `gpu.py use --clear`. The install turns on the firewall (only SSH comes in) and turns off SSH passwords, so give it a machine of its own |
+
+The Verda web console is only for what the CLI cannot do: making the API credentials, cards and top-ups (the
+project owner), enlarging the disk, and a spot machine on the kept disk ("Spot eviction storage settings → No
+deletion"; from the CLI an eviction could take the disk).
 
 **A team on one machine.** Everyone works in the same Verda project with the same `verda.hostname`,
 `instance_type` and `location`. Each person adds their own public key to the project (`verda ssh-key add`), and
@@ -86,7 +93,8 @@ boot the team's kept disk rather than install from scratch, put its id into your
 `{"os_volume_id": "<disk id>"}` (`verda volume list`). `stop --yes` deletes the machine for everyone, so agree
 who ends the session.
 
-**Teammates without a Verda account** need only their own SSH key. They send their public key
+**Teammates without a Verda account** need only their own SSH key and `"provider": "other"` in their config,
+since they do not drive Verda themselves. They send their public key
 (`~/.ssh/id_ed25519_yesopen_gpu.pub`, never a private key). Whoever has the account adds it to the project, gives
 the machine every key (in the console, or through the list in `verda.ssh_key_id`), starts and later deletes the
 machine, and passes on its address for each session. The teammate runs `gpu.py use <address>` and `gpu.py start`;
@@ -104,9 +112,10 @@ $G stop --yes         # always: close the tunnel, delete the machine, keep the d
 
 `start` does every step that is still missing and skips the rest:
 
-1. **The machine.** With Verda set up: the machine called `verda.hostname` if it exists (it waits while Verda
-   starts it), otherwise a new order with `--yes`, booting the kept disk when there is one. Without Verda: the
-   address from `gpu.py use`, `host` in the config, or `GPU_HOST`.
+1. **The machine.** At Verda it first checks the Verda CLI (as `gpu.py verda-check`) and stops with the setup
+   steps when it is not set up. Then it takes the machine called `verda.hostname` if it exists (it waits while
+   Verda starts it), otherwise a new order with `--yes`, booting the kept disk when there is one. With `"provider":
+   "other"`, or while Verda's API is down: the address from `gpu.py use`, `host` in the config, or `GPU_HOST`.
 2. **Login.** It waits until SSH answers (a new machine needs a minute or two).
 3. **The stack.** It installs it (`bootstrap`) when the server has none or has one from other server files:
    firewall, SSH settings, the images, 61.5 GB of models, ComfyUI; the remaining 101 GB download in the background
@@ -139,11 +148,14 @@ input files with SHA-256, outputs and time.
 | `upscale` | SeedVR2 3B (Apache 2.0) | 704×1280 → 1056×1920, restores detail | `video`, `multiplier` |
 | `interpolate` | FILM (MIT, Apache 2.0) | 24 → 48 fps, smoother than the edit's 24 → 30 | `video`, `multiplier` |
 | `two-shot` | InfiniteTalk on Wan 2.1, 480p | two people talking in one frame; downloaded on request, the repackaged files state no licence | `image`, `audio_a`, `audio_b`, `mask_a`, `mask_b` |
-| `h3-i2v`, `h3-r2v` | MiniMax H3 | variant B, see section 1 | |
+| `h3-talk` | MiniMax H3 (MiniMax H3 Community, section 1) | per film instead of `talk`: a lip-synced take from a still and a recorded line, the line anchored as the soundtrack | `image`, `audio`, `prompt`, `seconds`, `fast`, `megapixels` |
+| `h3-i2v`, `h3-r2v` | MiniMax H3 | a shot with the model's own sound, from a still or from reference images | `image` / `ref_1`, `ref_2`, `prompt`, `seconds`, `fast` |
 
 LTX makes 8n+1 frames: the client rounds `seconds` up to whole groups of 8 frames and pads the audio with silence
 to exactly that length, so picture, sound and latent agree. Takes come out at 704×1280 and 24 fps; the edit
-resamples to 30.
+resamples to 30. MiniMax H3 makes 17k+5 frames at 24 fps and is trained on 5.2–15 s; the client rounds up the same
+way and pads the line to the whole take, so the model adds no sound of its own. H3 takes come out at 768×1344
+(`megapixels` 0.98, its largest trained canvas); the edit crops them to 9:16 like any take.
 
 ## 5. Phase 3 on GPU: stills
 
@@ -228,6 +240,31 @@ line, so the lips follow the sound and the edit never hunts for word boundaries.
 9. **Optional finish per take:** `upscale` for a sharper 1056×1920 master (63 s for a 4.4 s take on the H200);
    `interpolate` when the motion judders.
 
+**Takes on MiniMax H3 instead of LTX** (variant B, section 1). Choose the model per film: `"model": "h3"` in
+`lines.json` → `take`, or on one line, or `gpu_batches.py takes --model h3` for one batch (a line's own `model`
+still wins). The job is `h3-talk`: the same still and the same fitted line, and the line is anchored as the
+soundtrack, so the voice, `inspect_take.py` and `cuts.json` work as with LTX, while the model makes the picture to
+it. The prompt comes from `take.h3_template`, written like MiniMax's own templates: `<Picture 1>` is the still,
+`SHOT 1: The scene opens exactly on image 1`, the line in quotes, then `Audio:`. Besides the LTX fields it knows
+`{he}`, `{He}`, `{his}` and `{text}`; a whole prompt for one line goes into `h3_prompt`. A take shorter than
+5.2 s is made 5.2 s long and cut after the line in the edit; a line longer than 15 s gets a warning (split it, or
+`"model": "ltx"` on that line). `take.fast` (8 steps instead of 20) and `take.megapixels` apply to H3 only. Both
+versions of one film side by side: `gpu_batches.py takes --model h3 --out takes-h3/batch.json`, then
+`$G batch takes-h3/batch.json`.
+
+The H3 models download once onto the kept disk, and every later machine started from that disk has them:
+`$G fetch h3-talk,h3-i2v,h3-r2v --variant-b`, 76.4 GB (`h3-talk` alone 53.5 GB): the video models in INT8
+(21 GB each), the Qwen3-VL 32B text encoder in INT8 (27 GB, instead of the template's 4-bit NVFP4: the H200 has
+no FP4 cores, so the 4-bit file would only save disk), the VAEs and the turbo LoRAs. `fetch` needs the current
+stack on the server (`start` installs it), checks the free disk space first and skips files that are already
+there. Hugging Face serves one file at 20–37 MB/s, so the set took 22 minutes. The download needs no GPU: when none
+is free in the disk's location, a CPU machine boots the disk as well (at Verda `CPU.4V.16G`, $0.048 an hour).
+`start` cannot install there, so copy `server/fetch_models.py` and `server/manifest.json` to a side folder on it and
+run `python3 fetch_models.py --models /srv/yesopen/models --manifest <folder>/manifest.json --templates
+h3-talk,h3-i2v,h3-r2v --variant-b`; the next `start` on a GPU machine installs the stack and finds the files in
+place. Not measured yet: the GPU time of an H3 take, and how closely the lips follow the anchored line. Check the
+first takes on their sheets before making a whole film.
+
 `talk-voice` makes voice and lips in one job (`[VISUAL]: <what we see>. [SPEECH]: <the exact line>`, plus a voice
 sample), like Seedance. On the first server day it was 5 times slower than `talk`, pushed in on the face and matched
 the lips worse, and its sound cannot be checked before the picture. Use `talk`.
@@ -281,9 +318,13 @@ Measured on the first server day (2 October 2026, 1× H200 at Verda, GPU time fr
 - `python3 $SK/scripts/gpu_batches.py estimate` prints the jobs and GPU minutes of a new skit for Gate 2.
 - Prices at Verda on 2 October 2026, per hour on demand (spot is half and can be stopped at any time): 1× B200
   (`1B200.30V`, 180 GB) $6.99, 1× H200 (`1H200.141S.44V`) $4.78. Check before starting.
-- The kept disk: 300 GB, $60 a month. Verda disks only grow; enlarge it to 400 GB before variant B.
+- `h3-talk` (MiniMax H3): not measured yet.
+- The kept disk: 300 GB, $60 a month. It holds variant A (162.5 GB) and MiniMax H3 (76.4 GB) with the system and
+  the images; with `two-shot` (29.7 GB) as well it gets tight. `gpu.py fetch` refuses a download that would leave
+  less than 15 GB free. Verda disks only grow; after an enlargement in the console the partition grows by itself
+  on the next boot.
 - First install: about 61.5 GB of models before ComfyUI starts, 101 GB more in the background (variant A: 162.5 GB
-  automatic, 94.6 GB more on request).
+  automatic, 106.1 GB more on request: `two-shot` 29.7 GB, MiniMax H3 76.4 GB).
 
 ## 10. What went wrong in the pilot, and the fix
 

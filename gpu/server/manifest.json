@@ -21,7 +21,7 @@
     },
     "manual": {
       "files": 13,
-      "gb": 94.6
+      "gb": 106.1
     },
     "variant_A_automatic": {
       "files": 37,
@@ -241,7 +241,7 @@
     {
       "name": "ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
       "directory": "latent_upscale_models",
-      "url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/5948be4ced3a4493d1f836df64378ff136ddb770/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+      "url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/3c6a4e66e5d0a684231950b9c74dd4ded7b6fadc/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
       "size": 995743560,
       "sha256": "5f416311fa8172b65af67530758964708d29a317b830d689a51143b7f91913ed",
       "stage": "before_start",
@@ -356,7 +356,7 @@
     {
       "name": "ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
       "directory": "diffusion_models",
-      "url": "https://huggingface.co/Lightricks/LTX-2.5/resolve/5e6e71018ee1756ed329b697a7b4aedc934dfce9/diffusion_models/ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
+      "url": "https://huggingface.co/Lightricks/LTX-2.5/resolve/2356ce76915d6c48d313d7e8b25900e1dd3abaa8/diffusion_models/ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors",
       "size": 21504034224,
       "sha256": null,
       "stage": "after_start",
@@ -422,7 +422,7 @@
     {
       "name": "ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors",
       "directory": "latent_upscale_models",
-      "url": "https://huggingface.co/Lightricks/LTX-2.5/resolve/5e6e71018ee1756ed329b697a7b4aedc934dfce9/latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors",
+      "url": "https://huggingface.co/Lightricks/LTX-2.5/resolve/2356ce76915d6c48d313d7e8b25900e1dd3abaa8/latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors",
       "size": 995778752,
       "sha256": null,
       "stage": "after_start",
@@ -471,7 +471,7 @@
     {
       "name": "gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
       "directory": "text_encoders",
-      "url": "https://huggingface.co/Lightricks/LTX-2.5/resolve/5e6e71018ee1756ed329b697a7b4aedc934dfce9/text_encoders/gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
+      "url": "https://huggingface.co/Lightricks/LTX-2.5/resolve/2356ce76915d6c48d313d7e8b25900e1dd3abaa8/text_encoders/gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors",
       "size": 15372969374,
       "sha256": null,
       "stage": "after_start",
@@ -572,7 +572,7 @@
     {
       "name": "ltx-2.5-audio-vae-bf16.safetensors",
       "directory": "vae",
-      "url": "https://huggingface.co/Lightricks/LTX-2.5/resolve/5e6e71018ee1756ed329b697a7b4aedc934dfce9/vae/ltx-2.5-audio-vae-bf16.safetensors",
+      "url": "https://huggingface.co/Lightricks/LTX-2.5/resolve/2356ce76915d6c48d313d7e8b25900e1dd3abaa8/vae/ltx-2.5-audio-vae-bf16.safetensors",
       "size": 364866540,
       "sha256": null,
       "stage": "after_start",
@@ -590,7 +590,7 @@
     {
       "name": "ltx-2.5-video-vae-bf16.safetensors",
       "directory": "vae",
-      "url": "https://huggingface.co/Lightricks/LTX-2.5/resolve/5e6e71018ee1756ed329b697a7b4aedc934dfce9/vae/ltx-2.5-video-vae-bf16.safetensors",
+      "url": "https://huggingface.co/Lightricks/LTX-2.5/resolve/2356ce76915d6c48d313d7e8b25900e1dd3abaa8/vae/ltx-2.5-video-vae-bf16.safetensors",
       "size": 1472223346,
       "sha256": null,
       "stage": "after_start",
@@ -678,7 +678,8 @@
       "stage": "manual",
       "variant": "B",
       "templates": [
-        "h3-i2v"
+        "h3-i2v",
+        "h3-talk"
       ],
       "repo": "Comfy-Org/MiniMax-H3",
       "license": "minimax-h3-community-license-agreement",
@@ -726,7 +727,8 @@
       "stage": "manual",
       "variant": "B",
       "templates": [
-        "h3-i2v"
+        "h3-i2v",
+        "h3-talk"
       ],
       "repo": "lightx2v/Minimax-h3-Turbo",
       "license": "apache-2.0",
@@ -766,21 +768,23 @@
       "gated": false
     },
     {
-      "name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
       "directory": "text_encoders",
-      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/e5eb578a89295337b8ff433a035929ce0279e0b6/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
-      "size": 15687142551,
-      "sha256": "35a88d51044231fe332301d7a62aa81e3f2cba62febeb446e2c1e3e0ef76f2c6",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/e5eb578a89295337b8ff433a035929ce0279e0b6/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+      "size": 27141342152,
+      "sha256": "bc2ced0fbea64757fa9acddccfc0b3f4819d1dcf1da6c124d690d368be283923",
       "stage": "manual",
       "variant": "B",
       "templates": [
         "h3-i2v",
-        "h3-r2v"
+        "h3-r2v",
+        "h3-talk"
       ],
       "repo": "Comfy-Org/MiniMax-H3",
       "license": "minimax-h3-community-license-agreement",
       "license_link": "https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/LICENSE",
-      "gated": false
+      "gated": false,
+      "replaces_url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors"
     },
     {
       "name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
@@ -824,7 +828,8 @@
       "variant": "B",
       "templates": [
         "h3-i2v",
-        "h3-r2v"
+        "h3-r2v",
+        "h3-talk"
       ],
       "repo": "Comfy-Org/MiniMax-H3",
       "license": "minimax-h3-community-license-agreement",
@@ -841,7 +846,8 @@
       "variant": "B",
       "templates": [
         "h3-i2v",
-        "h3-r2v"
+        "h3-r2v",
+        "h3-talk"
       ],
       "repo": "Comfy-Org/MiniMax-H3",
       "license": "minimax-h3-community-license-agreement",

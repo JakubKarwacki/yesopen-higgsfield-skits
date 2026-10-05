@@ -16,8 +16,10 @@ Higgsfield engine.
   gpu.py batch takes/shots.json             run a list of jobs, skipping the ones already done
   gpu.py tunnel | tunnel --close            SSH tunnel to the server's ComfyUI on localhost:8188
   gpu.py up [--first] | down | status       create / delete the Verda machine (asks before anything is billed)
+  gpu.py verda-check                        is the Verda CLI set up here (installed, logged in, key ids); what to do
   gpu.py use ADDRESS | use --clear          a machine made by hand (Verda console, another provider): its address
   gpu.py bootstrap                          install the stack on a fresh machine and start the model download
+  gpu.py fetch h3-talk,h3-i2v --variant-b   download the models of an option or of MiniMax H3 on the server
   gpu.py push DIR | pull DIR                copy a project folder to / from the server
   gpu.py edit DIR [--remote] -- SCRIPT ARGS run a skit edit script in the editor container (here or on the server)
 
@@ -134,6 +136,27 @@ def resolve_values(spec: dict, given: dict, rng: random.Random) -> dict:
         elif param.get("required"):
             raise SystemExit(f"{spec['template']}: parameter {name!r} is required ({param.get('doc', param['type'])})")
     return values
+
+
+H3_FPS = 24
+
+
+def frame_grid(spec: dict, values: dict) -> dict:
+    """The frame count a video model makes for the asked seconds, and the seconds the audio is padded to."""
+    rules = spec.get("rules") or {}
+    if "h3_frames" in rules:
+        return h3_frames(rules["h3_frames"], values)
+    return ltx_frames(spec, values)
+
+
+def h3_frames(rule: dict, values: dict) -> dict:
+    """MiniMax H3 makes 17k+5 frames at 24 fps (the graph rounds up to that itself). Pad the audio to exactly that
+    length: the whole soundtrack is then anchored, and the model adds no sound of its own after the line."""
+    seconds = float(values[rule["seconds"]])
+    frames = max(5, math.ceil(round(seconds * H3_FPS, 6)))  # up, never shorter than asked: the line must fit
+    frames += (5 - frames % 17) % 17
+    values[rule["seconds"]] = frames / H3_FPS
+    return {"frames": frames, "seconds": frames / H3_FPS, "pad_audio": rule.get("pad_audio", [])}
 
 
 def ltx_frames(spec: dict, values: dict) -> dict:
@@ -354,7 +377,7 @@ def prepare_job(template: str, given: dict, rng: random.Random, workdir: Path, o
     prompt, spec = load_template(template)
     spec.setdefault("template", template)
     values = resolve_values(spec, given, rng)
-    frames = ltx_frames(spec, values)
+    frames = frame_grid(spec, values)
     files = {}
     for name, param in spec["params"].items():
         if name not in values:
@@ -370,7 +393,7 @@ def prepare_job(template: str, given: dict, rng: random.Random, workdir: Path, o
         else:
             check_enum(param, value, object_info, prompt)
             set_targets(prompt, param, value)
-    return {"template": template, "prompt": prompt, "spec": spec, "values": values, "files": files, "ltx": frames}
+    return {"template": template, "prompt": prompt, "spec": spec, "values": values, "files": files, "frames": frames}
 
 
 def run_job(comfy: Comfy, job: dict, out_dir: Path, name: str, timeout: float, validate_only=False, say=print) -> dict:
@@ -406,7 +429,7 @@ def run_job(comfy: Comfy, job: dict, out_dir: Path, name: str, timeout: float, v
         "prompt_id": prompt_id, "seconds": round(time.time() - started, 1),
         "values": {k: (str(v) if k in job["files"] else v) for k, v in job["values"].items()},
         "inputs": {k: {"file": str(p), "sha256": sha256(p)} for k, p in job["files"].items()},
-        "outputs": saved, "ltx": job["ltx"] or None,
+        "outputs": saved, "frames": job["frames"] or None,
     }
     with open(out_dir / "jobs.jsonl", "a") as log:
         log.write(json.dumps(record, ensure_ascii=False) + "\n")
@@ -581,7 +604,16 @@ def describe_instance(item: dict) -> str:
             f"${item.get('price_per_hour')}/h os_volume={item.get('os_volume_id')}")
 
 
+def require_verda(config) -> None:
+    """status, up and down drive Verda machines: stop with the setup steps, or say why Verda cannot be used now."""
+    if not verda_ready(config):
+        raise SystemExit("This command drives Verda machines, and Verda cannot be used now: "
+                         + ("provider is not \"verda\" in the config." if config.get("provider", "verda") != "verda"
+                            else "its API does not answer (see the warning above); try again later."))
+
+
 def cmd_status(args, config):
+    require_verda(config)
     machine = config["verda"]
     item = find_instance(machine["hostname"])
     print(describe_instance(item) if item else f"no machine called {machine['hostname']}; disk: "
@@ -590,6 +622,7 @@ def cmd_status(args, config):
 
 
 def cmd_up(args, config):
+    require_verda(config)
     machine, state = config["verda"], load_state()
     existing = find_instance(machine["hostname"])
     if existing:
@@ -639,6 +672,7 @@ def cmd_up(args, config):
 
 
 def cmd_down(args, config):
+    require_verda(config)
     machine, state = config["verda"], load_state()
     item = find_instance(machine["hostname"])
     if not item:
@@ -690,18 +724,89 @@ def wait_for(check, what: str, minutes: float, every: float = 10) -> None:
         time.sleep(every)
 
 
-def verda_ready(config) -> bool:
-    """Can this computer make and delete Verda machines: CLI installed and logged in, type and SSH key set?"""
-    machine = config.get("verda") or {}
-    if not (shutil.which("verda") and machine.get("instance_type") and machine.get("ssh_key_id")):
-        return False
+VERDA_SETUP = """\
+Machines at Verda are made and deleted with the Verda CLI, and it is not set up on this computer yet. Set it up
+before the first session (the person who owns the Verda account does steps 2 and 3, never an agent):
+  1. install it: brew install verda-cloud/tap/verda-cli
+  2. in the Verda console, in the project that runs your machines: Project management -> Credentials -> create
+     API credentials (the secret is shown once)
+  3. in your own terminal: verda auth login, then paste the client ID and the secret there. Never paste them into
+     a chat or give them to an agent. With several profiles, choose one: verda auth use NAME
+  4. check it: verda doctor ("Authentication valid" must be ok), then gpu.py verda-check
+The CLI also takes the credentials from VERDA_CLIENT_ID and VERDA_CLIENT_SECRET in the environment (never on a
+command line); gpu.py verda-check then checks them with a read-only call. A server at another provider, or a
+machine a teammate starts for you, needs none of this: set "provider": "other" in the config and use gpu.py use
+ADDRESS."""
+
+
+def verda_check(config):
+    """('ready' | 'unreachable' | 'missing', [what is wrong]) for driving Verda from this computer: the CLI is
+    installed and logged in (verda doctor, or credentials in the environment) and the config names the instance
+    type and the SSH key ids."""
+    if not shutil.which("verda"):
+        return "missing", ["the verda command is not installed"]
     try:
-        verda(["vm", "list", "-o", "json"])
-    except SystemExit as error:
-        print(f"the Verda CLI does not work here ({str(error).splitlines()[-1][:120]}); "
-              f"treating the machine as one made by hand")
+        result = subprocess.run(["verda", "doctor", "-o", "json"], capture_output=True, text=True, timeout=120)
+        checks = {check.get("name"): check for check in json.loads(result.stdout).get("checks", [])}
+    except (subprocess.TimeoutExpired, ValueError, AttributeError):
+        return "unreachable", ["verda doctor gave no answer"]
+    api = checks.get("API reachable") or {}
+    if api.get("status", "ok") != "ok":
+        return "unreachable", [f"Verda's API does not answer ({api.get('detail') or api.get('status')}): "
+                               f"a maintenance window or the network"]
+    if os.environ.get("VERDA_CLIENT_ID") and os.environ.get("VERDA_CLIENT_SECRET"):
+        # the CLI uses these before its profile (scripts/verda-vault.py passes them so), but verda doctor only
+        # looks at the profile file and then skips the login test, so a read-only call checks them instead
+        try:
+            probe = subprocess.run(["verda", "--agent", "vm", "list", "-o", "json"], capture_output=True, text=True,
+                                   timeout=120, env={**os.environ, "VERDA_DEBUG": "false"})
+        except subprocess.TimeoutExpired:
+            return "unreachable", ["verda vm list gave no answer"]
+        problems = [] if probe.returncode == 0 else [
+            "VERDA_CLIENT_ID and VERDA_CLIENT_SECRET in the environment were refused (verda vm list failed); "
+            "unset them to use the CLI's own login"]
+    else:
+        problems = [f"{name}: {(checks.get(name) or {}).get('status', 'no answer')}"
+                    + (f" ({checks[name]['detail']})" if (checks.get(name) or {}).get("detail") else "")
+                    for name in ("Credentials found", "Authentication valid")
+                    if (checks.get(name) or {}).get("status") != "ok"]
+    machine = config.get("verda") or {}
+    for key, source in (("instance_type", "verda --agent instance-types --gpu -o json"),
+                        ("ssh_key_id", "verda --agent ssh-key list -o json")):
+        if not machine.get(key):
+            problems.append(f"verda.{key} is empty in {CONFIG} (from: {source})")
+    return ("missing" if problems else "ready"), problems
+
+
+def verda_ready(config) -> bool:
+    """Can this computer make and delete Verda machines? A Verda setup that is not finished stops here with the
+    steps to finish it. Only an API that does not answer (maintenance, network) falls back to the known address,
+    and provider "other" in the config skips Verda altogether."""
+    if config.get("provider", "verda") != "verda":
         return False
-    return True
+    state, problems = verda_check(config)
+    if state == "ready":
+        return True
+    if state == "unreachable":
+        print(f"warning: {problems[0]}; going on with the machine's known address, if there is one")
+        return False
+    raise SystemExit(VERDA_SETUP + "\nWhat is missing now:\n  - " + "\n  - ".join(problems))
+
+
+def cmd_verda_check(args, config):
+    """Is the Verda CLI ready on this computer? Run it before the first session; it says what to set up."""
+    if config.get("provider", "verda") != "verda":
+        print(f"provider is {config.get('provider')!r} in the config: this setup does not use the Verda CLI")
+        return 0
+    state, problems = verda_check(config)
+    if state == "ready":
+        print("Verda CLI: ready (logged in; instance type and SSH key ids are set)")
+        return 0
+    if state == "unreachable":
+        print(f"Verda CLI: installed, but {problems[0]}. Try again later (verda doctor shows more).")
+        return 1
+    print(VERDA_SETUP + "\nWhat is missing now:\n  - " + "\n  - ".join(problems))
+    return 1
 
 
 FAILED = ("no_capacity", "offline", "error")  # an order in these states will not start by itself
@@ -737,11 +842,11 @@ def cmd_start(args, config):
     elif config.get("host"):
         print(f"machine: {config['host']} (made by hand; gpu.py use --clear once it is deleted)")
     else:
-        raise SystemExit("No machine is known and Verda cannot be driven from here. Either make a machine (the "
-                         "Verda console or another provider: Ubuntu 24.04, NVIDIA driver, Docker, NVIDIA Container "
-                         "Toolkit, root SSH with your key) and run gpu.py use ADDRESS, or set up the Verda CLI "
-                         "(verda auth login; verda.instance_type and verda.ssh_key_id in the config) so that "
-                         "gpu.py start --yes makes the machine itself.")
+        raise SystemExit("No machine is known. At Verda, gpu.py start --yes makes one once the Verda CLI is set up "
+                         "(gpu.py verda-check; verda auth login); if Verda's API is down, try again later. At "
+                         "another provider (\"provider\": \"other\" in the config), make a machine there (Ubuntu "
+                         "24.04, NVIDIA driver, Docker, NVIDIA Container Toolkit, root SSH with your key) and run "
+                         "gpu.py use ADDRESS.")
     wait_for(lambda: remote_text(config, "true", 40) is not None, f"SSH on {config['host']}", 10)
     stamp = stack_stamp()
     if args.bootstrap or remote_text(config, f"cat {STAMP} 2>/dev/null") != stamp:
@@ -832,6 +937,28 @@ def cmd_bootstrap(args, config):
     return 0
 
 
+def cmd_fetch(args, config):
+    """Download the models of templates that no stage fetches by itself: an option (two-shot) or variant B (MiniMax
+    H3, --variant-b, only with MiniMax's consent). Runs fetch_models.py on the server, which checks the free disk
+    space before the first byte. ComfyUI sees the new files without a restart."""
+    templates = [t for t in args.templates.split(",") if t]
+    files = json.loads(MANIFEST.read_text())["files"]
+    unknown = sorted(set(templates) - {t for entry in files for t in entry["templates"]})
+    if unknown:
+        raise SystemExit(f"no model files listed for {', '.join(unknown)} (gpu.py templates lists the templates)")
+    variant_b = sorted({t for entry in files if entry["variant"] == "B" for t in entry["templates"]} & set(templates))
+    if variant_b and not args.variant_b:
+        raise SystemExit(f"{', '.join(variant_b)}: MiniMax H3 (variant B), only with MiniMax's consent; "
+                         f"add --variant-b once you have it")
+    if remote_text(config, f"cat {STAMP} 2>/dev/null") != stack_stamp():
+        raise SystemExit("the server runs other stack files than this skill (or does not answer): run gpu.py start, "
+                         "which installs them, then fetch again")
+    command = (f"cd {REMOTE_ROOT}/stack/server && set -a && {{ [ ! -f .env ] || . ./.env; }} && set +a && "
+               f"python3 fetch_models.py --models {REMOTE_ROOT}/models --templates {shlex.quote(','.join(templates))}"
+               f"{' --variant-b' if args.variant_b else ''} --jobs 6{' --check' if args.check else ''}")
+    return subprocess.run(ssh_base(config) + [command]).returncode
+
+
 def cmd_push(args, config):
     source = Path(args.dir).resolve()
     host = ssh_base(config)[-1]
@@ -895,6 +1022,8 @@ def main(argv=None) -> int:
     p = sub.add_parser("tunnel", help="open or close the SSH tunnel")
     p.add_argument("--close", action="store_true")
     p.set_defaults(func=cmd_tunnel)
+    sub.add_parser("verda-check", help="is the Verda CLI set up here, and what to do if not").set_defaults(
+        func=cmd_verda_check)
     sub.add_parser("status", help="show the Verda machine").set_defaults(func=cmd_status)
     p = sub.add_parser("up", help="create the Verda machine (billing starts)")
     p.add_argument("--first", action="store_true", help="fresh OS image instead of the kept disk")
@@ -916,6 +1045,11 @@ def main(argv=None) -> int:
     p.add_argument("--clear", action="store_true", help="forget it, after the machine is deleted")
     p.set_defaults(func=cmd_use)
     sub.add_parser("bootstrap", help="install the stack on the machine").set_defaults(func=cmd_bootstrap)
+    p = sub.add_parser("fetch", help="download the models of an option (two-shot) or of MiniMax H3 on the server")
+    p.add_argument("templates", help="comma-separated, e.g. h3-talk,h3-i2v,h3-r2v")
+    p.add_argument("--variant-b", action="store_true", help="MiniMax H3: only with MiniMax's consent")
+    p.add_argument("--check", action="store_true", help="only report what is missing and the free disk space")
+    p.set_defaults(func=cmd_fetch)
     for name, func in (("push", cmd_push), ("pull", cmd_pull)):
         p = sub.add_parser(name, help=f"{name} a project folder")
         p.add_argument("dir")

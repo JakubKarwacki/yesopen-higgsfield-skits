@@ -1,5 +1,7 @@
 {
-  "_doc": "Copy to ~/.config/yesopen-gpu/config.json (or $YESOPEN_GPU_HOME/config.json). For Verda fill verda.instance_type and verda.ssh_key_id; for any other server set host (or GPU_HOST) and leave verda alone.",
+  "_doc": "Copy to ~/.config/yesopen-gpu/config.json (or $YESOPEN_GPU_HOME/config.json). For Verda set up the Verda CLI and fill verda.instance_type and verda.ssh_key_id (gpu.py verda-check checks both); for any other server set provider to other and host (or GPU_HOST), and leave verda alone.",
+  "provider": "verda",
+  "_provider": "verda (default): machines are made and deleted with the Verda CLI, which must be set up first; gpu.py verda-check says what is missing. other: any server you or a teammate made (set host, or gpu.py use ADDRESS)",
   "comfy_url": "http://127.0.0.1:8188",
   "host": null,
   "_host": "the server's address when you made it yourself (any provider, or a machine in your office); gpu.py up fills it for Verda",

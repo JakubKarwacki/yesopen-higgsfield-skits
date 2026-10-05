@@ -99,5 +99,84 @@
         "why": "lossless bed: the edit mixes and encodes once, at the end"
       }
     ]
+  },
+  "h3-i2v": {
+    "steps": [
+      {
+        "op": "set_input",
+        "node": "105:13",
+        "input": "clip_name",
+        "value": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "why": "the 8-bit text encoder instead of the template's 4-bit NVFP4 one: close to BF16 in quality, and the H200 has no FP4 cores, so NVFP4 would only save disk (templates.json -> url_overrides)"
+      }
+    ]
+  },
+  "h3-r2v": {
+    "steps": [
+      {
+        "op": "set_input",
+        "node": "128",
+        "input": "clip_name",
+        "value": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "why": "the 8-bit text encoder, as for h3-i2v"
+      }
+    ]
+  },
+  "h3-talk": {
+    "steps": [
+      {
+        "op": "set_input",
+        "node": "105:13",
+        "input": "clip_name",
+        "value": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "why": "the 8-bit text encoder, as for h3-i2v"
+      },
+      {
+        "op": "add_node",
+        "node": "901",
+        "class_type": "LoadAudio",
+        "title": "Recorded line",
+        "inputs": {
+          "audio": "line.wav"
+        },
+        "why": "our fitted line (lines/<id>.wav), padded by the client with silence to the take's exact length"
+      },
+      {
+        "op": "add_node",
+        "node": "902",
+        "class_type": "MiniMaxH3AddGuide",
+        "title": "Anchor the line as the soundtrack",
+        "inputs": {
+          "positive": [
+            "105:104",
+            0
+          ],
+          "latent": [
+            "105:104",
+            1
+          ],
+          "audio_vae": [
+            "105:24",
+            0
+          ],
+          "audio": [
+            "901",
+            0
+          ],
+          "frame_idx": 0
+        },
+        "why": "the model generates the picture to our recorded voice instead of inventing a voice of its own, so a character sounds the same in every take and the edit keeps the fitted line"
+      },
+      {
+        "op": "set_input",
+        "node": "105:16",
+        "input": "conditioning",
+        "value": [
+          "902",
+          0
+        ],
+        "why": "the sampler gets the conditioning with the anchored line"
+      }
+    ]
   }
 }

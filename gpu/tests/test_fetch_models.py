@@ -164,3 +164,43 @@ class FetchTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DiskSpaceTests(unittest.TestCase):
+    """The fetcher counts what is still to come and stops before the first byte when the disk is too small."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.models = Path(self.tmp.name) / "models"
+        self.manifest = Path(self.tmp.name) / "manifest.json"
+        self.files = [{"name": f"m{i}.safetensors", "directory": "diffusion_models", "size": 10 * 10**9,
+                       "sha256": None, "url": "http://127.0.0.1:9/never", "gated": False, "stage": "manual",
+                       "variant": "B", "templates": ["h3-talk"]} for i in range(2)]
+        self.manifest.write_text(json.dumps({"files": self.files}))
+        self._free = fetch_models.free_bytes
+
+    def tearDown(self):
+        fetch_models.free_bytes = self._free
+        self.tmp.cleanup()
+
+    def test_partial_and_present_files_count_less(self):
+        folder = self.models / "diffusion_models"
+        folder.mkdir(parents=True)
+        with open(folder / "m0.safetensors", "wb") as handle:  # present: sparse file of the right size
+            handle.truncate(10 * 10**9)
+        with open(folder / "m1.safetensors.part", "wb") as handle:
+            handle.truncate(4 * 10**9)
+        self.assertEqual(fetch_models.bytes_to_fetch(self.files, self.models), 6 * 10**9)
+
+    def test_too_little_space_downloads_nothing(self):
+        fetch_models.free_bytes = lambda path: 30 * 10**9  # 20 GB to come + 15 GB to keep free > 30 GB
+        out = io.StringIO()
+        with redirect_stdout(out):
+            code = fetch_models.main(["--models", str(self.models), "--manifest", str(self.manifest),
+                                      "--templates", "h3-talk", "--variant-b"])
+        self.assertEqual(code, 1)
+        self.assertIn("not enough disk space", out.getvalue())
+        self.assertFalse(self.models.exists())
+
+    def test_free_space_of_a_folder_that_does_not_exist_yet(self):
+        self.assertGreater(fetch_models.free_bytes(self.models / "a" / "b"), 0)

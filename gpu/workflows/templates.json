@@ -35,7 +35,9 @@
     {"id": "h3-i2v", "name": "video_minimax_h3_i2v", "stage": "takes", "variant": "B", "load": "manual",
      "role": "MiniMax H3 image -> video with native audio; only with MiniMax's consent"},
     {"id": "h3-r2v", "name": "video_minimax_h3_r2v", "stage": "takes", "variant": "B", "load": "manual",
-     "role": "MiniMax H3 from references (identity, voice); only with MiniMax's consent"}
+     "role": "MiniMax H3 from references (identity, voice); only with MiniMax's consent"},
+    {"id": "h3-talk", "name": "video_minimax_h3_i2v", "stage": "takes", "variant": "B", "load": "manual",
+     "role": "MiniMax H3 lip-synced take from a still and our recorded line, anchored as the soundtrack; only with MiniMax's consent"}
   ],
   "custom_nodes": [
     {"pack": "comfyui_fill-chatterbox", "repo": "https://github.com/filliptm/ComfyUI_Fill-ChatterBox",
@@ -49,7 +51,10 @@
                    "files": ["ve.safetensors", "t3_cfg.safetensors", "s3gen.safetensors", "tokenizer.json", "conds.pt"]}
   },
   "url_overrides": {
+    "_why": "another source for a declared file; when the new URL ends in another file name, that file replaces the declared one (patches.json points the loader at it)",
     "https://huggingface.co/Comfy-Org/HunyuanVideo_1.5_repackaged/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors":
-      "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors"
+      "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+    "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors":
+      "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors"
   }
 }

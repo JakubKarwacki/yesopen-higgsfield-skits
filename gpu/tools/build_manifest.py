@@ -58,13 +58,22 @@ def referenced_files(prompt: dict) -> set:
             if isinstance(value, str) and MODEL_FILE.search(value)}
 
 
+def override(model: dict, overrides: dict) -> dict:
+    """Our source for a declared file. A URL that ends in another file name swaps the file for that one (another
+    precision of the same model, say); patches.json then points the loader at the new name."""
+    url = overrides.get(model["url"])
+    if not url:
+        return model
+    return {**model, "url": url, "name": urllib.parse.unquote(url.rpartition("/")[2]), "replaces_url": model["url"]}
+
+
 def collect(config: dict) -> dict:
     """Map (directory, name) -> file entry with the templates that use it."""
     files = {}
     overrides = config.get("url_overrides", {})
     for template in config["templates"]:
         ui = json.loads((UI_DIR / f"{template['name']}.json").read_text())
-        models = declared_models(ui)
+        models = [override(model, overrides) for model in declared_models(ui)]
         extra = config.get("extra_models", {}).get(template["id"])
         if extra:
             models += [{"directory": extra["directory"], "name": name,
@@ -76,10 +85,10 @@ def collect(config: dict) -> dict:
         for model in models:
             key = (model["directory"], model["name"])
             entry = files.setdefault(key, {"directory": model["directory"], "name": model["name"],
-                                           "source_url": overrides.get(model["url"], model["url"]),
+                                           "source_url": model["url"],
                                            "templates": [], "stage": "manual", "variant": "B"})
-            if model["url"] in overrides:
-                entry["replaces_url"] = model["url"]
+            if "replaces_url" in model:
+                entry["replaces_url"] = model["replaces_url"]
             entry["templates"].append(template["id"])
             if STAGES.index(template["load"]) < STAGES.index(entry["stage"]):
                 entry["stage"] = template["load"]

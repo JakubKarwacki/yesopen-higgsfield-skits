@@ -104,6 +104,40 @@ class TemplateTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             gpu.ltx_frames(spec, {"seconds": 5, "fps": 25})
 
+    def test_h3_seconds_round_up_to_the_17k_plus_5_grid(self):
+        _, spec = gpu.load_template("h3-talk")
+        values = {"seconds": 5.17}
+        info = gpu.frame_grid(spec, values)
+        # 5.17 s * 24 = 124.08 frames -> 125 -> next 17k+5 = 141 frames
+        self.assertEqual((info["frames"], info["pad_audio"]), (141, ["audio"]))
+        self.assertAlmostEqual(values["seconds"], 141 / 24)
+        for seconds in (0.1, 3.2, 5.1, 124 / 24, 9.99, 15.0):
+            values = {"seconds": seconds}
+            frames = gpu.frame_grid(spec, values)["frames"]
+            self.assertEqual(frames % 17, 5, seconds)
+            self.assertGreaterEqual(frames / 24, min(seconds, frames / 24), seconds)
+            self.assertLess(frames / 24 - seconds, 17 / 24, seconds)
+            # what the graph's math node computes from the seconds we send
+            a = values["seconds"]
+            graph = max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17
+            self.assertEqual(graph, frames, seconds)
+
+    def test_h3_talk_pads_the_line_to_the_whole_take(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            line, still = Path(tmp) / "line.wav", Path(tmp) / "still.png"
+            subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "sine=frequency=440:duration=2.4",
+                            "-ar", "24000", str(line)], check=True)
+            still.write_bytes(gpu.png_rgba(9, 16, lambda x, y: 255))
+            job = gpu.prepare_job("h3-talk", {"image": str(still), "audio": str(line), "prompt": "x",
+                                              "seconds": "5.17", "seed": "1"}, random.Random(1), Path(tmp))
+            padded = job["files"]["audio"]
+            duration = float(probe(padded, "format=duration")["format"]["duration"])
+            self.assertAlmostEqual(duration, 141 / 24, delta=0.002)
+            self.assertEqual(job["prompt"]["115"]["inputs"]["megapixels"], 0.98)
+            self.assertEqual(job["prompt"]["105:16"]["inputs"]["conditioning"], ["902", 0])
+            self.assertEqual(job["prompt"]["105:13"]["inputs"]["clip_name"],
+                             "qwen3vl_32b_minimax_h3_int8_convrot.safetensors")
+
     def test_coerce(self):
         self.assertIs(gpu.coerce("bool", "yes"), True)
         self.assertIs(gpu.coerce("bool", "off"), False)
@@ -162,13 +196,36 @@ class ToolTests(unittest.TestCase):
             actual = json.loads((convert_templates.API_DIR / raw.name).read_text())
             self.assertEqual(actual, expected, raw.stem)
 
+    def test_an_override_with_another_file_name_swaps_the_file(self):
+        sys.path.insert(0, str(ROOT / "tools"))
+        import build_manifest
+        declared = {"directory": "text_encoders", "name": "te_nvfp4.safetensors",
+                    "url": "https://huggingface.co/a/b/resolve/main/text_encoders/te_nvfp4.safetensors"}
+        new_url = "https://huggingface.co/a/b/resolve/main/text_encoders/te_int8.safetensors"
+        swapped = build_manifest.override(declared, {declared["url"]: new_url})
+        self.assertEqual((swapped["name"], swapped["url"], swapped["replaces_url"]),
+                         ("te_int8.safetensors", new_url, declared["url"]))
+        self.assertIs(build_manifest.override(declared, {}), declared)
+
+    def test_h3_workflows_use_files_the_manifest_lists(self):
+        manifest = json.loads(gpu.MANIFEST.read_text())
+        for template in ("h3-i2v", "h3-r2v", "h3-talk"):
+            listed = {f["name"] for f in manifest["files"] if template in f["templates"]}
+            prompt, _ = gpu.load_template(template)
+            used = {v for node in prompt.values() for v in node["inputs"].values()
+                    if isinstance(v, str) and v.endswith(".safetensors")}
+            self.assertEqual(used, listed, template)
+            self.assertTrue(all(f["variant"] == "B" and f["stage"] == "manual"
+                                for f in manifest["files"] if template in f["templates"]), template)
+
 
 class MachineFixture:
     """A stand-in for the Verda CLI and a state file in a temporary folder."""
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        self._saved = gpu.STATE, gpu.KNOWN_HOSTS, gpu.CONFIG, gpu.verda
+        self._saved = gpu.STATE, gpu.KNOWN_HOSTS, gpu.CONFIG, gpu.verda, gpu.verda_check
+        gpu.verda_check = lambda config: ("ready", [])  # the CLI is set up; VerdaCheckTests cover the rest
         gpu.STATE, gpu.KNOWN_HOSTS = Path(self.tmp.name) / "state.json", Path(self.tmp.name) / "known_hosts"
         gpu.CONFIG = Path(self.tmp.name) / "config.json"  # never the user's own settings
         self.calls, self.machines = [], []
@@ -194,7 +251,7 @@ class MachineFixture:
         self.config["verda"].update({"instance_type": "1B200.30V", "ssh_key_id": "key-1"})
 
     def tearDown(self):
-        gpu.STATE, gpu.KNOWN_HOSTS, gpu.CONFIG, gpu.verda = self._saved
+        gpu.STATE, gpu.KNOWN_HOSTS, gpu.CONFIG, gpu.verda, gpu.verda_check = self._saved
         self.tmp.cleanup()
 
     def run_command(self, func, **flags):
@@ -331,8 +388,8 @@ class MachineTests(MachineFixture, unittest.TestCase):
         self.assertFalse((Path(self.tmp.name) / "tunnel.sock").exists())
 
 
-class SessionTests(MachineFixture, unittest.TestCase):
-    """start / stop: use the machine that is there, make one only with --yes, install the stack only when needed."""
+class SessionFixture(MachineFixture):
+    """Fake SSH, stack stamp, bootstrap, tunnel and health around the Verda stand-in."""
 
     def setUp(self):
         super().setUp()
@@ -371,6 +428,10 @@ class SessionTests(MachineFixture, unittest.TestCase):
 
     def did(self, kind):
         return [event for event in self.events if event[0] == kind]
+
+
+class SessionTests(SessionFixture, unittest.TestCase):
+    """start / stop: use the machine that is there, make one only with --yes, install the stack only when needed."""
 
     def test_start_without_a_machine_and_without_yes_makes_nothing(self):
         out = self.run_command(gpu.cmd_start, bootstrap=False)
@@ -474,6 +535,163 @@ class SessionTests(MachineFixture, unittest.TestCase):
         self.assertIsNone(gpu.load_state()["ip"])
 
 
+class VerdaCheckTests(unittest.TestCase):
+    """verda-check: Verda machines need the Verda CLI set up; the user is told what to do, and never asked for secrets."""
+
+    def setUp(self):
+        self._saved = gpu.shutil.which, gpu.subprocess.run, gpu.CONFIG
+        self.tmp = tempfile.TemporaryDirectory()
+        gpu.CONFIG = Path(self.tmp.name) / "config.json"
+        self.config = json.loads(gpu.EXAMPLE_CONFIG.read_text())
+        self.config["verda"].update({"instance_type": "1B200.30V", "ssh_key_id": ["key-1"]})
+        self.installed = True
+        self.doctor = {"Credentials found": "ok", "API reachable": "ok", "Authentication valid": "ok"}
+        self.ran = []
+        gpu.shutil.which = lambda name: "/usr/local/bin/verda" if self.installed and name == "verda" else None
+
+        self.env_login_works = True
+        self.environ = dict(gpu.os.environ)
+        for name in ("VERDA_CLIENT_ID", "VERDA_CLIENT_SECRET"):
+            gpu.os.environ.pop(name, None)
+
+        def run(command, **kwargs):
+            self.ran.append(command)
+            if command[:4] == ["verda", "--agent", "vm", "list"]:
+                self.assertEqual(kwargs["env"]["VERDA_DEBUG"], "false")
+                return gpu.subprocess.CompletedProcess(command, 0 if self.env_login_works else 1, "[]", "")
+            checks = [{"name": name, "status": status} for name, status in self.doctor.items()]
+            return gpu.subprocess.CompletedProcess(command, 0, json.dumps({"checks": checks}), "")
+
+        gpu.subprocess.run = run
+
+    def tearDown(self):
+        gpu.shutil.which, gpu.subprocess.run, gpu.CONFIG = self._saved
+        gpu.os.environ.clear()
+        gpu.os.environ.update(self.environ)
+        self.tmp.cleanup()
+
+    def check(self):
+        out = __import__("io").StringIO()
+        with __import__("contextlib").redirect_stdout(out):
+            code = gpu.cmd_verda_check(None, self.config)
+        return code, out.getvalue()
+
+    def test_ready_when_logged_in_with_type_and_keys(self):
+        self.assertEqual(self.check(), (0, "Verda CLI: ready (logged in; instance type and SSH key ids are set)\n"))
+        self.assertTrue(gpu.verda_ready(self.config))
+        self.assertEqual(self.ran[0], ["verda", "doctor", "-o", "json"])
+
+    def test_not_installed_says_how_to_set_it_up(self):
+        self.installed = False
+        code, out = self.check()
+        self.assertEqual(code, 1)
+        for step in ("brew install verda-cloud/tap/verda-cli", "Credentials", "verda auth login", "verda doctor",
+                     "Never paste them into", "give them to an agent"):
+            self.assertIn(step, out)
+        self.assertEqual(self.ran, [])
+
+    def test_a_failed_login_is_named(self):
+        self.doctor["Authentication valid"] = "fail"
+        code, out = self.check()
+        self.assertEqual(code, 1)
+        self.assertIn("Authentication valid: fail", out)
+        self.assertIn("verda auth login", out)
+
+    def test_missing_key_ids_are_named(self):
+        self.config["verda"]["ssh_key_id"] = None
+        code, out = self.check()
+        self.assertEqual(code, 1)
+        self.assertIn("verda.ssh_key_id is empty", out)
+        self.assertIn("verda --agent ssh-key list -o json", out)
+
+    def test_session_commands_stop_until_it_is_set_up(self):
+        self.doctor["Credentials found"] = "warn"
+        for command in (gpu.cmd_start, gpu.cmd_up, gpu.cmd_down, gpu.cmd_status, gpu.cmd_stop):
+            if command is gpu.cmd_stop:
+                saved, gpu.cmd_tunnel = gpu.cmd_tunnel, lambda args, config: 0
+            try:
+                with self.assertRaises(SystemExit) as stopped:
+                    command(__import__("argparse").Namespace(yes=True, first=False, bootstrap=False), self.config)
+            finally:
+                if command is gpu.cmd_stop:
+                    gpu.cmd_tunnel = saved
+            self.assertIn("verda auth login", str(stopped.exception), command.__name__)
+            self.assertIn("Credentials found: warn", str(stopped.exception), command.__name__)
+
+    def test_an_api_outage_only_warns(self):
+        self.doctor["API reachable"] = "fail"
+        out = __import__("io").StringIO()
+        with __import__("contextlib").redirect_stdout(out):
+            self.assertFalse(gpu.verda_ready(self.config))
+        self.assertIn("maintenance window", out.getvalue())
+        self.assertEqual(self.check()[0], 1)
+
+    def test_credentials_in_the_environment_are_checked_with_a_real_call(self):
+        # the way scripts/verda-vault.py passes them: no profile file, so doctor fails that check and skips the login
+        gpu.os.environ.update(VERDA_CLIENT_ID="id-from-the-vault", VERDA_CLIENT_SECRET="secret-from-the-vault")
+        self.doctor.update({"Credentials found": "fail", "Authentication valid": "skip"})
+        self.assertEqual(self.check()[0], 0)
+        self.assertEqual(self.ran[-1], ["verda", "--agent", "vm", "list", "-o", "json"])
+        self.env_login_works = False
+        code, out = self.check()
+        self.assertEqual(code, 1)
+        self.assertIn("VERDA_CLIENT_ID and VERDA_CLIENT_SECRET in the environment were refused", out)
+        self.assertNotIn("secret-from-the-vault", out)
+
+    def test_another_provider_does_not_need_verda(self):
+        self.config["provider"] = "other"
+        self.installed = False
+        self.assertFalse(gpu.verda_ready(self.config))
+        self.assertEqual(self.check()[0], 0)
+        self.assertEqual(self.ran, [])
+
+
+class FetchCommandTests(SessionFixture, unittest.TestCase):
+    """fetch: optional models on the server, MiniMax H3 only with --variant-b, only on a current stack."""
+
+    def setUp(self):
+        super().setUp()
+        self.config["host"] = "192.0.2.8"
+        self.ran = []
+        self._run = gpu.subprocess.run
+        gpu.subprocess.run = lambda command, **kw: self.ran.append(command) or __import__("types").SimpleNamespace(
+            returncode=0)
+
+    def tearDown(self):
+        gpu.subprocess.run = self._run
+        super().tearDown()
+
+    def fetch(self, templates, variant_b=False, check=False):
+        return self.run_command(gpu.cmd_fetch, templates=templates, variant_b=variant_b, check=check)
+
+    def test_h3_needs_variant_b(self):
+        self.server["stamp"] = gpu.stack_stamp()
+        with self.assertRaises(SystemExit) as caught:
+            self.fetch("h3-talk,h3-i2v")
+        self.assertIn("--variant-b", str(caught.exception))
+        self.assertEqual(self.ran, [])
+
+    def test_refuses_a_server_with_another_stack(self):
+        self.server["stamp"] = "older-stack"
+        with self.assertRaises(SystemExit) as caught:
+            self.fetch("h3-talk", variant_b=True)
+        self.assertIn("gpu.py start", str(caught.exception))
+        self.assertEqual(self.ran, [])
+
+    def test_unknown_template(self):
+        with self.assertRaises(SystemExit):
+            self.fetch("h4-talk", variant_b=True)
+
+    def test_runs_the_fetcher_on_the_server(self):
+        self.server["stamp"] = gpu.stack_stamp()
+        self.fetch("h3-talk,h3-i2v,h3-r2v", variant_b=True)
+        self.assertEqual(self.code, 0)
+        command = self.ran[-1][-1]
+        self.assertIn("python3 fetch_models.py --models /srv/yesopen/models --templates h3-talk,h3-i2v,h3-r2v "
+                      "--variant-b --jobs 6", command)
+        self.assertNotIn("HF_TOKEN=", command)  # the token stays in the server's .env
+
+
 @unittest.skipUnless(comfy_available(), f"no ComfyUI at {COMFY_URL}")
 class EndToEndTests(UseFixtures, unittest.TestCase):
     def setUp(self):
@@ -500,7 +718,7 @@ class EndToEndTests(UseFixtures, unittest.TestCase):
         # 1.3 s * 24 = 31.2 frames -> 32 frames -> 1.3333 s of audio
         duration = float(probe(saved, "format=duration")["format"]["duration"])
         self.assertAlmostEqual(duration, 32 / 24, delta=0.002)
-        self.assertEqual(record["ltx"]["frames"], 33)
+        self.assertEqual(record["frames"]["frames"], 33)
         log = [json.loads(line) for line in (self.dir / "out" / "jobs.jsonl").read_text().splitlines()]
         self.assertEqual(log[-1]["name"], "line-01")
         self.assertEqual(log[-1]["inputs"]["audio"]["sha256"], gpu.sha256(Path(log[-1]["inputs"]["audio"]["file"])))

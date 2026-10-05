@@ -17,7 +17,8 @@ SK=~/.agents/skills/yesopen-higgsfield-skits
 G="python3 $SK/gpu/client/gpu.py"
 ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_yesopen_gpu -C yesopen-gpu
 mkdir -p ~/.config/yesopen-gpu && cp $SK/gpu/client/config.example.json ~/.config/yesopen-gpu/config.json
-$G use 203.0.113.10      # only for a machine made by hand; with Verda set up (below) start finds or orders it
+$G verda-check          # Verda: is the Verda CLI set up here? it prints the steps when not (required)
+$G use 203.0.113.10      # only with "provider": "other" (a machine made elsewhere); at Verda start finds or orders it
 $G start                 # is there a machine? connect to it. none: show what would be ordered
 $G start --yes           # order it if there is none (billing starts), install what is missing, open the tunnel
 $G health                # every template: nodes and model files
@@ -40,19 +41,23 @@ download in the background.
 - The install turns on the firewall (`ufw`, only SSH comes in) and turns off SSH passwords, and it does not run
   `apt upgrade` or reboot, so the NVIDIA driver stays as it is. Give it a machine of its own.
 
-**Verda from this computer** (tested). `brew install verda-cloud/tap/verda-cli` (v1.8.2 tested), API
-credentials from the Verda console and `verda auth login`, then
-`verda ssh-key add --name yesopen-gpu --public-key "$(cat ~/.ssh/id_ed25519_yesopen_gpu.pub)"`. In
+**Verda from this computer** (tested; the default `provider`, and the Verda CLI is required for it).
+`brew install verda-cloud/tap/verda-cli` (v1.8.2 tested). The account holder makes API credentials in the Verda
+console and saves them with `verda auth login` in their own terminal (never through a chat or an agent), or they
+reach the CLI as `VERDA_CLIENT_ID` and `VERDA_CLIENT_SECRET` in the environment (the team vault's way,
+`../scripts/verda-vault.py`; never on a command line), then `verda ssh-key add --name yesopen-gpu --public-key "$(cat ~/.ssh/id_ed25519_yesopen_gpu.pub)"`. In
 `config.json` → `verda` set `instance_type` (`1H200.141S.44V` tested, `1B200.30V` planned), `ssh_key_id`
-(`verda ssh-key list`) and `location` (one with a free card: `verda availability --type <type>`). `start --yes`
+(`verda ssh-key list`) and `location` (one with a free card: `verda availability --type <type>`).
+`gpu.py verda-check` checks all of it; until it passes, `start`, `stop`, `up`, `down` and `status` stop with the
+setup steps (an outage of Verda's API only warns). `start --yes`
 then orders the machine named `verda.hostname` with the image "Ubuntu 24.04 + CUDA 13.0 Open + Docker", or boots
 the disk kept from the last session; `stop --yes` deletes the machine and keeps the disk. `up`, `down` and
 `status` are the single steps. An order that ends as `no_capacity` must be removed with `down --yes` before the
 next try. A team in one Verda project lists every member's key id in `ssh_key_id`, so whoever orders the machine
 lets the others connect to it; `../references/gpu-engine.md`, section 2, has the details.
 
-**A machine made by hand** (the Verda console without API credentials, another provider, your own server):
-`gpu.py use <address>`, then `start`. At the end `gpu.py stop`, delete the machine at the provider (keep its disk
+**A machine made elsewhere** (another provider, your own server, or a Verda machine a teammate starts for you):
+`"provider": "other"` in `config.json`, `gpu.py use <address>`, then `start`. At the end `gpu.py stop`, delete the machine at the provider (keep its disk
 if the provider allows it, so the 162 GB of models need not download again) and `gpu.py use --clear`.
 
 ## Status on 2 October 2026
@@ -62,7 +67,7 @@ Checked without a GPU, on a Mac and in the server image running locally:
 | What | Result |
 | --- | --- |
 | 15 workflows in API format | all accepted by ComfyUI 0.35.0, locally and in the server image (amd64, CPU mode) |
-| Tests (`tests/`) | 51 pass: the client, `start` / `stop` / `up` / `down` / `use` against a stand-in Verda CLI (also a deleted machine, an order without a free card, a hand-made machine, a lost connection), the model download, and real jobs in ComfyUI on the core nodes. Without a local ComfyUI the 6 end-to-end tests are skipped |
+| Tests (`tests/`) | 109 tests, 103 run without a GPU: the client, `start` / `stop` / `up` / `down` / `use` against a stand-in Verda CLI (also a deleted machine, an order without a free card, a hand-made machine, a lost connection), `verda-check` (not installed, not logged in, credentials in the environment, key ids missing, an API outage, another provider), the MiniMax H3 frame grid and file swap, H3 takes without the LTX-only settings, the voice, language and shutdown checks, the model download with its free-space check, and real jobs in ComfyUI on the core nodes. Without a local ComfyUI the 6 end-to-end tests are skipped |
 | Verda commands in `client/gpu.py` | match the source of Verda CLI v1.8.2: the `vm create` flags, the `vm list` JSON fields; `vm action delete` without `--with-volumes` keeps the disk with the models |
 | Polish voice | `tts` with a voice cloned from one of our own Seedance takes; Whisper read the text without differences |
 | Two-character dialogue | `tts-dialog`, 3 lines: voices at 113 Hz and 208 Hz as in the samples (121 and 206 Hz), the speakers' tracks do not overlap, the mix is exactly their sum, Whisper word for word |
@@ -108,8 +113,8 @@ and LTX-2.5, which waits for a Hugging Face token.
 
 The official templates from `Comfy-Org/workflow_templates`, commit `0bfbbbfa260e` of 30 September 2026. The graphs
 are as Comfy-Org publishes them, except for the patches in `workflows/patches.json`: voice and music are saved
-losslessly as FLAC, the dialogue is not trimmed and also saves each speaker's track, and the voice model stays in
-GPU memory between jobs.
+losslessly as FLAC, the dialogue is not trimmed and also saves each speaker's track, the voice model stays in
+GPU memory between jobs, and MiniMax H3 uses the 8-bit text encoder and, in `h3-talk`, our recorded line.
 
 | Id | Template | Licence | Download | When | For |
 | --- | --- | --- | --- | --- | --- |
@@ -126,12 +131,20 @@ GPU memory between jobs.
 | `upscale` | `utility_seedvr2_3b_int8_upscale_video` | Apache 2.0 | 4.0 GB | background | 704×1280 → 1056×1920 |
 | `interpolate` | `utility_video_frame_interpolation` | MIT and Apache 2.0 | 0.1 GB | background | extra frames |
 | `two-shot` | `video_wan2_1_infinitetalk` | Apache 2.0 and MIT; the Kijai files state no licence | 29.7 GB | on request | two people talking in one frame |
-| `h3-i2v`, `h3-r2v` | `video_minimax_h3_*` | MiniMax H3 Community | 42.0 GB | only after MiniMax confirms | variant B |
+| `h3-talk` | `video_minimax_h3_i2v` | MiniMax H3 Community | 53.5 GB | on request, only with MiniMax's consent | variant B: a still and a recorded line make a lip-synced take, per film instead of `talk` |
+| `h3-i2v`, `h3-r2v` | `video_minimax_h3_*` | as above | 53.5 GB each | as above | variant B: a shot with the model's own sound |
 
 Sizes count shared files in every row. Without repeats: 61.5 GB before ComfyUI starts, 101 GB in the background
-(variant A automatic: 162.5 GB), 94.6 GB on request. The 300 GB disk holds all of variant A with the files on
-request (192 GB) plus the system and the Docker images. Before variant B (65 GB more) enlarge it to 400 GB; Verda
-disks can only grow.
+(variant A automatic: 162.5 GB), 106.1 GB on request (`two-shot` 29.7 GB, MiniMax H3 76.4 GB). The 300 GB disk
+holds variant A and MiniMax H3 plus the system and the Docker images; with `two-shot` as well it gets tight, and
+`gpu.py fetch` refuses a download that would leave less than 15 GB free. Verda disks can only grow.
+
+MiniMax H3 (`h3-*`) needs MiniMax's written consent: its standard licence excludes the EU, the UK, the US and
+South Korea, asks for a separate authorization above $20 million of yearly revenue, and requires published videos
+made with it to be marked clearly as machine-generated. With the consent, download it once onto the kept disk:
+`gpu.py fetch h3-talk,h3-i2v,h3-r2v --variant-b`. Our changes to its templates: the 8-bit text encoder instead of
+the 4-bit one (the H200 has no FP4 cores), 768×1344 instead of the template's 480×864, and in `h3-talk` our
+recorded line anchored as the soundtrack (`workflows/patches.json`).
 
 The LTX-2.x Community License is free for a company whose yearly revenue, with its affiliates, is under
 $10 million; it forbids deepfakes of real people without their consent and asks that content made with it is
@@ -180,6 +193,7 @@ $G use 203.0.113.10                # a machine made by hand; use --clear after d
 $G health                          # version, GPU memory, nodes and model files for every workflow
 $G run tts -s text="Dzień dobry." -s language="Polish (pl)" -s voice=voices/owner.wav -o voice --name line-01
 $G batch takes/batch.json          # a list of jobs; finished ones are skipped
+$G fetch h3-talk,h3-i2v,h3-r2v --variant-b   # once per disk: MiniMax H3 (only with MiniMax's consent)
 $G edit <project> --remote -- assemble.py --format all   # edit on the server, the result comes back
 $G stop --yes                      # close the tunnel, delete the machine, keep the disk
 $G up | down | status | bootstrap | tunnel [--close]     # the single steps

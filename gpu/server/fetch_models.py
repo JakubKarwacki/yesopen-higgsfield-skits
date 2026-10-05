@@ -5,7 +5,8 @@ Each file goes to <models>/<directory>/<name>. A file that is already there with
 script can run again after an interruption, on a kept disk, or for a later stage. Downloads resume from a .part
 file, run several at a time, and are checked against the manifest's size and, where Hugging Face publishes it,
 SHA-256. The Hugging Face token (HF_TOKEN, needed only for gated repositories such as LTX-2.5) is sent to
-huggingface.co only, never to the storage the download is redirected to, and never printed.
+huggingface.co only, never to the storage the download is redirected to, and never printed. Before the first byte
+it checks that the disk has room for what is missing plus --keep-free-gb; if not, it downloads nothing.
 
 Usage:
   python3 fetch_models.py --models /srv/yesopen/models --stage before_start
@@ -19,6 +20,7 @@ import fcntl
 import hashlib
 import json
 import os
+import shutil
 import sys
 import threading
 import time
@@ -126,6 +128,25 @@ def select(manifest: dict, stage: str, templates: list | None, variant_b: bool) 
     return sorted(chosen, key=lambda e: (order.index(e["stage"]), -e["size"]))
 
 
+def bytes_to_fetch(entries: list, root: Path) -> int:
+    """What the download still writes: every file not in place, less what its .part file already holds."""
+    total = 0
+    for entry in entries:
+        target = root / entry["directory"] / entry["name"]
+        if target.exists() and target.stat().st_size == entry["size"]:
+            continue
+        part = target.with_name(target.name + ".part")
+        have = part.stat().st_size if part.exists() else 0
+        total += entry["size"] - (have if have <= entry["size"] else 0)
+    return total
+
+
+def free_bytes(path: Path) -> int:
+    while not path.exists():  # the models folder of a fresh disk does not exist yet
+        path = path.parent
+    return shutil.disk_usage(path).free
+
+
 def fetch_one(entry: dict, root: Path, token, timeout, retries, verify) -> str:
     # One lock per file: a second run (bootstrap again while the background stage is still going) waits for the
     # file the first one is fetching and then finds it present, instead of writing into the same .part file.
@@ -167,12 +188,16 @@ def main(argv=None) -> int:
     parser.add_argument("--timeout", type=float, default=60)
     parser.add_argument("--verify", action="store_true", help="also hash files that are already present")
     parser.add_argument("--check", action="store_true", help="only report what is missing")
+    parser.add_argument("--keep-free-gb", type=float, default=15,
+                        help="disk space to leave for outputs and image builds (default 15)")
     args = parser.parse_args(argv)
     manifest = json.loads(args.manifest.read_text())
     entries = select(manifest, args.stage, args.templates.split(",") if args.templates else None, args.variant_b)
     token = os.environ.get("HF_TOKEN") or None
     total = sum(e["size"] for e in entries)
     say(f"{len(entries)} file{'' if len(entries) == 1 else 's'}, {total / 1e9:.1f} GB ({args.templates or args.stage}) -> {args.models}")
+    need, free = bytes_to_fetch(entries, args.models), free_bytes(args.models)
+    say(f"to download {need / 1e9:.1f} GB, free on the disk {free / 1e9:.1f} GB")
     if args.check:
         missing = [e for e in entries if not ((args.models / e["directory"] / e["name"]).exists()
                                               and (args.models / e["directory"] / e["name"]).stat().st_size == e["size"])]
@@ -180,6 +205,11 @@ def main(argv=None) -> int:
             say(f"  missing {e['directory']}/{e['name']}")
         say(f"{len(entries) - len(missing)} of {len(entries)} present")
         return 1 if missing else 0
+    if need and need + args.keep_free_gb * 1e9 > free:
+        say(f"not enough disk space: {need / 1e9:.1f} GB to download and {args.keep_free_gb:g} GB to keep free, "
+            f"but {free / 1e9:.1f} GB free. Nothing was downloaded: enlarge the disk or remove models you do not "
+            f"use, then run again.")
+        return 1
     failures = 0
     with ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
         futures = {pool.submit(fetch_one, e, args.models, token, args.timeout, args.retries, args.verify): e

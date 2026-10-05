@@ -1,3 +1,4 @@
+import io
 import json
 import random
 import sys
@@ -41,6 +42,23 @@ class TalkNegativeConditioning(unittest.TestCase):
                 gpu_batches.cmd_takes(root, doc, SimpleNamespace(only=None, out=None))
             job = json.loads((root/'takes/batch.json').read_text())['jobs'][0]
             self.assertEqual(job['set']['negative_prompt'], 'subtitles, foreground person')
+
+    def test_h3_takes_leave_the_ltx_settings_out(self):
+        # h3-talk has no negative prompt or first-stage CFG; gpu.py would refuse a job that sets them
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            doc = {'characters': {'a': {'still': 'a.png', 'who': 'Woman', 'where': 'salon'}},
+                   'take': {'negative_prompt': 'subtitles', 'cfg_first': 2.0},
+                   'lines': [{'id': 'l01', 'who': 'a', 'text': 'Hello',
+                              'negative_prompt': 'subtitles, foreground person'}]}
+            with patch.object(gpu_batches, 'line_seconds', return_value=2), \
+                    patch('sys.stderr', new_callable=io.StringIO) as err:
+                gpu_batches.cmd_takes(root, doc, SimpleNamespace(only=None, out=None, model='h3'))
+            job = json.loads((root/'takes/batch.json').read_text())['jobs'][0]
+            _, spec = gpu.load_template('h3-talk')
+            self.assertEqual(job['template'], 'h3-talk')
+            self.assertLessEqual(set(job['set']), set(spec['params']))
+            self.assertIn('cfg_first, negative_prompt: LTX settings', err.getvalue())
 
 
 

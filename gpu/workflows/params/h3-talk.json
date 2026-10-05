@@ -1,6 +1,6 @@
 {
-  "template": "h3-i2v",
-  "doc": "Variant B, only with MiniMax's consent: image to video with native audio (MiniMax H3).",
+  "template": "h3-talk",
+  "doc": "Variant B, only with MiniMax's consent: lip-synced take from a still and a recorded line (MiniMax H3). The line is anchored as the soundtrack, so the voice stays ours.",
   "params": {
     "image": {
       "type": "image",
@@ -11,6 +11,17 @@
         ]
       ],
       "required": true
+    },
+    "audio": {
+      "type": "audio",
+      "targets": [
+        [
+          "901",
+          "audio"
+        ]
+      ],
+      "required": true,
+      "doc": "padded with silence to the shot length before upload"
     },
     "prompt": {
       "type": "text",
@@ -78,7 +89,10 @@
   },
   "rules": {
     "h3_frames": {
-      "seconds": "seconds"
+      "seconds": "seconds",
+      "pad_audio": [
+        "audio"
+      ]
     }
   }
 }
