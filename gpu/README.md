@@ -271,3 +271,7 @@ docker run -d --name yesopen-comfy-test --platform linux/amd64 -p 127.0.0.1:8188
   yesopen-comfyui:0.35.0 python main.py --listen 0.0.0.0 --port 8188 --cpu --disable-auto-launch
 python3 gpu/tools/validate_local.py --comfy-dir /tmp/comfy-test
 ```
+
+## Nebius
+
+For manual Nebius operations with your own service account, see [Nebius access and disk preparation](../references/nebius-operations.md). Each operator supplies their own local configuration and vault entry. Automatic provider fallback is not implemented.
