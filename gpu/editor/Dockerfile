@@ -32,7 +32,7 @@ ENV PATH=/opt/ffmpeg/bin:$PATH
 
 # The same versions as on the Mac. Whisper runs on the CPU (it only transcribes takes and checks the final mix).
 RUN pip install --no-cache-dir torch==2.11.0 --index-url https://download.pytorch.org/whl/cpu \
- && pip install --no-cache-dir pillow==12.3.0 numpy==2.4.4 openai-whisper==20250625
+ && pip install --no-cache-dir pillow==12.3.0 numpy==2.4.4 openai-whisper==20250625 faster-whisper
 
 WORKDIR /work
 CMD ["ffmpeg", "-hide_banner", "-version"]
