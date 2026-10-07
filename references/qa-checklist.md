@@ -39,7 +39,9 @@ engine only.
 
 - [ ] Every shot starting image matches its planned entry state; changed poses/props are not reset to the original cast portrait.
 
-- [ ] Four candidates per character on one sheet.
+- [ ] Every character, its look and its voice come from the character table written with the script; a character
+      or voice from another skit only when the script brings it back.
+- [ ] Four candidates per character on one sheet; the pick and its reason against the script recorded in `script.md`.
 - [ ] Picked still: no logos, no readable text, neutral face with lips closed, prop visible, face large enough
       for a 1.4x punch-in, real local business look, nobody in the background.
 - [ ] Higgsfield: `stills/picked.json` and the args saved. GPU: the pick in `lines.json` →
