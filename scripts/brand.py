@@ -38,6 +38,14 @@ FORMATS = {
 }
 
 
+# 4:5 and 1:1 cut from the finished 9:16 master with ffmpeg (scripts/crop_formats.py): the crop window's top edge
+# in the 1080x1920 frame. Faces sit high in our takes, captions at caption_y 0.646 (y 1240 to about 1345), so the windows
+# are pulled up from the centre. Render that master with assemble.py --crop-safe: its banner then starts at
+# CROP_SAFE_BANNER_TOP, inside both windows. The end card is replaced by the format's own card after the crop.
+CROP_FROM_9X16 = {"4:5": {"top": 200}, "1:1": {"top": 280}}
+CROP_SAFE_BANNER_TOP = 300
+
+
 def get_format(name: str) -> dict:
     """Accept "9:16" or "9x16"; return the layout with its name."""
     key = name.strip().replace("x", ":")

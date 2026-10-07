@@ -19,8 +19,12 @@ and the result is exactly reproducible: re-running the gym example gives a byte-
 ## 1. Tools and setup
 
 - `ffmpeg`/`ffprobe` (8.x used; no `drawtext`/`libass` needed: all text is drawn with Pillow and overlaid).
-- Python 3.11 with `pillow`, `numpy`, and `openai-whisper` for `inspect_take.py` and `qa_report.py --whisper`
-  (`pip install pillow numpy openai-whisper`; the `large-v3-turbo` model downloads on first use).
+- Python 3.11 with `pillow`, `numpy`, and `faster-whisper` for `fit_lines.py`, `inspect_take.py` and `qa_report.py --whisper`
+  (`pip install pillow numpy faster-whisper`; Whisper `large-v3-turbo` in int8 downloads on first use). The script
+  always knows the text, so the transcript only validates it and times the words: greedy decoding is enough
+  (`scripts/speech.py`; `YESOPEN_ASR=openai` switches back to openai-whisper).
+- 4:5 and 1:1 are cut from the 9:16 master: `assemble.py --format 9:16 --crop-safe`, then `crop_formats.py .`
+  (crop windows in `brand.CROP_FROM_9X16`, the format's own end card). 16:9 is still rendered by `assemble.py`.
 - Manrope comes with the skill (`assets/brand/fonts/Manrope-Variable.ttf`, SIL OFL). `YESOPEN_FONT` overrides it.
 
 ## 2. Step by step

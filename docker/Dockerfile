@@ -61,13 +61,13 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
  && apt-get install -y -qq --no-install-recommends \
       rsync openssh-client procps ca-certificates
 
-# Whisper (qa_report.py --whisper, inspect_take.py) runs on the CPU here, so torch comes from the CPU-only index
+# Whisper (faster-whisper by default, openai-whisper as fallback: scripts/speech.py) runs on the CPU here, so torch comes from the CPU-only index
 # (no CUDA libraries); its models download on first use into /root/.cache/whisper (a volume, see docker-compose.yml).
 # pip and the packages' own test folders are not needed once the packages are in
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install pillow numpy \
  && pip install torch --index-url https://download.pytorch.org/whl/cpu \
- && pip install openai-whisper \
+ && pip install openai-whisper faster-whisper \
  && pip uninstall -y pip setuptools wheel \
  && find /usr/local/lib/python3.12/site-packages -type d -name tests -prune -exec rm -rf {} +
 

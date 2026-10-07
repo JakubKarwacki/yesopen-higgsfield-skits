@@ -120,7 +120,7 @@ that hides the missing event. After regeneration, review and select the edit bou
 | Need | Details |
 | --- | --- |
 | `ffmpeg`, `ffprobe` | 8.x; no `drawtext` or `libass` needed (all text is drawn with Pillow) |
-| Python 3.11 | `pip install pillow numpy openai-whisper` (`large-v3-turbo` downloads on first use) |
+| Python 3.11 | `pip install pillow numpy faster-whisper` (Whisper `large-v3-turbo`, int8 on the CPU, downloads on first use; the transcript only validates the known text and times its words, `scripts/speech.py`; `openai-whisper` still works as a fallback, `YESOPEN_ASR=openai`) |
 | GPU engine | a GPU server: one NVIDIA card with 80 GB or more, an Ubuntu 24.04 VM with Docker and the NVIDIA Container Toolkit, root login by SSH key, a 300 GB disk. Verda, another provider or your own machine: `references/gpu-engine.md`, section 2. Here: `ssh`, `rsync`, an SSH key and the settings in `~/.config/yesopen-gpu/config.json` |
 | GPU engine at Verda, required | the `verda` CLI, set up by the user: installed, logged in with API credentials of the Verda project, and `verda.instance_type` and `verda.ssh_key_id` filled in the config. Before the first GPU step run `python3 $SK/gpu/client/gpu.py verda-check`. When it says the CLI is not set up, stop and tell the user plainly that they must set it up first, and give them the steps it prints. The user runs `verda auth login` in their own terminal; never ask for the client secret, never take it in the chat and never read it. The credentials may also reach the CLI from the environment (`VERDA_CLIENT_ID`, `VERDA_CLIENT_SECRET`), the way `scripts/verda-vault.py` passes the team vault entry (`references/verda-operations.md`); `verda-check` tests them with a read-only call. `start`, `stop`, `up`, `down` and `status` refuse to run until the check passes. A server elsewhere, or a machine a teammate starts for you: `"provider": "other"` in the config |
 | GPU engine, optional | a Hugging Face token for silent `action` shots (LTX-2.5); Docker here for the editor container |
@@ -141,7 +141,7 @@ Quick check, free:
 
 ```bash
 ffmpeg -version | head -1
-python3 -c "import PIL, numpy, whisper; print('python ok')"
+python3 -c "import PIL, numpy, faster_whisper; print('python ok')"
 $G templates | head -1                                   # GPU client
 test -f ~/.config/yesopen-gpu/config.json && echo "gpu settings ok"
 $SK/scripts/hf-job cost bytedance/seedance-2.5/image-to-video $SK/templates/args/take.json   # Higgsfield
@@ -344,7 +344,9 @@ run in the editor container, here or on the GPU server (`gpu-engine.md`, section
 Read `references/formats-delivery.md`.
 
 ```bash
-python3 $SK/scripts/assemble.py . --format all
+python3 $SK/scripts/assemble.py . --format 9:16 --crop-safe   # the one full render; banner inside the crop windows
+python3 $SK/scripts/crop_formats.py .                        # 4:5 and 1:1 cut from it with ffmpeg, own end cards
+python3 $SK/scripts/assemble.py . --format 16:9               # the wide format still renders from the takes
 python3 $SK/scripts/qa_report.py . --format 9:16 --whisper
 python3 $SK/scripts/qa_report.py . --format 4:5     # and 1:1, 16:9
 ```
