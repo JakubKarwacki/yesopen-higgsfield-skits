@@ -208,6 +208,12 @@ Read `references/scriptwriting.md`. Build the joke in this order:
 4. Three or four escalation steps with the same shape, then a turn, one honest product line, a button.
 5. The end-card line = the best line of the script.
 
+Cast while you write, not afterwards: the characters come out of the script. For every character write, next to
+the dialogue, the look, the place, the props, the variants the shots need (START/END states) and the voice: age,
+temperament, how it speaks and changes. The `look` prompts of Phase 3 and the voice source are written from this
+table. A returning character or voice from another skit (`assets/cast/`) only when the script wants that person
+back and the owner knows it; never as a shortcut for a new role.
+
 Check every claim (`rg` in `business-card/messages/en`) and write the claims table. Write `script.md` from the
 template. With the GPU engine also write `lines.json` from `templates/lines.json`: the line table in the form the
 batches read (who, the text with numbers as words, exaggeration, acting, what we see), and run
@@ -245,9 +251,13 @@ $SK/scripts/hf-job submit still-owner higgsfield-ai/soul/v2/standard args/still-
 python3 $SK/scripts/contact_sheet.py stills/still-owner-*.png -o stills/sheet-owner.jpg --cols 4 --width 400 --label index
 ```
 
-**Both.** Reject logos, readable text, broad smiles, hidden props, small faces, chain-store sets. Write the picks
-to `lines.json` → `characters.<name>.still` (GPU) or `stills/picked.json` (Higgsfield), and to `project.json` →
-`cast`. Returning characters come from `assets/cast/` with their stills and voice samples. Gate 3.
+**Both.** Reject logos, readable text, broad smiles, hidden props, small faces, chain-store sets. Pick against the
+script, not the sheet alone: the role, the place, the props and the variants the later shots need. Write each pick
+and its reason in `script.md`, and the picks to `lines.json` → `characters.<name>.still` (GPU) or
+`stills/picked.json` (Higgsfield), and to `project.json` → `cast`. A new character's voice is made from its picked
+still and its role (GPU: a short `h3-i2v` take of the character speaking in character, cut to 5–15 s), not borrowed
+from another skit. Returning characters come from `assets/cast/` with their stills and voice samples, only when
+the script brings them back (Phase 2). Gate 3.
 
 ### Phase 4: Takes (historical estimates, not a runtime promise)
 
