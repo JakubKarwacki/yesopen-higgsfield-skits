@@ -20,11 +20,18 @@ Nie kopiujemy kwestii, kadrów ani nazw z wzoru.
 
 ## Postacie
 
+Obsadę piszemy razem ze scenariuszem: każda postać wynika z roli w żarcie, a z tej tabeli powstają `look`
+w `lines.json` i źródło głosu. Postać lub głos z innego skeczu tylko wtedy, gdy scenariusz ją sprowadza z powrotem.
+
 - **POSTAĆ 1:**
+  - rola w żarcie (kim jest dla widza, co wie, czego nie wie);
   - wiek, wygląd, strój bez logo, rekwizyt;
   - miejsce (lokalny biznes, konkretne detale planu);
-  - sposób mówienia i to, jak zmienia się w trakcie;
-  - źródło głosu, dowód uprawnienia, plik i SHA-256 w `voices/provenance.json`.
+  - warianty potrzebne w ujęciach (poza, rekwizyt, strój, miejsce) — zgodne z tabelą ciągłości;
+  - sposób mówienia, temperament i to, jak zmienia się w trakcie;
+  - głos: jak powstaje z tej postaci (próbka z jej zdjęcia i roli), dowód uprawnienia, plik i SHA-256 w
+    `voices/provenance.json`;
+  - wybrane zdjęcie i powód wyboru względem scenariusza (po castingu).
 - **POSTAĆ 2:** ...
 
 ## Scenariusz
