@@ -152,6 +152,7 @@ $SK/scripts/hf-job cost bytedance/seedance-2.5/image-to-video $SK/templates/args
 ```text
 <root>/<date>-<slug>/
   project.json             engine, cast, takes, speech threshold, caption style and fixes, banner texts, end card
+  decisions.md             every answer of the grills (brief, script, session), with its source
   script.md                the script document (Polish), dialogue in the video's language
   lines.json               GPU: the lines, voices, stills and take prompts every batch is written from
   reference/analysis.md    our analysis of the reference; reference/private/ is git-ignored
@@ -182,8 +183,9 @@ known defects and missing voice rights still block the affected work.
 
 1. Create the project (above). Put the link into `project.json` → `reference.url`.
 2. The engine is GPU unless the user asks for Higgsfield or has no GPU server.
-3. If the brief is unclear only in ways that change the joke (who the audience is, the language, the length),
-   ask once. Otherwise state your assumption and go.
+3. Grill 1, the brief (`references/grill.md`): settle what changes the joke (audience and pain, the YesOpen
+   feature, language, length, characters, tone, reference) one question at a time, look up what the files
+   answer, and write the answers to `decisions.md`. Skip what is already on record.
 
 ### Phase 1: Reference (about 5 min)
 
@@ -220,9 +222,11 @@ batches read (who, the text with numbers as words, exaggeration, acting, what we
 `python3 $SK/scripts/gpu_batches.py estimate` for the GPU minutes.
 
 Present it in chat, short and in the user's language: the idea in two sentences, the line table, what is borrowed
-(mechanics only), the claims, open decisions each with a recommendation, the cost (GPU: the session's hours at the
-machine's price; Higgsfield: `hf-job cost` for each planned take). Wait for an explicit yes, and record it in
-`script.md`. With the GPU engine the same message asks for the yes to start the machine. Gate 2.
+(mechanics only), the claims, the cost (GPU: the session's hours at the machine's price; Higgsfield: `hf-job cost`
+for each planned take). Then grill 2 (`references/grill.md`): the draft's open decisions one at a time, each with
+a recommended option, in dependency order, updating the draft as answers come. Wait for an explicit yes, and record
+it in `script.md`. Before anything is billed, grill 3 settles the session (voices listened to, provider and card,
+budget, the Slack note) and ends with the yes to start the machine. Gate 2.
 
 ### Phase 3: Cast (about 5 min)
 
@@ -440,6 +444,7 @@ returns no cost and there is no balance endpoint.
 | File | Read when |
 | --- | --- |
 | `references/case-study-gym-breakup.md` | before the first skit, and whenever you need a worked example of any step |
+| `references/grill.md` | Phase 0 (brief), Phase 2 (open decisions of the script) and before anything is billed: one question at a time, answers in `decisions.md` |
 | `references/reference-analysis.md` | Phase 1 |
 | `references/scriptwriting.md` | Phase 2: joke structure, verified claims, ideas for the next skits |
 | `references/gpu-engine.md` | GPU engine: the server and how to get one, a session, the templates, Phases 3–4 audio first, music, editing on the server, time and cost |
