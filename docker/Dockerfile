@@ -45,6 +45,14 @@ RUN --mount=type=cache,target=/dl \
     tar xzf "$tmp/v.tgz" -C "$tmp" verda; \
     install -m755 "$tmp/verda" /out/verda
 
+# Nebius CLI (the second GPU provider): the same binary their install.sh fetches (stable release, linux/x86_64), over
+# HTTPS from their storage. Nebius publishes no checksums for it. Not run here: Alpine (musl) cannot run it, the final
+# stage does `nebius version`.
+RUN set -eux; base=https://storage.eu-north1.nebius.cloud/cli/release; mkdir -p /out/nebius; \
+    v=$(curl -fsS "$base/stable"); \
+    curl -fsSL -o /out/nebius/nebius "$base/$v/linux/x86_64/nebius"; \
+    chmod 755 /out/nebius/nebius; echo "nebius $v"
+
 
 FROM python:3.12-slim-bookworm
 
@@ -59,7 +67,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
  && echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache \
  && apt-get update -qq \
  && apt-get install -y -qq --no-install-recommends \
-      rsync openssh-client procps ca-certificates
+      rsync openssh-client procps ca-certificates openssl
 
 # Whisper (qa_report.py --whisper, inspect_take.py) runs on the CPU here, so torch comes from the CPU-only index
 # (no CUDA libraries); its models download on first use into /root/.cache/whisper (a volume, see docker-compose.yml).
@@ -74,8 +82,9 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 COPY --from=fetch /out/ffmpeg/ffmpeg /out/ffmpeg/ffprobe /usr/local/bin/
 COPY --from=fetch /out/ffmpeg/lib/ /usr/local/lib/ffmpeg/
 COPY --from=fetch /out/verda /usr/local/bin/verda
+COPY --from=fetch /out/nebius/nebius /usr/local/bin/nebius
 RUN echo /usr/local/lib/ffmpeg > /etc/ld.so.conf.d/ffmpeg.conf && ldconfig \
- && ffmpeg -version | head -1 && ffprobe -version | head -1 && verda --version
+ && ffmpeg -version | head -1 && ffprobe -version | head -1 && verda --version && nebius version
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh

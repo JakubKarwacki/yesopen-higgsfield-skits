@@ -71,6 +71,8 @@ def load_config() -> dict:
     config["comfy_url"] = os.environ.get("GPU_COMFY_URL", config.get("comfy_url", "http://127.0.0.1:8188"))
     state = load_state()
     config["host"] = os.environ.get("GPU_HOST") or config.get("host") or state.get("ip")
+    # a Nebius machine (nebius_session.py up) logs in as "nebius", not root
+    config["ssh_user"] = os.environ.get("GPU_SSH_USER") or state.get("ssh_user") or config.get("ssh_user", "root")
     return config
 
 

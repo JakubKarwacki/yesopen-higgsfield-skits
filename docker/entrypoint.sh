@@ -58,4 +58,28 @@ EOF
   echo "config made from the example in $conf: fill verda.instance_type and verda.ssh_key_id" >&2
 fi
 
+# Nebius: profile "yesopen-farm" from $YESOPEN_GPU_HOME/nebius/nebius.json (written by `skill.ps1 nebius-config`) and the
+# service-account key in the same folder (made by `skill.ps1 nebius-keygen`). ~/.nebius is not persistent, so it is made
+# on every start; tokens are never cached in plaintext (credentials.yaml -> /dev/null).
+nb="$YESOPEN_GPU_HOME/nebius"
+if [ -f "$nb/nebius.json" ] && [ -f "$nb/sa.pem" ] && command -v nebius >/dev/null; then
+  mkdir -p "$HOME/.nebius" && ln -sf /dev/null "$HOME/.nebius/credentials.yaml"
+  args=$(python3 - "$nb/nebius.json" <<'EOF'
+import json, shlex, sys
+c = json.load(open(sys.argv[1], encoding="utf-8-sig"))
+if c["public_key_id"].startswith("PUBLICKEY_ID"):
+    sys.exit(1)   # still the placeholder: waiting for the key id from Adrian
+print(shlex.join(["--service-account-id", c["service_account_id"], "--public-key-id", c["public_key_id"],
+                  "--parent-id", c["project_id"]]))
+EOF
+  ) || args=""
+  if [ -n "$args" ]; then
+    chmod 600 "$nb/sa.pem"
+    eval "nebius profile create yesopen-farm --endpoint api.nebius.cloud:443 $args --private-key-file-path $nb/sa.pem" \
+      >/dev/null 2>&1 || echo "nebius profile could not be created (check $nb/nebius.json)" >&2
+  else
+    echo "nebius: public_key_id not set yet (skill.ps1 nebius-config <json> <publickey-id>)" >&2
+  fi
+fi
+
 exec "$@"
