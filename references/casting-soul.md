@@ -43,8 +43,11 @@ Reject a candidate for any of these:
 - the face too small for a 1.4x punch-in (the face should be at least about 1/6 of the frame height);
 - a set that looks like a chain store or a studio, or that has people in the background.
 
-Pick the one that looks like a real phone video of a real local business. Write the pick and its URL
-(`stills/picked.json`), and keep the rejected ones: they show the next person what goes wrong.
+Pick the one that looks like a real phone video of a real local business and fits the script: the character's
+role, the place, the prop the joke needs and the variants the later shots start from. Write the pick, its URL
+(`stills/picked.json`) and the reason in `script.md`, and keep the rejected ones: they show the next person what
+goes wrong. The look prompt itself comes from the character table written with the script, never from a still or
+a character of another skit.
 
 ## What went wrong in the gym skit and the fix
 

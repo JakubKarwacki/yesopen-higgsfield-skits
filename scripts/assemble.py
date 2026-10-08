@@ -177,6 +177,8 @@ def main():
     ap.add_argument("--no-captions", action="store_true")
     ap.add_argument("--whisper-captions", action="store_true", help="caption from Whisper on the cut dialogue instead of the EDL words")
     ap.add_argument("--no-music", action="store_true", help="leave out the music bed even if the EDL has one")
+    ap.add_argument("--crop-safe", action="store_true",
+                    help="9:16 only: place the banner inside the 4:5 and 1:1 crop windows, for crop_formats.py")
     a = ap.parse_args()
     project = find_project(a.project)
     names = list(__import__("brand").FORMATS) if a.format == "all" else a.format.split(",")
@@ -184,6 +186,8 @@ def main():
         raise SystemExit("--out works with one format only")
     for name in names:
         layout = get_format(name)
+        if a.crop_safe and layout["name"] == "9:16":
+            layout["banner_top"] = __import__("brand").CROP_SAFE_BANNER_TOP
         out = assemble(project, layout, a.edl, a.out, not a.no_captions, a.whisper_captions, not a.no_music)
         print(json.dumps({"format": layout["name"], "out": str(out), "duration": round(probe_duration(out), 3)}))
 
