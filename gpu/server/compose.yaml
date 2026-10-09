@@ -14,6 +14,8 @@ services:
       - ${YESOPEN_DATA:-/srv/yesopen}/comfy/input:/opt/ComfyUI/input
       - ${YESOPEN_DATA:-/srv/yesopen}/comfy/output:/opt/ComfyUI/output
       - ${YESOPEN_DATA:-/srv/yesopen}/comfy/user:/opt/ComfyUI/user
+      # live refresh of saved workflows in every open browser (gpu/server/live_refresh; copied here by docker/comfy-link.sh)
+      - ${YESOPEN_DATA:-/srv/yesopen}/comfy/live_refresh:/opt/ComfyUI/custom_nodes/yesopen_live_refresh:ro
     environment:
       # every weight comes from fetch_models.py; nothing may download behind our back at run time
       HF_HUB_OFFLINE: "1"

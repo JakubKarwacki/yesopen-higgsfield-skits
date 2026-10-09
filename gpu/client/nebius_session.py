@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """A GPU session on Nebius: one H200/H100 machine on the kept disk, made and deleted with the Nebius CLI.
 
-  nebius_session.py up [--dry-run]    make the machine, start ComfyUI, record its address in state.json
+  nebius_session.py up [--dry-run] [--cpu]   make the machine (--cpu: a small CPU one, no ComfyUI), record its address in state.json
   nebius_session.py down [--force]    stop ComfyUI, DELETE the machine, check the kept disk is still READY
 
 Run it through `scripts\\skill.ps1 nebius-up` / `nebius-down` (needs the profile from `skill.ps1 nebius-config` and the
@@ -31,6 +31,8 @@ VARIANTS = [
     ("H200 preemptible", "gpu-h200-sxm", "1gpu-16vcpu-200gb", True),
     ("H100", "gpu-h100-sxm", "1gpu-16vcpu-200gb", False),
 ]
+# `up --cpu`: the cheapest machine, only to reach the kept disk (copy files, look inside, download models); no ComfyUI
+CPU_VARIANT = ("CPU", "cpu-d3", "2vcpu-8gb", False)
 
 
 def run(cmd, check=True, **kw):
@@ -119,7 +121,7 @@ def cmd_up(args):
     name = instance_name(cfg)
 
     instance = None
-    for label, platform, preset, spot in VARIANTS:
+    for label, platform, preset, spot in ([CPU_VARIANT] if args.cpu else VARIANTS):
         cmd = ["compute", "instance", "create", "--name", name, "--parent-id", cfg["project_id"],
                "--resources-platform", platform, "--resources-preset", preset,
                "--boot-disk-attach-mode", "READ_WRITE", "--boot-disk-existing-disk-id", cfg["disk_id"],
@@ -143,7 +145,7 @@ def cmd_up(args):
     if args.dry_run:
         return 0
     if not instance:
-        sys.exit("no H200 / H200 preemptible / H100 available now. Try again later or use Verda.")
+        sys.exit("no CPU machine available now." if args.cpu else "no H200 / H200 preemptible / H100 available now. Try again later or use Verda.")
 
     instance_id = instance["metadata"]["id"]
     ip = public_ip(instance) or public_ip(nebius_json("compute", "instance", "get", "--id", instance_id))
@@ -156,6 +158,10 @@ def cmd_up(args):
     run(["ssh-keygen", "-R", ip, "-f", str(KNOWN_HOSTS)], check=False)
     print(f"instance {instance_id} at {ip}; waiting for SSH ...", flush=True)
     wait_for("SSH", lambda: ssh(ip, "true").returncode == 0, 300)
+    if args.cpu:
+        print(f"ready: {SSH_USER}@{ip} (CPU machine, ComfyUI not started)")
+        print("When done: scripts\\skill.ps1 nebius-down")
+        return 0
     # ComfyUI wakes after about 40 s; the compose file is on the kept disk
     result = ssh(ip, f"docker compose -f {COMPOSE} up -d comfyui", 300)
     if result.returncode != 0:
@@ -210,6 +216,7 @@ def main():
     sub = parser.add_subparsers(dest="cmd", required=True)
     up = sub.add_parser("up")
     up.add_argument("--dry-run", action="store_true", help="show the create commands, change nothing")
+    up.add_argument("--cpu", action="store_true", help="a small CPU machine on the disk, no ComfyUI (about $0.05 an hour)")
     up.set_defaults(fn=cmd_up)
     down = sub.add_parser("down")
     down.add_argument("--force", action="store_true", help="delete even with jobs in the ComfyUI queue")
