@@ -3,13 +3,16 @@
 
     python3 gpu/tools/build_pipeline_graph.py [--ui DIR] [--out FILE]
 
-Layout, three rows left to right:
-- top row: the phases that run on the user's computer (0-2 before the GPU, 5-8 after it), notes only;
-- main track (GPU): still -> line -> talking take -> upscale -> interpolation, the stages LINKED by their outputs, so
-  one "Run" makes a finished take from a prompt;
-- below it the other stages, all wired in and run by the same "Run": pose edit (Qwen) -> silent b-roll (LTX-2.5), the
-  two-voice dialog and the music. Only MiniMax H3 is muted (mode 2): it needs MiniMax's written consent (MUTED).
-Inside a stage the nodes follow the data flow (loaders, model, outputs).
+Layout (graph_layout.py does the work):
+- The GPU stages stand on a grid that the annealer picks for the shortest, least bent wiring of all the links between
+  them (each pair weighted by its number of links); the steps on the user's computer are a note on each side. One "Run"
+  runs every stage except MiniMax H3 (muted, mode 2: it needs MiniMax's written consent).
+- Inside a stage, and inside every subgraph, the nodes stand in data-flow columns, each level with the node feeding it
+  when there is room; no node covers a link.
+- Links run orthogonally (render mode "Straight", reroutes only where the frontend's own corner would miss the lane):
+  one lane per source, links of different sources never overlap, lanes ordered for the fewest crossings.
+- Node boxes and socket rows come from comfy_geometry.json, measured in the browser with measure_geometry.js; measure
+  again after changing node sizes, templates or the theme (gpu/server/live_refresh/web/theme.js).
 
 Changes against the templates, all explained in the stage notes:
 - The templates' own notes (model links, how-tos, reference tables) are dropped; the stage headers keep the warnings.
@@ -24,9 +27,14 @@ import copy
 import json
 from pathlib import Path
 
+from graph_layout import (TITLE_H, CHANNEL_DY, LANE_DX, LANE_X0, Geometry, build_reroutes, drawn_pieces, lane_items, lane_paths,
+                          layout_block, overlaps, place_stages)
+
 HERE = Path(__file__).resolve().parent
 DEFAULT_UI = HERE.parent / "workflows" / "ui"
 DEFAULT_OUT = HERE.parent / "workflows" / "pipeline" / "yesopen-skit-pipeline.json"
+# node boxes and socket rows as the ComfyUI frontend draws them, measured in the browser (see graph_layout.Geometry)
+GEOMETRY = HERE / "comfy_geometry.json"
 
 # placeholder inputs of the official templates -> files in comfy/input of the kept disk (a still, two voices, a line, a clip)
 INPUTS = {
@@ -50,9 +58,11 @@ NOTE_TYPES = ("Note", "MarkdownNote")
 LOADERS = ("LoadImage", "LoadAudio", "LoadVideo")
 
 # the Save nodes are the previews: one size each, so the rows stay compact
-SAVE_SIZES = {"SaveImage": (520, 520), "SaveImageAdvanced": (560, 480), "SaveVideo": (520, 440)}
+SAVE_SIZES = {"SaveImage": (290, 500), "SaveImageAdvanced": (290, 500), "SaveVideo": (290, 560)}   # portrait 9:16 previews
 REMOVABLE = LOADERS + ("ResolutionSelector",)     # source nodes that vanish when their last link is rewired
 SETTINGS = "__settings__"                         # the stage that holds the shared skit settings (no template file)
+SETTINGS_STAGE = "cfg"
+MIX = "__mix__"                                   # the preview of a take with the music (core nodes only, no template file)
 
 # the skit's own defaults instead of the templates' demo content (a cactus, Spanish, "I'm Purz")
 STILL = ("Vertical smartphone photo, medium shot from mid-thigh up, eye level. A friendly woman in a white clinic coat, "
@@ -75,10 +85,15 @@ SAVE_PREFIX = {"z": "yesopen/still", "qwen": "yesopen/still-edit", "tts": "yesop
                "up": "yesopen/take-upscaled", "film": "yesopen/take-48fps", "ace": "yesopen/music"}
 
 # node colours by role: (colour, background)
-ROLE = {"input": ("#232", "#353"), "model": ("#223", "#335"), "output": ("#322", "#533"), "setting": ("#323", "#535")}
-MAX_STAGE_W = 1900             # a wider stage wraps its node columns into a second band
-
-
+# One Dark (VS Code), as in gpu/server/live_refresh/web/theme.js
+OD = {"bg": "#282c34", "bg_dark": "#21252b", "bg_light": "#2c313a", "line": "#3e4451", "comment": "#5c6370",
+      "red": "#e06c75", "orange": "#d19a66", "yellow": "#e5c07b", "green": "#98c379", "cyan": "#56b6c2", "blue": "#61afef",
+      "purple": "#c678dd"}
+# node colours by role: (title bar, body); the title bars are the One Dark accents darkened so light text reads on them
+ROLE = {"input": ("#4a6b3a", OD["bg"]), "model": ("#2f5f8f", OD["bg"]), "output": ("#8f4a52", OD["bg"]),
+        "setting": ("#6f4a8a", OD["bg"])}
+NOTE_COLORS = ("#6e5f36", OD["bg_light"])          # stage notes
+TITLE_COLORS = (OD["line"], OD["bg_dark"])         # the pipeline title
 def swap_models(obj):
     """Replace the template's model names by the variants on the disk, everywhere (widgets, named widgets, subgraphs).
     The `models` download hints of a replaced file are dropped: they would make the frontend ask for the missing one."""
@@ -96,76 +111,110 @@ def swap_models(obj):
     return obj
 
 
-GAP_X, GAP_Y = 90, 50          # between node columns / rows inside a stage
 PAD = 50                       # group padding
-COL_GAP = 260                  # between stage columns
-ROW_GAP = 380                  # between rows (room for the row group's title)
-HEADER_H = 160                 # a stage's own note above its flow
-COLLAPSED = (330, 46)
+COL_GAP = 160                  # least room between stage columns (more when the lanes need it)
+ROW_GAP = 160                  # least room between rows (more when the channels need it)
+GROUP_TITLE_H = 50             # a group's title strip
+HEADER_H = 90                  # a stage's own note
+NOTE_MIN_W = 520               # a stage box is at least this wide (room for its note)
+PRE_POST_H = 200               # the computer steps are one note each
 MUTE = 2                       # ComfyUI node mode "never": skipped by Run
+TOP_PAD = {"cfg": 100, "tts": 20}            # a stage whose first output would sit at the same height as a neighbour's input (links must not overlap)
 MUTED = {"h3"}                 # stages Run skips: MiniMax H3 needs the vendor's written consent
 
-# (key, template file or None, title, note, colour, row, column); row 0 = computer, 1 = main track, 2 = alternatives
+# (key, template file or None, title, note, colour, row, column): columns are the stages in the order of the data flow,
+# parallel alternatives sit under each other; column 0 and 5 are the steps on the user's computer
 STAGES = [
-    ("s0", None, "0 · Start", "new_project.py <slug> --title '<end-card line>' -> project.json, lines.json, script.md.\n"
-     "Engine: gpu (default) or higgsfield.", "#666", 0, 0),
-    ("s1", None, "1 · Referencja", "capture-reference <link> reference/private (Ego Browser), contact_sheet.py.\n"
-     "Write analysis.md in your own words: mechanics only, never the reference's lines. Gate 1.", "#666", 0, 1),
-    ("s2", None, "2 · Scenariusz  ->  Gate 2: Twoje TAK", "script.md + lines.json: line table, cast, START->ACTION->END->HOLD->NEXT per shot, "
-     "claims table (product copy only), cost.\nNothing paid before an explicit yes to the script. "
-     "gpu_batches.py estimate prints the GPU minutes.", "#8a5a1e", 0, 2),
-    ("s5", None, "5 · Montaż", "make_edl.py -> assemble.py: scripted ffmpeg 8.x (libx264), Pillow for all text, Manrope.\n"
-     "cuts.json per shot, banners, captions, end card, optional music on the beat. Gate 5.", "#666", 0, 3),
-    ("s6", None, "6 · Formaty i QA", "assemble.py --format 9:16 --crop-safe, crop_formats.py (4:5, 1:1), 16:9; qa_report.py --whisper.\n"
-     "-14 LUFS, true peak <= -1 dBTP, Whisper match about 1.0. Gate 6.", "#666", 0, 4),
-    ("s7", None, "7 · Dostawa  ·  8 · Podsumowanie", "encode_variants.py: share (25 MiB), web (15 MB), poster. Links to local files first.\n"
-     "Then: 'Po produkcji' in script.md, reusable cast to assets/, retire the GPU (delete the machine, keep the disk). Gate 7.", "#666", 0, 5),
+    ("pre", None, "KOMPUTER  ·  przed GPU (kroki 0-2)",
+     "0 Start: new_project.py <slug> -> project.json, lines.json, script.md\n"
+     "1 Referencja: capture-reference, contact_sheet.py, analysis.md własnymi słowami. Gate 1\n"
+     "2 Scenariusz: script.md + lines.json, tabela kwestii i claimów. Gate 2: Twoje TAK. gpu_batches.py estimate = minuty GPU",
+     OD["comment"], 0, 0),
+    ("post", None, "KOMPUTER  ·  po GPU (kroki 5-8)",
+     "5 Montaż: make_edl.py -> assemble.py (ffmpeg, Pillow, Manrope). Gate 5\n"
+     "6 Formaty i QA: 9:16, 4:5, 1:1, 16:9; qa_report.py --whisper, -14 LUFS. Gate 6\n"
+     "7 Dostawa: encode_variants.py (share, web, poster). Gate 7. 8 Podsumowanie: skasuj maszynę, zostaw dysk",
+     OD["comment"], 0, 5),
 
+    ("tts", "audio-chatterbox_tts_multilingual", "4a · Kwestia (Chatterbox Multilingual)",
+     "Każdą kwestię nagraj dwa razy, fit_lines.py sprawdza słowo po słowie. Zawsze ustaw język. ASR to nie zgoda na głos: odsłuchaj.",
+     OD["green"], 0, 1),
+    ("z", "image_z_image_turbo_int8", "3 · Still postaci (Z-Image Turbo)",
+     "1088x1920. Prompt zaczynaj od kadru: 'Vertical smartphone photo, medium shot from mid-thigh up, eye level'. Gate 3.",
+     OD["blue"], 1, 1),
     ("cfg", SETTINGS, "USTAWIENIA SKECZU (wspólne)",
-     "Jedno miejsce na rozmiar (9:16), czas i seed. Połączone z ujęciami LTX-2.3, LTX-2.5, MiniMax H3 i upscalem.\n"
-     "Zmień tu, nie w etapach. Still (Z-Image) ma własny rozmiar 1088x1920 w podgrafie.", "#7a5a9a", 1, -1),
-    ("z", "image_z_image_turbo_int8", "FAZA 3 · Still postaci (Z-Image Turbo)",
-     "Cast stills, 1088x1920. Open the prompt with the framing: 'Vertical smartphone photo, medium shot from mid-thigh up, eye level'.\n"
-     "OUT: still -> pose edit, the three takes. CLI: gpu_batches.py stills -> gpu.py batch stills/batch.json (template: still). Gate 3.",
-     "#3f789e", 1, 0),
-    ("tts", "audio-chatterbox_tts_multilingual", "FAZA 4a · Kwestia (Chatterbox Multilingual)",
-     "Record every line twice, then fit_lines.py checks it word by word. Always set the language (Polish (pl), English (en)).\n"
-     "OUT: the line -> the talking take. Listen to the key lines: ASR is not voice approval. CLI: gpu_batches.py voice -> fit_lines.py.",
-     "#4f8a4f", 1, 1),
-    ("ltx23", "video_ltx2_3_ia2v", "FAZA 4b · Mówiąca postać, lip sync (LTX-2.3 audio->wideo)",
-     "IN: still (Z-Image) + line (Chatterbox) -> a lip-synced take, 704x1280, 24 fps. The prompt must say: framing stays the same, "
-     "no zoom, no push-in.\nCLI: gpu_batches.py takes -> gpu.py batch takes/batch.json (template: talk). Gate 4.", "#b58b2a", 1, 2),
-    ("up", "utility_seedvr2_3b_int8_upscale_video", "FAZA 4d · Upscale (SeedVR2 3B)",
-     "IN: the take. 704x1280 -> 1056x1920, about 63 s for a 4.4 s take. OUT: -> interpolation. CLI template: upscale.", "#b06634", 1, 3),
-    ("film", "utility_video_frame_interpolation", "FAZA 4d · Interpolacja klatek (FILM)",
-     "IN: the upscaled take. 24 -> 48 fps when the motion judders. CLI template: interpolate.", "#b06634", 1, 4),
+     "Rozmiar 9:16, czas i seed dla ujęć LTX-2.3, LTX-2.5 i MiniMax H3. Zmieniaj tu, nie w etapach.", OD["purple"], 2, 1),
 
-    ("qwen", "image_qwen_image_edit_2511_int8", "ALT · Wariant pozy / rekwizytu (Qwen-Image-Edit 2511)",
-     "IN: the still. Same person, another pose or prop; fast=true keeps face, clothes and set. Phones always show their back to the camera.\n"
-     "CLI: gpu.py run still-edit -s image=... -s prompt=...", "#3f789e", 2, 0),
-    ("dlg", "audio-chatterbox_tts_dialog", "ALT · Cała rozmowa (Chatterbox, dwa głosy)",
-     "Whole English conversation plus one track per speaker (SPEAKER A: ...). CLI template: tts-dialog.\n"
-     "AudioCrop was removed: send voice samples already trimmed.", "#4f8a4f", 2, 3),
-    ("ltx25", "video_ltx2_5_i2v", "ALT · Cichy ruch / B-roll (LTX-2.5 obraz->wideo)",
-     "IN: the Qwen-edited still. Silent reactions and B-roll, with room sound. Needs the gated Hugging Face licence of Lightricks/LTX-2.5.\n"
-     "CLI template: action (also action-t2v, action-flf).", "#b58b2a", 2, 1),
-    ("h3", "video_minimax_h3_i2v", "ALT · MiniMax H3 (tylko za zgodą MiniMax)",
-     "IN: the still. Variant B: needs MiniMax's written consent (licence excludes EU, UK, US and South Korea) and a "
-     "machine-generated label on publishing.\nCLI template: h3-i2v / h3-talk; gpu_batches.py takes --model h3.", "#9a6b1a", 2, 2),
-    ("ace", "audio_ace_step1_5_xl_turbo", "FAZA 4c · Podkład muzyczny (ACE-Step 1.5 XL Turbo)",
-     "Instrumental bed, at least 10 s longer than the edit. music.py puts a downbeat on the cut to the end card and ducks 12 dB "
-     "under every line.\nCLI: gpu.py run music -s tags=... -s seconds=90 -s bpm=100.", "#a1309b", 2, 4),
+    ("ltx23", "video_ltx2_3_ia2v", "4b · Mówiąca postać, lip sync (LTX-2.3)",
+     "Still + kwestia -> ujęcie z lip syncem, 704x1280, 24 fps. Prompt: kadr bez zmian, bez zoomu i push-inu. Gate 4.", OD["yellow"], 0, 2),
+    ("h3", "video_minimax_h3_i2v", "4b · MiniMax H3 (wyciszony: tylko za zgodą MiniMax)",
+     "Wymaga pisemnej zgody MiniMax (licencja wyklucza UE, UK, USA, Koreę Płd.) i oznaczenia 'machine-generated'. Włącz: Ctrl+M.",
+     OD["red"], 1, 2),
+    ("qwen", "image_qwen_image_edit_2511_int8", "3b · Wariant pozy / rekwizytu (Qwen-Image-Edit 2511)",
+     "Ta sama osoba, inna poza lub rekwizyt; fast=true trzyma twarz, ubranie i plan. Telefon zawsze tyłem do kamery.", OD["blue"], 2, 2),
+
+    ("up", "utility_seedvr2_3b_int8_upscale_video", "4d · Upscale (SeedVR2 3B)",
+     "704x1280 -> 1056x1920, ok. 63 s na ujęcie 4,4 s.", OD["orange"], 0, 3),
+    ("dlg", "audio-chatterbox_tts_dialog", "4a · Rozmowa dwóch głosów (Chatterbox)",
+     "Cała rozmowa po angielsku i jedna ścieżka na mówcę (SPEAKER A: ...). Próbki głosów wgraj już przycięte.", OD["green"], 1, 3),
+    ("ltx25", "video_ltx2_5_i2v", "4b · Cichy ruch / B-roll (LTX-2.5)",
+     "Still po Qwenie -> ciche reakcje i B-roll z dźwiękiem pokoju. Wymaga licencji Lightricks/LTX-2.5 na Hugging Face.", OD["yellow"], 2, 3),
+
+    ("film", "utility_video_frame_interpolation", "4d · Interpolacja klatek (FILM)",
+     "24 -> 48 fps, gdy ruch szarpie.", OD["orange"], 0, 4),
+    ("ace", "audio_ace_step1_5_xl_turbo", "4c · Podkład muzyczny (ACE-Step 1.5 XL Turbo)",
+     "Podkład instrumentalny, co najmniej 10 s dłuższy niż montaż. music.py kładzie downbeat na cięciu do end card i przycisza 12 dB pod kwestiami.",
+     OD["purple"], 1, 4),
+    ("mix", MIX, "5a · Podgląd ujęcia z muzyką",
+     "Ujęcie po interpolacji + podkład przycięty do długości ujęcia i ściszony o 12 dB. Tylko odsłuch: montaż robi assemble.py.",
+     OD["cyan"], 0, 5),
 ]
 
-# (source stage, source node, source slot, target stage, target node, target slot): the main track's data flow
+# nodes the templates do not have, by stage: (title, type, inputs (name, type, is a widget), outputs (name, type), widgets, size).
+# They are created after the template stages, so the template nodes keep their ids (comfy_geometry.json is keyed by id).
+EXTRA_NODES = {
+    "cfg": [("Rozmowa zamiast kwestii", "PrimitiveBoolean", [], [("BOOLEAN", "BOOLEAN")], [False], (230, 90))],
+    "ltx23": [("Głos: kwestia / rozmowa", "ComfySwitchNode",
+               [("on_false", "AUDIO", False), ("on_true", "AUDIO", False), ("switch", "BOOLEAN", True)],
+               [("output", "AUDIO")], [False], (270, 130))],
+    "mix": [
+        ("Rozbij ujęcie", "GetVideoComponents", [("video", "VIDEO", False)],
+         [("images", "IMAGE"), ("audio", "AUDIO"), ("fps", "FLOAT"), ("bit_depth", "COMBO"), ("color_space", "COMBO")], [], (300, 160)),
+        ("Muzyka: długość ujęcia", "TrimAudioDuration", [("audio", "AUDIO", False), ("duration", "FLOAT", True)],
+         [("AUDIO", "AUDIO")], [0.0, SECONDS], (300, 120)),
+        ("Muzyka: -12 dB", "AudioAdjustVolume", [("audio", "AUDIO", False)], [("AUDIO", "AUDIO")], [-12], (300, 100)),
+        ("Miks: ujęcie + muzyka", "AudioMerge", [("audio1", "AUDIO", False), ("audio2", "AUDIO", False)],
+         [("AUDIO", "AUDIO")], ["add"], (300, 120)),
+        ("Złóż wideo", "CreateVideo", [("images", "IMAGE", False), ("fps", "FLOAT", True), ("audio", "AUDIO", False)],
+         [("VIDEO", "VIDEO")], [24.0, "auto", "sRGB"], (300, 150)),
+        ("Podgląd z muzyką", "SaveVideo", [("video", "VIDEO", False)], [], ["yesopen/take-preview-music", "auto", "auto"], (290, 560)),
+    ],
+}
+
+# (source stage, source node, source slot), (target stage, target node, target slot): the data flow
 LINKS = [
     (("z", "Text to Image (Z-Image-Turbo)", 0), ("qwen", "Image Edit (Qwen-Image 2511 Int8)", 0)),
     (("z", "Text to Image (Z-Image-Turbo)", 0), ("ltx23", "Video Generation (LTX-2.3)", 0)),
-    (("qwen", "Image Edit (Qwen-Image 2511 Int8)", 0), ("ltx25", "Image to Video (LTX-2.5)", 0)),     # b-roll from the edited still
     (("z", "Text to Image (Z-Image-Turbo)", 0), ("h3", "Image to Video (MiniMax H3)", 0)),
-    (("tts", "FL_ChatterboxMultilingualTTS", 0), ("ltx23", "Video Generation (LTX-2.3)", 1)),
+    (("qwen", "Image Edit (Qwen-Image 2511 Int8)", 0), ("ltx25", "Image to Video (LTX-2.5)", 0)),       # b-roll from the edited still
+    # the talking take speaks the line, or the two-voice dialog when "Rozmowa zamiast kwestii" is on
+    (("tts", "FL_ChatterboxMultilingualTTS", 0), ("ltx23", "Głos: kwestia / rozmowa", "on_false")),
+    (("dlg", "FL_ChatterboxDialogTTS", 0), ("ltx23", "Głos: kwestia / rozmowa", "on_true")),
+    (("cfg", "Rozmowa zamiast kwestii", 0), ("ltx23", "Głos: kwestia / rozmowa", "switch")),
+    (("ltx23", "Głos: kwestia / rozmowa", 0), ("ltx23", "Video Generation (LTX-2.3)", 1)),
     (("ltx23", "Video Generation (LTX-2.3)", 0), ("up", "Upscale Video (SeedVR2 3B Int8)", 0)),
     (("up", "Upscale Video (SeedVR2 3B Int8)", 0), ("film", "Frame Interpolation", 0)),
+    # the preview with music: the finished take and the music bed, cut to the take and 12 dB down
+    (("film", "Frame Interpolation", 0), ("mix", "Rozbij ujęcie", "video")),
+    (("ace", "VAEDecodeAudio", 0), ("mix", "Muzyka: długość ujęcia", "audio")),
+    (("cfg", "Czas (s)", 0), ("mix", "Muzyka: długość ujęcia", "duration")),
+    (("mix", "Muzyka: długość ujęcia", 0), ("mix", "Muzyka: -12 dB", "audio")),
+    (("mix", "Rozbij ujęcie", 1), ("mix", "Miks: ujęcie + muzyka", "audio1")),
+    (("mix", "Muzyka: -12 dB", 0), ("mix", "Miks: ujęcie + muzyka", "audio2")),
+    (("mix", "Rozbij ujęcie", 0), ("mix", "Złóż wideo", "images")),
+    (("mix", "Rozbij ujęcie", 2), ("mix", "Złóż wideo", "fps")),
+    (("mix", "Miks: ujęcie + muzyka", 0), ("mix", "Złóż wideo", "audio")),
+    (("mix", "Złóż wideo", 0), ("mix", "Podgląd z muzyką", "video")),
     # the shared settings panel (a target slot may be given by input name)
     (("cfg", "Szerokość", 0), ("ltx23", "Video Generation (LTX-2.3)", "value_1")),
     (("cfg", "Szerokość", 0), ("ltx25", "Image to Video (LTX-2.5)", "value_3")),
@@ -176,19 +225,19 @@ LINKS = [
     (("cfg", "Czas (s)", 0), ("ltx23", "Video Generation (LTX-2.3)", "value_4")),
     (("cfg", "Czas (s)", 0), ("h3", "Image to Video (MiniMax H3)", "value_1")),
     (("cfg", "Seed", 0), ("ltx23", "Video Generation (LTX-2.3)", "noise_seed")),
+    (("cfg", "Seed", 0), ("ltx25", "Image to Video (LTX-2.5)", "noise_seed")),
+    (("cfg", "Seed", 0), ("h3", "Image to Video (MiniMax H3)", "noise_seed")),
+    (("cfg", "Seed", 0), ("qwen", "Image Edit (Qwen-Image 2511 Int8)", "seed")),
     (("cfg", "Seed", 0), ("up", "Upscale Video (SeedVR2 3B Int8)", "seed_1")),
 ]
 
 TITLE = (
     "YESOPEN SKIT PIPELINE  ·  silnik GPU\n\n"
-    "Górny rząd: kroki na komputerze (przed GPU po lewej, po GPU po prawej). Środek: TOR GŁÓWNY, połączony liniami: "
-    "still -> kwestia -> ujęcie z lip syncem -> upscale -> interpolacja. Dolny rząd: reszta GPU, też podpięta: "
-    "wariant pozy (Qwen) -> ciche ujęcie LTX-2.5, rozmowa dwóch głosów, muzyka.\n"
-    "Jeden 'Run' robi cały pipeline GPU (kroki na komputerze, górny rząd, to opisy). Wyciszony jest tylko MiniMax H3: "
-    "wymaga pisemnej zgody MiniMax; włączysz go zaznaczając jego węzły i Ctrl+M. "
-    "Wskaźnik u góry mówi, czy ktoś już generuje. "
-    "Wejścia (Load Image/Audio) wskazują pliki z dysku; wybierz własne. Zwinięte notatki 'Model links' rozwiń kliknięciem.\n"
-    "Podglądy: każdy etap kończy się węzłem Save (obraz, dźwięk, wideo), który pokazuje wynik w kanwie."
+    "Czytaj od lewej do prawej: still i kwestia -> ujęcie z lip syncem -> upscale -> interpolacja -> podgląd z muzyką. "
+    "Obok: MiniMax H3, Qwen -> B-roll LTX-2.5, rozmowa dwóch głosów (ujęcie mówi nią, gdy w ustawieniach włączysz "
+    "'Rozmowa zamiast kwestii'), muzyka. Jeden 'Run' robi cały pipeline GPU (poza wyciszonym H3); kroki na komputerze "
+    "po bokach to opisy. Wskaźnik u góry mówi, czy ktoś już generuje. "
+    "Wejścia (Load) wskazują pliki z dysku, podmień na własne. Podgląd wyniku pokazuje węzeł Save na końcu etapu."
 )
 
 
@@ -251,48 +300,41 @@ def note(nid, x, y, w, h, text, color="#432", bgcolor="#653", collapsed=False):
             "color": color, "bgcolor": bgcolor}
 
 
-def size_of(node):
-    if (node.get("flags") or {}).get("collapsed"):
-        return COLLAPSED
-    w, h = node.get("size") or [300, 100]
-    return (w, max(h, 60))
-
-
-def layout_stage(nodes, links, x0, y0):
-    """Place a stage's nodes: columns by data-flow depth, notes collapsed in a row below. Returns (w, h)."""
-    flow = [n for n in nodes if n["type"] not in NOTE_TYPES]
-    notes = [n for n in nodes if n["type"] in NOTE_TYPES]
-    ids = {n["id"] for n in flow}
-    depth = {i: 0 for i in ids}
-    for _ in range(len(ids)):                       # relax: depth = longest path from a source
-        for _, o, _, t, _, _ in links:
-            if o in ids and t in ids:
-                depth[t] = max(depth[t], depth[o] + 1)
-    columns = {}
-    for n in sorted(flow, key=lambda n: n["pos"][1]):
-        columns.setdefault(depth[n["id"]], []).append(n)
-    x, band_y, band_h, flow_h, flow_w = x0, y0, 0, 0, 0
-    for d in sorted(columns):
-        col = columns[d]
-        col_w = max(size_of(n)[0] for n in col)
-        if x > x0 and x - x0 + col_w > MAX_STAGE_W:      # too wide: continue in a new band below
-            band_y += band_h + GAP_Y * 2
-            x, band_h = x0, 0
-        y = band_y
-        for n in col:
-            n["pos"] = [x, y]
-            y += size_of(n)[1] + GAP_Y
-        band_h = max(band_h, y - band_y - GAP_Y)
-        flow_h = band_y + band_h - y0
-        x += col_w + GAP_X
-        flow_w = max(flow_w, x - x0 - GAP_X)
-    nx, ny = x0, y0 + flow_h + GAP_Y
-    for n in notes:                                  # the long "Model links" notes: collapsed, one row
-        n["flags"] = dict(n.get("flags") or {}, collapsed=True)
-        n["pos"] = [nx, ny]
-        nx += COLLAPSED[0] + 20
-    w = max(flow_w, nx - x0 - 20)
-    return w, flow_h + (GAP_Y + COLLAPSED[1] if notes else 0)
+def optimise_subgraph(sg, data):
+    """Lay out a subgraph's inside like a stage: its input node in the first column, its output node in the last, the
+    nodes in data-flow columns, links routed with reroutes. The template's notes and groups inside it are dropped."""
+    sg["nodes"] = [n for n in sg.get("nodes", []) if n["type"] not in NOTE_TYPES]
+    sg["groups"] = []
+    for n in sg["nodes"]:
+        (n.get("flags") or {}).pop("collapsed", None)
+    io = data.get("io", {}).get(sg["id"], {})
+    pseudo = {}
+    for nid, side, key in ((-10, "inputNode", "in"), (-20, "outputNode", "out")):
+        b = sg[side]["bounding"]
+        count = len(sg["inputs" if key == "in" else "outputs"])
+        m = io.get(key) or {"w": b[2], "h": b[3], "slots": [24 + 20 * i for i in range(count)]}
+        slots = [{}] * count
+        pseudo[nid] = {"id": nid, "_io": True, "size": [m["w"], m["h"]], "_slots": m["slots"], "pos": [0, 0],
+                       "inputs": slots if key == "out" else [], "outputs": slots if key == "in" else []}
+    links = [(l["id"], l["origin_id"], l["origin_slot"], l["target_id"], l["target_slot"]) for l in sg.get("links", [])]
+    geo = Geometry(data, sg["id"])
+    _, _, paths = layout_block(sg["nodes"], links, geo, io_in=pseudo[-10], io_out=pseudo[-20])
+    for nid, side in ((-10, "inputNode"), (-20, "outputNode")):
+        p = pseudo[nid]
+        sg[side]["bounding"] = [p["pos"][0], p["pos"][1], p["size"][0], p["size"][1]]
+    nodes = {n["id"]: n for n in sg["nodes"]} | pseudo
+    ends = {l[0]: ((nodes[l[1]]["pos"][0] + geo.size(nodes[l[1]])[0], nodes[l[1]]["pos"][1] + geo.out_y(nodes[l[1]], l[2])),
+                   (nodes[l[3]]["pos"][0], nodes[l[3]]["pos"][1] + geo.in_y(nodes[l[3]], l[4])))
+            for l in links if l[1] in nodes and l[3] in nodes}
+    for l1, l2, a1, a2 in overlaps(drawn_pieces(paths, ends)):
+        print(f"  overlap in {sg['name']}: link {l1} and link {l2} at {a1} / {a2}")
+    reroutes, last = build_reroutes(paths)
+    sg["reroutes"] = reroutes
+    print(f"  subgraph {sg['name']}: nodes {len(sg['nodes'])}, links {len(links)}, reroutes {len(reroutes)}")
+    for l in sg.get("links", []):
+        l.pop("parentId", None)
+        if l["id"] in last:
+            l["parentId"] = last[l["id"]]
 
 
 def main():
@@ -309,7 +351,7 @@ def main():
     def prim(kind, title, value):
         nonlocal next_id
         out = {"PrimitiveInt": "INT", "PrimitiveFloat": "FLOAT"}[kind]
-        n = {"id": next_id, "type": kind, "pos": [0, 0], "size": [300, 110], "flags": {}, "order": 0, "mode": 0, "inputs": [],
+        n = {"id": next_id, "type": kind, "pos": [0, 0], "size": [230, 110], "flags": {}, "order": 0, "mode": 0, "inputs": [],
              "outputs": [{"name": out, "type": out, "links": []}], "title": title,
              "properties": {"Node name for S&R": kind}, "widgets_values": [value, "fixed"] if kind == "PrimitiveInt" else [value],
              "_stage": "cfg", "_role": "setting"}
@@ -321,7 +363,7 @@ def main():
             nodes_all += [prim("PrimitiveInt", "Szerokość", WIDTH), prim("PrimitiveInt", "Wysokość", HEIGHT),
                           prim("PrimitiveFloat", "Czas (s)", SECONDS), prim("PrimitiveInt", "Seed", SEED)]
             continue
-        if not file:
+        if not file or file == MIX:
             continue
         wf = json.load(open(args.ui / f"{file}.json"))
         ns = copy.deepcopy(wf["nodes"])
@@ -334,10 +376,16 @@ def main():
                 n["widgets_values"][0] = INPUTS.get(n["widgets_values"][0], n["widgets_values"][0])
             if n["type"] in SAVE_SIZES:
                 n["size"] = list(SAVE_SIZES[n["type"]])
+            (n.get("flags") or {}).pop("collapsed", None)          # every node open: its sockets are where the links go
         for sg in wf.get("definitions", {}).get("subgraphs", []):
             apply_subgraph_defaults(key, sg)
         for n in ns:
             apply_node_defaults(key, n)
+            if n["type"] == "SaveAudioMP3":              # deprecated in ComfyUI 0.35: the same MP3 V0 through SaveAudioAdvanced
+                n["type"] = "SaveAudioAdvanced"
+                n["properties"]["Node name for S&R"] = "SaveAudioAdvanced"
+                n["widgets_values"] = [n["widgets_values"][0], "mp3", n["widgets_values"][1]]
+                n["size"] = [300, 150]
         saves = [n for n in ns if n["type"].startswith("Save")]
         if saves and key in SAVE_PREFIX:
             saves[0]["widgets_values"][0] = SAVE_PREFIX[key]
@@ -368,6 +416,16 @@ def main():
                 swap_models(sg.get("nodes", []))
                 subgraphs.append(sg)
 
+    for key, specs in EXTRA_NODES.items():
+        for title, kind, ins, outs, widgets, size in specs:
+            nodes_all.append({"id": next_id, "type": kind, "pos": [0, 0], "size": list(size), "flags": {}, "order": 0, "mode": 0,
+                              "inputs": [dict({"name": n, "type": t, "link": None}, **({"widget": {"name": n}} if w else {}))
+                                         for n, t, w in ins],
+                              "outputs": [{"name": n, "type": t, "links": []} for n, t in outs], "title": title,
+                              "properties": {"Node name for S&R": kind}, "widgets_values": list(widgets), "_stage": key,
+                              **({"_role": "setting"} if key == SETTINGS_STAGE else {})})
+            next_id += 1
+
     # 2. wire the stages together; a Load node that fed a rewired input is removed
     def find(stage, name):
         return next(n for n in nodes_all if n["_stage"] == stage and name in (n["type"], n.get("title"), sg_names.get(n["type"])))
@@ -375,6 +433,9 @@ def main():
     def connect(src, sslot, dst, dslot):
         nonlocal next_link
         if isinstance(dslot, str):
+            if not any(x["name"] == dslot for x in dst["inputs"]):       # a promoted widget the template did not expose as a socket
+                d = next(i for sg in subgraphs if sg["id"] == dst["type"] for i in sg["inputs"] if i["name"] == dslot)
+                dst["inputs"].append({"name": dslot, "type": d["type"], "widget": {"name": dslot}, "link": None})
             dslot = next(i for i, x in enumerate(dst["inputs"]) if x["name"] == dslot)
         inp = dst["inputs"][dslot]
         old = inp.get("link")
@@ -394,78 +455,162 @@ def main():
     for (s_stage, s_node, s_slot), (d_stage, d_node, d_slot) in LINKS:
         connect(find(s_stage, s_node), s_slot, find(d_stage, d_node), d_slot)
 
-    # 3. sizes of the grid: a column is as wide as its widest stage, a row as high as its highest
-    rows = {0: [], 1: [], 2: []}
-    measured = {}
-    for key, file, title, text, color, row, col in STAGES:
+    # 2b. drop nodes whose outputs go nowhere (e.g. GetImageSize once the settings panel feeds the sizes)
+    gone_any = True
+    while gone_any:
+        gone_any = False
+        for n in list(nodes_all):
+            outs = n.get("outputs") or []
+            if not outs or n["type"] in sg_names or n["type"].startswith(("Save", "Preview")) or any(o.get("links") for o in outs):
+                continue
+            for i in n.get("inputs") or []:
+                if i.get("link") is not None:
+                    lk = next(l for l in links_out if l[0] == i["link"])
+                    links_out.remove(lk)
+                    origin = next(o for o in nodes_all if o["id"] == lk[1])
+                    origin["outputs"][lk[2]]["links"].remove(lk[0])
+            nodes_all.remove(n)
+            gone_any = True
+
+    # 3. the insides of the subgraphs
+    data = json.load(open(GEOMETRY)) if GEOMETRY.exists() else {}
+    for sg in subgraphs:
+        optimise_subgraph(sg, data)
+
+    # 4. every stage on its own, relative to its corner
+    geo = Geometry(data, "root")
+    stage_of = {n["id"]: n["_stage"] for n in nodes_all}
+    by_id = {n["id"]: n for n in nodes_all}
+    lks = [tuple(l[:5]) for l in links_out]
+    cross = [l for l in lks if stage_of[l[1]] != stage_of[l[3]]]
+    exports, imports = {(l[1], l[2]) for l in cross}, {(l[3], l[4]) for l in cross}
+    inner, box, content_w = {}, {}, {}
+    content_y = GROUP_TITLE_H + TITLE_H + HEADER_H + 30          # a stage's nodes start below its note
+    for key, file, *_ in STAGES:
         if file:
-            ns = [n for n in nodes_all if n["_stage"] == key]
-            w, h = layout_stage(ns, links_out, 0, 0)            # measure; placed for real below
+            w, h, paths = layout_block([n for n in nodes_all if n["_stage"] == key], lks, geo, exports, imports)
+            if key == SETTINGS_STAGE:                    # a staircase: each setting's wire gets its own halfway line
+                panel = sorted((n for n in nodes_all if n["_stage"] == key), key=lambda n: n["pos"][1])
+                for i, n in enumerate(panel):
+                    n["pos"][0] += 2 * LANE_DX * i
+                w += 2 * LANE_DX * (len(panel) - 1)
+            inner[key] = paths
+            content_w[key] = w
+            box[key] = [max(w, NOTE_MIN_W) + 2 * PAD, content_y + h + PAD]
         else:
-            w, h = 720, 0
-        stage_w = max(w, 760)
-        box_h = PAD + HEADER_H + (40 + h if file else 0) + PAD
-        measured[key] = (stage_w + 2 * PAD, box_h)
-        rows[row].append(key)
-    col_w = {}
-    for key, _, _, _, _, row, col in STAGES:
-        if row:
-            col_w[col] = max(col_w.get(col, 0), measured[key][0])
+            box[key] = [760, GROUP_TITLE_H + TITLE_H + PRE_POST_H + PAD]
+
+    # 5. the stages on the grid: the arrangement with the shortest, least bent wiring for all the links
+    weights = {}
+    for l in cross:
+        k = (stage_of[l[1]], stage_of[l[3]])
+        weights[k] = weights.get(k, 0) + 1
+    gpu = [s[0] for s in STAGES if s[1]]
+    cells, score = place_stages({s[0]: (s[6], s[5]) for s in STAGES if s[1]}, weights, {k: box[k] for k in gpu})
+    last_col = max(c for c, _ in cells.values())
+    cells["pre"], cells["post"] = (0, 0), (last_col + 1, 0)
+
+    # a stage moves down to put its main incoming link level with its source (same row, next column); when the target
+    # sits lower already, the source moves down instead, unless it is aligned with its own source
+    dy = {k: 0 for k in cells}
+    aligned = set()
+    for key in sorted(gpu, key=lambda k: cells[k][0]):
+        votes = {}
+        for l in cross:
+            s, t = stage_of[l[1]], stage_of[l[3]]
+            if t == key and cells[s][1] == cells[t][1] and cells[t][0] - cells[s][0] == 1:
+                want = (dy[s] + by_id[l[1]]["pos"][1] + geo.out_y(by_id[l[1]], l[2])
+                        - by_id[l[3]]["pos"][1] - geo.in_y(by_id[l[3]], l[4]))
+                if -400 <= want <= 400 and want:
+                    votes.setdefault((want, s), 0)
+                    votes[(want, s)] += 1
+        if votes:
+            want, s = max(votes, key=lambda v: (votes[v], -abs(v[0])))
+            if want > 0:
+                dy[key] += want
+                aligned.add(key)
+            elif s not in aligned:
+                dy[s] -= want
+    for k in dy:
+        if k in box:
+            box[k][1] += dy[k]
+
+    # corridors as wide as their lanes, row gaps as high as their channels
+    lanes, chans = {}, {}
+    for l in cross:
+        (cs, rs), (ct, rt) = cells[stage_of[l[1]]], cells[stage_of[l[3]]]
+        lanes.setdefault(cs, set()).add((l[1], l[2]))
+        if ct - cs > 1:
+            lanes.setdefault(ct - 1, set()).add((l[1], l[2], "h", rt))
+            chans.setdefault(rt, set()).add((l[1], l[2]))
+    # a stage that only sends is as wide as its column and its nodes stand at the right: its wires start at the corridor
+    wired = {stage_of[l[1]] for l in cross} | {stage_of[l[3]] for l in cross}
+    sends_only = {stage_of[l[1]] for l in cross} - {stage_of[l[3]] for l in cross}
+    link_w = {}
+    for k in wired:
+        link_w[cells[k][0]] = max(link_w.get(cells[k][0], 0), box[k][0])
+    for k in sends_only:
+        box[k][0] = max(box[k][0], max(box[o][0] for o in cells if o in box and cells[o][0] == cells[k][0]))
+    col_w, row_h = {}, {}
+    for k, (c, r) in cells.items():
+        col_w[c] = max(col_w.get(c, 0), box[k][0])
+        row_h[r] = max(row_h.get(r, 0), box[k][1])
     col_x, x = {}, 0
     for c in sorted(col_w):
         col_x[c] = x
-        x += col_w[c] + COL_GAP
-    total_w = x - COL_GAP
-    row_h = {r: max(measured[k][1] for k in ks) for r, ks in rows.items()}
-    row_y = {0: 0}
-    row_y[1] = row_y[0] + row_h[0] + ROW_GAP
-    row_y[2] = row_y[1] + row_h[1] + ROW_GAP
+        x += col_w[c] + max(COL_GAP, 2 * LANE_X0 + LANE_DX * len(lanes.get(c, ())))
+    total_w = x
+    row_y, y = {}, 0
+    for r in sorted(row_h):
+        y += max(ROW_GAP, 80 + CHANNEL_DY * len(chans.get(r, ()))) if r else 0
+        row_y[r] = y
+        y += row_h[r]
+    total_h = y
 
-    # 4. place stages, notes and groups
-    notes_out, stage_groups = [], []
-    local_left = [s for s in STAGES if s[5] == 0 and s[0] in ("s0", "s1", "s2")]
-    local_right = [s for s in STAGES if s[5] == 0 and s[0] in ("s5", "s6", "s7")]
-    local_x = {}
-    for i, s in enumerate(local_left):
-        local_x[s[0]] = i * (measured[s[0]][0] + COL_GAP // 2)
-    for i, s in enumerate(reversed(local_right)):
-        local_x[s[0]] = total_w - (i + 1) * measured[s[0]][0] - i * (COL_GAP // 2)
-    for key, file, title, text, color, row, col in STAGES:
-        sx = local_x[key] if row == 0 else col_x[col]
-        sy = row_y[row]
-        bw, bh = measured[key]
-        notes_out.append(note(next_id, sx + PAD, sy + PAD, bw - 2 * PAD, HEADER_H, text, "#432", "#653"))
+    # 6. place the stages, their notes and groups
+    notes_out, stage_groups, paths = [], [], {}
+    for key, file, title, text, color, *_ in STAGES:
+        c, r = cells[key]
+        bw, bh = box[key]
+        sx, sy = col_x[c], row_y[r]
+        notes_out.append(note(next_id, sx + PAD, sy + GROUP_TITLE_H + TITLE_H, bw - 2 * PAD, HEADER_H if file else PRE_POST_H,
+                              text, *NOTE_COLORS))
         next_id += 1
         if file:
-            layout_stage([n for n in nodes_all if n["_stage"] == key], links_out, sx + PAD, sy + PAD + HEADER_H + 40)
-            if key in MUTED:                                         # skipped by Run
-                for n in nodes_all:
-                    if n["_stage"] == key and n["type"] not in NOTE_TYPES:
+            ox, oy = sx + PAD, sy + content_y + dy[key]
+            if key in sends_only:                                    # its wires out start right at the corridor
+                ox += bw - 2 * PAD - content_w[key]
+            for n in nodes_all:
+                if n["_stage"] == key:
+                    n["pos"] = [n["pos"][0] + ox, n["pos"][1] + oy]
+                    if key in MUTED:                                 # skipped by Run
                         n["mode"] = MUTE
+            for lid, (src, pts) in inner[key].items():
+                paths[lid] = (src, [(px + ox, py + oy) for px, py in pts])
         stage_groups.append({"title": title, "bounding": [sx, sy, bw, bh], "color": color, "font_size": 30, "flags": {}})
 
-    row_titles = {
-        "left": ("KOMPUTER  ·  przed GPU", "#444"), "right": ("KOMPUTER  ·  po GPU (bez GPU)", "#444"),
-        1: ("TOR GŁÓWNY  ·  GPU  ·  połączony: still -> kwestia -> ujęcie -> upscale -> interpolacja", "#3f789e"),
-        2: ("POZOSTAŁE ETAPY GPU  ·  też w jednym Run (poza MiniMax H3, wyciszonym)", "#7a5a9a"),
-    }
-    groups_out, gid = [], 1
-    lg = [g for g in stage_groups if g["bounding"][1] == row_y[0]]
-    lg_left = [g for g in lg if g["bounding"][0] < total_w / 2]
-    lg_right = [g for g in lg if g["bounding"][0] >= total_w / 2]
-    for sel, k in ((lg_left, "left"), (lg_right, "right")):
-        x0 = min(g["bounding"][0] for g in sel) - 40
-        x1 = max(g["bounding"][0] + g["bounding"][2] for g in sel) + 40
-        groups_out.append({"id": gid, "title": row_titles[k][0], "bounding": [x0, -140, x1 - x0, row_h[0] + 180],
-                           "color": row_titles[k][1], "font_size": 54, "flags": {}})
-        gid += 1
-    for r in (1, 2):
-        groups_out.append({"id": gid, "title": row_titles[r][0], "bounding": [-40, row_y[r] - 140, total_w + 80, row_h[r] + 180],
-                           "color": row_titles[r][1], "font_size": 54, "flags": {}})
-        gid += 1
+    # 7. the links between stages: one lane per source in the corridor next to it, channels above the rows
+    specs, ends = [], {}
+    for l in cross:
+        o, t = by_id[l[1]], by_id[l[3]]
+        yo, yi = o["pos"][1] + geo.out_y(o, l[2]), t["pos"][1] + geo.in_y(t, l[4])
+        specs.append((l[0], (l[1], l[2]), yo, yi, cells[stage_of[l[1]]][0], cells[stage_of[l[3]]][0], cells[stage_of[l[3]]][1]))
+    items, chan_y = lane_items(specs, lambda r, k: row_y[r] - 40 - CHANNEL_DY * k)
+    for l in lks:
+        o, t = by_id[l[1]], by_id[l[3]]
+        ends[l[0]] = ((o["pos"][0] + geo.size(o)[0], o["pos"][1] + geo.out_y(o, l[2])), (t["pos"][0], t["pos"][1] + geo.in_y(t, l[4])))
+    corridors = {c: (col_x[c] + col_w[c], col_x.get(c + 1, col_x[c] + col_w[c] + COL_GAP)) for c in col_x}
+    paths.update(lane_paths(specs, items, chan_y, corridors, {k: (v[0][0], v[1][0]) for k, v in ends.items()}))
+    for l1, l2, a1, a2 in overlaps(drawn_pieces(paths, ends)):
+        print(f"  overlap: link {l1} and link {l2} at {a1} / {a2}")
+    reroutes, last = build_reroutes(paths)
+    link_extensions = [{"id": lid, "parentId": rid} for lid, rid in sorted(last.items())]
+
+    gpu_x0, gpu_x1 = col_x[1] - 60, col_x[last_col] + col_w[last_col] + 60
+    groups_out = [{"id": 1, "title": "GPU  ·  jeden Run robi cały pipeline (od lewej do prawej)",
+                   "bounding": [gpu_x0, -120, gpu_x1 - gpu_x0, total_h + 180], "color": OD["line"], "font_size": 54, "flags": {}}]
     for g in stage_groups:
-        g["id"] = gid
-        gid += 1
+        g["id"] = len(groups_out) + 1
         groups_out.append(g)
 
     sub_types = set(sg_names)
@@ -475,23 +620,23 @@ def main():
         if role and not n.get("color"):
             n["color"], n["bgcolor"] = ROLE[role]
 
-    title_note = note(next_id, 0, -640, min(total_w, 2200), 330, TITLE, "#332", "#553")
+    title_note = note(next_id, gpu_x0, -430, min(gpu_x1 - gpu_x0, 1800), 240, TITLE, *TITLE_COLORS)
     next_id += 1
     nodes_final = [title_note] + notes_out + nodes_all
     for n in nodes_final:
         n.pop("_stage", None)
 
-    scale = 0.3
     out = {
         "id": "yesopen-skit-pipeline", "revision": 0, "last_node_id": next_id, "last_link_id": next_link,
         "nodes": nodes_final, "links": links_out, "groups": groups_out, "config": {},
-        "extra": {"ds": {"scale": scale, "offset": [200, 700]}},
+        "extra": {"ds": {"scale": 0.25, "offset": [150, 560]}, "reroutes": reroutes, "linkExtensions": link_extensions},
         "version": 0.4, "definitions": {"subgraphs": subgraphs},
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     json.dump(out, open(args.out, "w"), ensure_ascii=False, indent=1)
-    print(f"{args.out}: nodes {len(nodes_final)}, links {len(links_out)}, groups {len(groups_out)}, "
-          f"subgraphs {len(subgraphs)}, canvas {total_w} x {row_y[2] + row_h[2]}")
+    print(f"{args.out}: nodes {len(nodes_final)}, links {len(links_out)}, groups {len(groups_out)}, subgraphs {len(subgraphs)}, "
+          f"reroutes {len(reroutes)}, canvas {round(total_w)} x {round(total_h)}")
+    print("  grid (column, row): " + ", ".join(f"{k} {cells[k]}" for k in gpu) + f"  (score {score:.0f})")
 
 
 if __name__ == "__main__":
