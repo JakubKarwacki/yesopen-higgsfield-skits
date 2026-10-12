@@ -137,14 +137,14 @@ def note_size(text, max_w, min_w=NOTE_MIN_W):
     return round(w), round(NOTE_PAD_Y + NOTE_LINE_H * rows + 4)
 MUTE = 2                       # ComfyUI node mode "never": skipped by Run
 TOP_PAD = {"cfg": 100, "tts": 20}            # a stage whose first output would sit at the same height as a neighbour's input (links must not overlap)
-MUTED = {"h3"}                 # stages Run skips: MiniMax H3 needs the vendor's written consent
+MUTED = {"h3", "dlg", "z", "qwen", "ltx25", "mix"}  # optional branches, explicitly enabled by the operator
 
 # (key, template file or None, title, note, colour, row, column): columns are the stages in the order of the data flow,
 # parallel alternatives sit under each other; column 0 and 5 are the steps on the user's computer
 STAGES = [
     ("proj", PROJECT_STAGE, "0-2 · Projekt, referencja, scenariusz",
      "Projekt z /work (gpu.py push <projekt>). Referencję analizujesz na komputerze: nigdy nie trafia na serwer. "
-     "Bramki 1-3 włączasz, gdy analiza, scenariusz (Twoje TAK) i obsada są gotowe. Kwestia: id z lines.json.",
+     "Bramki 1-3 włączasz po analizie, zatwierdzeniu scenariusza i wyborze obsady. Kwestia '*' = cały projekt; np. l01 = jedna. Status pokazuje checkpointy.",
      OD["comment"], 0, 0),
     ("tts", "audio-chatterbox_tts_multilingual", "4a · Kwestia (Chatterbox Multilingual)",
      "Tekst, głos, ekspresja i seed z projektu. Język ustaw jak w projekcie (węzeł kwestii to sprawdza). ASR to nie zgoda na głos: odsłuchaj.",
@@ -157,10 +157,10 @@ STAGES = [
      OD["purple"], 2, 1),
     ("fit", FIT_STAGE, "4a · Dopasowanie kwestii i still ujęcia",
      "fit_lines.py tnie nagranie do słów scenariusza; gpu_batches.py takes daje prompt, długość i seed ujęcia. "
-     "Still: wybrany z projektu, a gdy go brak, ten z Z-Image.", OD["green"], 1, 2),
+     "Still musi być wybrany w projekcie. Odsłuchaj pliki w podglądzie audio i dopiero włącz zatwierdzenie głosu. Zmiana audio unieważnia zgodę.", OD["green"], 1, 2),
 
     ("ltx23", "video_ltx2_3_ia2v", "4b · Mówiąca postać, lip sync (LTX-2.3)",
-     "Still + dopasowana kwestia -> ujęcie z lip syncem, 704x1280, 24 fps; zapis do takes/<id>.video.mp4 i inspect_take.py.",
+     "Wybrany still + zatwierdzone audio -> lip sync, 704x1280, 24 fps. Do projektu trafia wersja po upscale i interpolacji.",
      OD["yellow"], 0, 2),
     ("h3", "video_minimax_h3_i2v", "4b · MiniMax H3 (wyciszony: tylko za zgodą MiniMax)",
      "Wymaga pisemnej zgody MiniMax (licencja wyklucza UE, UK, USA, Koreę Płd.) i oznaczenia 'machine-generated'. Włącz: Ctrl+M.",
@@ -171,9 +171,9 @@ STAGES = [
     ("up", "utility_seedvr2_3b_int8_upscale_video", "4d · Upscale (SeedVR2 3B)",
      "704x1280 -> 1056x1920, ok. 63 s na ujęcie 4,4 s.", OD["orange"], 0, 3),
     ("dlg", "audio-chatterbox_tts_dialog", "4a · Rozmowa dwóch głosów (Chatterbox)",
-     "Cała rozmowa po angielsku i jedna ścieżka na mówcę (SPEAKER A: ...). Próbki głosów wgraj już przycięte.", OD["green"], 1, 3),
+     "Opcjonalny, wyciszony eksperyment; nie zastępuje zatwierdzonej kwestii w gałęzi produkcyjnej. Próbki i dialog ustaw osobno.", OD["green"], 1, 3),
     ("ltx25", "video_ltx2_5_i2v", "4b · Cichy ruch / B-roll (LTX-2.5)",
-     "Still po Qwenie -> ciche reakcje i B-roll z dźwiękiem pokoju. Wymaga licencji Lightricks/LTX-2.5 na Hugging Face.", OD["yellow"], 2, 3),
+     "Opcjonalny, wyciszony B-roll. Zapis: takes/<id>-broll.video.mp4; dodaj nazwę do cuts.json. Wymaga licencji Lightricks/LTX-2.5 na Hugging Face.", OD["yellow"], 2, 3),
 
     ("film", "utility_video_frame_interpolation", "4d · Interpolacja klatek (FILM)",
      "24 -> 48 fps, gdy ruch szarpie.", OD["orange"], 0, 4),
@@ -190,7 +190,7 @@ STAGES = [
      "Bramka 5: 4:5 i 1:1 z mastera, 16:9 z ujęć, raport QA z Whisperem (-14 LUFS, true peak <= -1 dBTP, słowa ~1.0).",
      OD["blue"], 0, 7),
     ("deliver", DELIVER_STAGE, "7 · Dostawa",
-     "Bramka 6: wersja do wysyłki (25 MiB), web (15 MB) i plakat w final/. Nic nie publikujemy bez Twojej prośby. "
+     "Bramka 6: share (25 MiB), web (15 MB) i plakat dla każdego formatu. Manifest SHA-256 w final/. Nic nie publikujemy. "
      "Potem: 'Po produkcji' w script.md i skasowanie maszyny (dysk zostaje).", OD["green"], 0, 8),
 ]
 
@@ -198,9 +198,6 @@ STAGES = [
 # They are created after the template stages, so the template nodes keep their ids (comfy_geometry.json is keyed by id).
 EXTRA_NODES = {
     "cfg": [("Rozmowa zamiast kwestii", "PrimitiveBoolean", [], [("BOOLEAN", "BOOLEAN")], [False], (230, 90))],
-    "ltx23": [("Głos: kwestia / rozmowa", "ComfySwitchNode",
-               [("on_false", "AUDIO", False), ("on_true", "AUDIO", False), ("switch", "BOOLEAN", True)],
-               [("output", "AUDIO")], [False], (270, 130))],
     "mix": [
         ("Rozbij ujęcie", "GetVideoComponents", [("video", "VIDEO", False)],
          [("images", "IMAGE"), ("audio", "AUDIO"), ("fps", "FLOAT"), ("bit_depth", "COMBO"), ("color_space", "COMBO")], [], (300, 160)),
@@ -228,26 +225,36 @@ PIPELINE_NODES = {
          ["3 · Obsada (wybrane stille)", False], (320, 120)),
         ("Kwestia z projektu", "YesOpenLine", [("project", "YESOPEN_PROJECT", False)],
          [("text", "STRING"), ("voice", "AUDIO"), ("exaggeration", "FLOAT"), ("cfg_weight", "FLOAT"), ("seed", "INT"),
-          ("look", "STRING"), ("who", "STRING"), ("line", "STRING")], ["l01", 0], (320, 240)),
+          ("look", "STRING"), ("who", "STRING"), ("line", "STRING"), ("language", "COMBO")], ["*", 0], (320, 260)),
+        ("Status projektu", "YesOpenStatus", [("project", "YESOPEN_PROJECT", False)],
+         [("report", "STRING")], [], (420, 260)),
     ],
     "fit": [
         ("Dopasuj kwestię", "YesOpenFitLine",
          [("project", "YESOPEN_PROJECT", False), ("line", "STRING", True), ("audio", "AUDIO", False), ("seed", "INT", True)],
          [("line_audio", "AUDIO"), ("take_prompt", "STRING"), ("seconds", "FLOAT"), ("take_seed", "INT"), ("still", "IMAGE"),
           ("has_still", "BOOLEAN"), ("report", "STRING")], ["l01", 100], (320, 230)),
-        ("Still: wybrany / z Z-Image", "ComfySwitchNode",
-         [("on_false", "IMAGE", False), ("on_true", "IMAGE", False), ("switch", "BOOLEAN", True)],
-         [("output", "IMAGE")], [False], (270, 130)),
+        ("Odsłuch zatwierdzony", "YesOpenVoiceApproval",
+         [("project", "YESOPEN_PROJECT", False), ("audio", "AUDIO", False)],
+         [("audio", "AUDIO")], [False], (320, 140)),
+        ("Odsłuch kwestii", "SaveAudioAdvanced", [("audio", "AUDIO", False)],
+         [], ["yesopen/voice-review", "flac"], (300, 130)),
     ],
     "z": [("Still do projektu", "YesOpenSaveStill",
            [("project", "YESOPEN_PROJECT", False), ("who", "STRING", True), ("image", "IMAGE", False), ("seed", "INT", True)],
            [("path", "STRING")], ["char1", 0], (300, 140))],
-    "ltx23": [("Ujęcie do projektu", "YesOpenSaveTake",
+    "film": [("Ujęcie do projektu", "YesOpenSaveTake",
                [("project", "YESOPEN_PROJECT", False), ("line", "STRING", True), ("video", "VIDEO", False)],
-               [("project", "YESOPEN_PROJECT"), ("report", "STRING")], ["l01"], (300, 120))],
+               [("project", "YESOPEN_PROJECT"), ("report", "STRING")], ["l01", ""], (300, 140))],
+    "ltx25": [("B-roll do projektu", "YesOpenSaveTake",
+                [("project", "YESOPEN_PROJECT", False), ("line", "STRING", True), ("video", "VIDEO", False)],
+                [("project", "YESOPEN_PROJECT"), ("report", "STRING")], ["l01", "-broll"], (300, 140))],
     "ace": [("Muzyka do projektu", "YesOpenSaveMusic", [("project", "YESOPEN_PROJECT", False), ("audio", "AUDIO", False)],
              [("path", "STRING")], ["bed"], (300, 110))],
     "edit": [
+        ("Wszystkie ujęcia i muzyka", "YesOpenJoinProduction",
+         [("project", "YESOPEN_PROJECT", False), ("music", "STRING", False)],
+         [("project", "YESOPEN_PROJECT"), ("report", "STRING")], [], (320, 130)),
         ("Bramka 4 · Ujęcia", "YesOpenGate", [("project", "YESOPEN_PROJECT", False)], [("project", "YESOPEN_PROJECT")],
          ["4 · Ujęcia", False], (320, 120)),
         ("Assety montażu", "YesOpenBuildAssets", [("project", "YESOPEN_PROJECT", False)],
@@ -267,6 +274,12 @@ PIPELINE_NODES = {
          [("project", "YESOPEN_PROJECT"), ("video", "VIDEO"), ("log", "STRING")], ["16:9", False], (300, 140)),
         ("Raport QA", "YesOpenQAReport", [("project", "YESOPEN_PROJECT", False)],
          [("project", "YESOPEN_PROJECT"), ("log", "STRING")], ["9:16", True], (300, 140)),
+        ("QA 4:5", "YesOpenQAReport", [("project", "YESOPEN_PROJECT", False)],
+         [("project", "YESOPEN_PROJECT"), ("log", "STRING")], ["4:5", False], (300, 140)),
+        ("QA 1:1", "YesOpenQAReport", [("project", "YESOPEN_PROJECT", False)],
+         [("project", "YESOPEN_PROJECT"), ("log", "STRING")], ["1:1", False], (300, 140)),
+        ("QA 16:9", "YesOpenQAReport", [("project", "YESOPEN_PROJECT", False)],
+         [("project", "YESOPEN_PROJECT"), ("log", "STRING")], ["16:9", False], (300, 140)),
         ("Wynik QA", "PreviewAny", [("source", "*", False)], [("STRING", "STRING")], [], (420, 300)),
     ],
     "deliver": [
@@ -280,6 +293,7 @@ PIPELINE_NODES = {
 
 # (source stage, source node, source slot), (target stage, target node, target slot): the data flow
 LINKS = [
+    (("proj", "Projekt", 0), ("proj", "Status projektu", "project")),
     # the project and its gates
     (("proj", "Projekt", 0), ("proj", "Bramka 1 · Referencja", "project")),
     (("proj", "Bramka 1 · Referencja", 0), ("proj", "Bramka 2 · Scenariusz", "project")),
@@ -291,6 +305,7 @@ LINKS = [
     (("proj", "Kwestia z projektu", 2), ("tts", "FL_ChatterboxMultilingualTTS", "exaggeration")),
     (("proj", "Kwestia z projektu", 3), ("tts", "FL_ChatterboxMultilingualTTS", "cfg_weight")),
     (("proj", "Kwestia z projektu", 4), ("tts", "FL_ChatterboxMultilingualTTS", "seed")),
+    (("proj", "Kwestia z projektu", 8), ("tts", "FL_ChatterboxMultilingualTTS", "language")),
     (("proj", "Kwestia z projektu", 5), ("z", "Text to Image (Z-Image-Turbo)", "text")),
     (("proj", "Bramka 2 · Scenariusz", 0), ("z", "Still do projektu", "project")),
     (("proj", "Kwestia z projektu", 6), ("z", "Still do projektu", "who")),
@@ -301,22 +316,19 @@ LINKS = [
     (("proj", "Kwestia z projektu", 7), ("fit", "Dopasuj kwestię", "line")),
     (("proj", "Kwestia z projektu", 4), ("fit", "Dopasuj kwestię", "seed")),
     (("tts", "FL_ChatterboxMultilingualTTS", 0), ("fit", "Dopasuj kwestię", "audio")),
-    (("fit", "Dopasuj kwestię", 4), ("fit", "Still: wybrany / z Z-Image", "on_true")),
-    (("z", "Text to Image (Z-Image-Turbo)", 0), ("fit", "Still: wybrany / z Z-Image", "on_false")),
-    (("fit", "Dopasuj kwestię", 5), ("fit", "Still: wybrany / z Z-Image", "switch")),
-    (("fit", "Still: wybrany / z Z-Image", 0), ("qwen", "Image Edit (Qwen-Image 2511 Int8)", 0)),
-    (("fit", "Still: wybrany / z Z-Image", 0), ("ltx23", "Video Generation (LTX-2.3)", 0)),
-    (("fit", "Still: wybrany / z Z-Image", 0), ("h3", "Image to Video (MiniMax H3)", 0)),
+    (("fit", "Dopasuj kwestię", 4), ("qwen", "Image Edit (Qwen-Image 2511 Int8)", 0)),
+    (("fit", "Dopasuj kwestię", 4), ("ltx23", "Video Generation (LTX-2.3)", 0)),
+    (("fit", "Dopasuj kwestię", 4), ("h3", "Image to Video (MiniMax H3)", 0)),
     (("fit", "Dopasuj kwestię", 1), ("ltx23", "Video Generation (LTX-2.3)", "value")),
     (("fit", "Dopasuj kwestię", 2), ("ltx23", "Video Generation (LTX-2.3)", "value_4")),
     (("fit", "Dopasuj kwestię", 3), ("ltx23", "Video Generation (LTX-2.3)", "noise_seed")),
     (("fit", "Dopasuj kwestię", 2), ("h3", "Image to Video (MiniMax H3)", "value_1")),
     (("qwen", "Image Edit (Qwen-Image 2511 Int8)", 0), ("ltx25", "Image to Video (LTX-2.5)", 0)),       # b-roll from the edited still
     # the talking take speaks the line, or the two-voice dialog when "Rozmowa zamiast kwestii" is on
-    (("fit", "Dopasuj kwestię", 0), ("ltx23", "Głos: kwestia / rozmowa", "on_false")),
-    (("dlg", "FL_ChatterboxDialogTTS", 0), ("ltx23", "Głos: kwestia / rozmowa", "on_true")),
-    (("cfg", "Rozmowa zamiast kwestii", 0), ("ltx23", "Głos: kwestia / rozmowa", "switch")),
-    (("ltx23", "Głos: kwestia / rozmowa", 0), ("ltx23", "Video Generation (LTX-2.3)", 1)),
+    (("proj", "Bramka 3 · Obsada", 0), ("fit", "Odsłuch zatwierdzony", "project")),
+    (("fit", "Dopasuj kwestię", 0), ("fit", "Odsłuch zatwierdzony", "audio")),
+    (("fit", "Dopasuj kwestię", 0), ("fit", "Odsłuch kwestii", "audio")),
+    (("fit", "Odsłuch zatwierdzony", 0), ("ltx23", "Video Generation (LTX-2.3)", 1)),
     (("ltx23", "Video Generation (LTX-2.3)", 0), ("up", "Upscale Video (SeedVR2 3B Int8)", 0)),
     (("up", "Upscale Video (SeedVR2 3B Int8)", 0), ("film", "Frame Interpolation", 0)),
     # the preview with music: the finished take and the music bed, cut to the take and 12 dB down
@@ -342,13 +354,18 @@ LINKS = [
     (("cfg", "Seed", 0), ("qwen", "Image Edit (Qwen-Image 2511 Int8)", "seed")),
     (("cfg", "Seed", 0), ("up", "Upscale Video (SeedVR2 3B Int8)", "seed_1")),
     # the take and the music into the project
-    (("proj", "Bramka 3 · Obsada", 0), ("ltx23", "Ujęcie do projektu", "project")),
-    (("proj", "Kwestia z projektu", 7), ("ltx23", "Ujęcie do projektu", "line")),
-    (("ltx23", "Video Generation (LTX-2.3)", 0), ("ltx23", "Ujęcie do projektu", "video")),
+    (("proj", "Bramka 3 · Obsada", 0), ("film", "Ujęcie do projektu", "project")),
+    (("proj", "Kwestia z projektu", 7), ("film", "Ujęcie do projektu", "line")),
+    (("film", "Frame Interpolation", 0), ("film", "Ujęcie do projektu", "video")),
+    (("proj", "Bramka 3 · Obsada", 0), ("ltx25", "B-roll do projektu", "project")),
+    (("proj", "Kwestia z projektu", 7), ("ltx25", "B-roll do projektu", "line")),
+    (("ltx25", "Image to Video (LTX-2.5)", 0), ("ltx25", "B-roll do projektu", "video")),
     (("proj", "Bramka 2 · Scenariusz", 0), ("ace", "Muzyka do projektu", "project")),
     (("ace", "VAEDecodeAudio", 0), ("ace", "Muzyka do projektu", "audio")),
     # the edit, the formats, QA and delivery: the skill's scripts on the project, each behind its gate
-    (("ltx23", "Ujęcie do projektu", 0), ("edit", "Bramka 4 · Ujęcia", "project")),
+    (("film", "Ujęcie do projektu", 0), ("edit", "Wszystkie ujęcia i muzyka", "project")),
+    (("ace", "Muzyka do projektu", 0), ("edit", "Wszystkie ujęcia i muzyka", "music")),
+    (("edit", "Wszystkie ujęcia i muzyka", 0), ("edit", "Bramka 4 · Ujęcia", "project")),
     (("edit", "Bramka 4 · Ujęcia", 0), ("edit", "Assety montażu", "project")),
     (("edit", "Assety montażu", 0), ("edit", "EDL", "project")),
     (("edit", "EDL", 0), ("edit", "Render 9:16", "project")),
@@ -358,18 +375,23 @@ LINKS = [
     (("formats", "Formaty 4:5 i 1:1", 0), ("formats", "Render 16:9", "project")),
     (("formats", "Render 16:9", 0), ("formats", "Raport QA", "project")),
     (("formats", "Raport QA", 1), ("formats", "Wynik QA", "source")),
-    (("formats", "Raport QA", 0), ("deliver", "Bramka 6 · Formaty i QA", "project")),
+    (("formats", "Raport QA", 0), ("formats", "QA 4:5", "project")),
+    (("formats", "QA 4:5", 0), ("formats", "QA 1:1", "project")),
+    (("formats", "QA 1:1", 0), ("formats", "QA 16:9", "project")),
+    (("formats", "QA 16:9", 0), ("deliver", "Bramka 6 · Formaty i QA", "project")),
     (("deliver", "Bramka 6 · Formaty i QA", 0), ("deliver", "Wersje do wysyłki", "project")),
     (("deliver", "Wersje do wysyłki", 1), ("deliver", "Pliki w final/", "source")),
 ]
 
 TITLE = (
     "YESOPEN SKIT PIPELINE  ·  silnik GPU\n\n"
-    "Cały pipeline, od projektu do dostawy. Wybierz projekt z /work i id kwestii; jeden Run nagrywa kwestię, dopasowuje "
-    "ją (fit_lines), filmuje ujęcie z lip syncem i zapisuje je w projekcie. Kroki po bramkach (montaż, formaty, QA, "
+    "Wybierz projekt z /work. Kwestia '*' = wszystkie kwestie; id np. l01 = jedna. Najpierw głosy i odsłuch, potem "
+    "włącz 'Odsłuch zatwierdzony', aby generować ujęcia. Checkpointy wznawiają niezmienione media. Montaż czeka na komplet "
+    "ujęć z cuts.json i muzykę. Kroki po bramkach (montaż, formaty, QA wszystkich czterech formatów, "
     "dostawa) robią skrypty skilla w kontenerze edytora; bramka przepuszcza dalej dopiero po włączeniu 'approved'. "
-    "Obok: MiniMax H3 (wyciszony), Qwen -> B-roll LTX-2.5, rozmowa dwóch głosów ('Rozmowa zamiast kwestii'), muzyka, "
-    "podgląd z muzyką. Wskaźnik u góry mówi, czy ktoś już generuje."
+    "QA blokuje dostawę przy błędzie. final/manifest.json: rozmiary i SHA-256. Przygotowanie scenariusza, wybór stilli, "
+    "pobranie plików i zamknięcie maszyny są krokami operatora. Obsada, Qwen/B-roll, rozmowa, MiniMax i miks podglądu "
+    "są wyciszone; włączaj wybrane grupy świadomie. Tryb CPU służy do podglądu grafu."
 )
 
 
@@ -590,6 +612,17 @@ def main():
 
     for (s_stage, s_node, s_slot), (d_stage, d_node, d_slot) in LINKS:
         connect(find(s_stage, s_node), s_slot, find(d_stage, d_node), d_slot)
+
+    # Template saves are independent execution roots; project savers support lazy resume.
+    for n in list(nodes_all):
+        if n['_stage'] in {'tts', 'ltx23', 'up', 'film', 'ace'} and n['type'].startswith('Save'):
+            for inp in n.get('inputs', []):
+                if inp.get('link') is not None:
+                    link = next(l for l in links_out if l[0] == inp['link'])
+                    links_out.remove(link)
+                    origin = next(o for o in nodes_all if o['id'] == link[1])
+                    origin['outputs'][link[2]]['links'].remove(link[0])
+            nodes_all.remove(n)
 
     # 2b. drop nodes whose outputs go nowhere (e.g. GetImageSize once the settings panel feeds the sizes)
     gone_any = True

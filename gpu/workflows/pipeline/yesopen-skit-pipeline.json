@@ -1,19 +1,19 @@
 {
  "id": "yesopen-skit-pipeline",
  "revision": 0,
- "last_node_id": 1097,
- "last_link_id": 112,
+ "last_node_id": 1103,
+ "last_link_id": 119,
  "nodes": [
   {
-   "id": 1096,
+   "id": 1102,
    "type": "Note",
    "pos": [
     -60,
-    -294
+    -309
    ],
    "size": [
     1400,
-    134
+    149
    ],
    "flags": {},
    "order": 0,
@@ -22,21 +22,21 @@
    "outputs": [],
    "properties": {},
    "widgets_values": [
-    "YESOPEN SKIT PIPELINE  ·  silnik GPU\n\nCały pipeline, od projektu do dostawy. Wybierz projekt z /work i id kwestii; jeden Run nagrywa kwestię, dopasowuje ją (fit_lines), filmuje ujęcie z lip syncem i zapisuje je w projekcie. Kroki po bramkach (montaż, formaty, QA, dostawa) robią skrypty skilla w kontenerze edytora; bramka przepuszcza dalej dopiero po włączeniu 'approved'. Obok: MiniMax H3 (wyciszony), Qwen -> B-roll LTX-2.5, rozmowa dwóch głosów ('Rozmowa zamiast kwestii'), muzyka, podgląd z muzyką. Wskaźnik u góry mówi, czy ktoś już generuje."
+    "YESOPEN SKIT PIPELINE  ·  silnik GPU\n\nWybierz projekt z /work. Kwestia '*' = wszystkie kwestie; id np. l01 = jedna. Najpierw głosy i odsłuch, potem włącz 'Odsłuch zatwierdzony', aby generować ujęcia. Checkpointy wznawiają niezmienione media. Montaż czeka na komplet ujęć z cuts.json i muzykę. Kroki po bramkach (montaż, formaty, QA wszystkich czterech formatów, dostawa) robią skrypty skilla w kontenerze edytora; bramka przepuszcza dalej dopiero po włączeniu 'approved'. QA blokuje dostawę przy błędzie. final/manifest.json: rozmiary i SHA-256. Przygotowanie scenariusza, wybór stilli, pobranie plików i zamknięcie maszyny są krokami operatora. Obsada, Qwen/B-roll, rozmowa, MiniMax i miks podglądu są wyciszone; włączaj wybrane grupy świadomie. Tryb CPU służy do podglądu grafu."
    ],
    "color": "#3e4451",
    "bgcolor": "#21252b"
   },
   {
-   "id": 1079,
+   "id": 1085,
    "type": "Note",
    "pos": [
     50,
-    2686
+    80
    ],
    "size": [
-    1308,
-    76
+    1520,
+    91
    ],
    "flags": {},
    "order": 0,
@@ -45,21 +45,21 @@
    "outputs": [],
    "properties": {},
    "widgets_values": [
-    "Projekt z /work (gpu.py push <projekt>). Referencję analizujesz na komputerze: nigdy nie trafia na serwer. Bramki 1-3 włączasz, gdy analiza, scenariusz (Twoje TAK) i obsada są gotowe. Kwestia: id z lines.json."
+    "Projekt z /work (gpu.py push <projekt>). Referencję analizujesz na komputerze: nigdy nie trafia na serwer. Bramki 1-3 włączasz po analizie, zatwierdzeniu scenariusza i wyborze obsady. Kwestia '*' = cały projekt; np. l01 = jedna. Status pokazuje checkpointy."
    ],
    "color": "#6e5f36",
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1080,
+   "id": 1086,
    "type": "Note",
    "pos": [
-    1936,
-    2686
+    1950,
+    80
    ],
    "size": [
-    779,
-    91
+    406,
+    106
    ],
    "flags": {},
    "order": 0,
@@ -74,11 +74,11 @@
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1081,
+   "id": 1087,
    "type": "Note",
    "pos": [
-    1936,
-    1246
+    1950,
+    1234
    ],
    "size": [
     666,
@@ -97,14 +97,14 @@
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1082,
+   "id": 1088,
    "type": "Note",
    "pos": [
-    2986,
-    1246
+    2990,
+    1234
    ],
    "size": [
-    365,
+    360,
     106
    ],
    "flags": {},
@@ -120,15 +120,15 @@
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1083,
+   "id": 1089,
    "type": "Note",
    "pos": [
-    2986,
-    2686
+    2990,
+    80
    ],
    "size": [
-    694,
-    91
+    730,
+    106
    ],
    "flags": {},
    "order": 0,
@@ -137,21 +137,21 @@
    "outputs": [],
    "properties": {},
    "widgets_values": [
-    "fit_lines.py tnie nagranie do słów scenariusza; gpu_batches.py takes daje prompt, długość i seed ujęcia. Still: wybrany z projektu, a gdy go brak, ten z Z-Image."
+    "fit_lines.py tnie nagranie do słów scenariusza; gpu_batches.py takes daje prompt, długość i seed ujęcia. Still musi być wybrany w projekcie. Odsłuchaj pliki w podglądzie audio i dopiero włącz zatwierdzenie głosu. Zmiana audio unieważnia zgodę."
    ],
    "color": "#6e5f36",
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1084,
+   "id": 1090,
    "type": "Note",
    "pos": [
-    4531,
-    2686
+    4056,
+    80
    ],
    "size": [
-    756,
-    76
+    400,
+    106
    ],
    "flags": {},
    "order": 0,
@@ -160,17 +160,17 @@
    "outputs": [],
    "properties": {},
    "widgets_values": [
-    "Still + dopasowana kwestia -> ujęcie z lip syncem, 704x1280, 24 fps; zapis do takes/<id>.video.mp4 i inspect_take.py."
+    "Wybrany still + zatwierdzone audio -> lip sync, 704x1280, 24 fps. Do projektu trafia wersja po upscale i interpolacji."
    ],
    "color": "#6e5f36",
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1085,
+   "id": 1091,
    "type": "Note",
    "pos": [
-    4531,
-    1246
+    4056,
+    1234
    ],
    "size": [
     786,
@@ -189,11 +189,11 @@
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1086,
+   "id": 1092,
    "type": "Note",
    "pos": [
-    4531,
-    80
+    4056,
+    2755
    ],
    "size": [
     714,
@@ -212,11 +212,11 @@
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1087,
+   "id": 1093,
    "type": "Note",
    "pos": [
-    5995,
-    2686
+    5208,
+    80
    ],
    "size": [
     360,
@@ -235,14 +235,14 @@
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1088,
+   "id": 1094,
    "type": "Note",
    "pos": [
-    2986,
-    4270
+    50,
+    2755
    ],
    "size": [
-    672,
+    792,
     76
    ],
    "flags": {},
@@ -252,21 +252,21 @@
    "outputs": [],
    "properties": {},
    "widgets_values": [
-    "Cała rozmowa po angielsku i jedna ścieżka na mówcę (SPEAKER A: ...). Próbki głosów wgraj już przycięte."
+    "Opcjonalny, wyciszony eksperyment; nie zastępuje zatwierdzonej kwestii w gałęzi produkcyjnej. Próbki i dialog ustaw osobno."
    ],
    "color": "#6e5f36",
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1089,
+   "id": 1095,
    "type": "Note",
    "pos": [
-    5995,
-    1246
+    5208,
+    1234
    ],
    "size": [
-    732,
-    76
+    880,
+    91
    ],
    "flags": {},
    "order": 0,
@@ -275,17 +275,17 @@
    "outputs": [],
    "properties": {},
    "widgets_values": [
-    "Still po Qwenie -> ciche reakcje i B-roll z dźwiękiem pokoju. Wymaga licencji Lightricks/LTX-2.5 na Hugging Face."
+    "Opcjonalny, wyciszony B-roll. Zapis: takes/<id>-broll.video.mp4; dodaj nazwę do cuts.json. Wymaga licencji Lightricks/LTX-2.5 na Hugging Face."
    ],
    "color": "#6e5f36",
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1090,
+   "id": 1096,
    "type": "Note",
    "pos": [
-    8125,
-    2686
+    6348,
+    80
    ],
    "size": [
     360,
@@ -304,11 +304,11 @@
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1091,
+   "id": 1097,
    "type": "Note",
    "pos": [
-    8125,
-    1246
+    6348,
+    1234
    ],
    "size": [
     900,
@@ -327,11 +327,11 @@
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1092,
+   "id": 1098,
    "type": "Note",
    "pos": [
-    11535,
-    2686
+    9388,
+    80
    ],
    "size": [
     780,
@@ -350,11 +350,11 @@
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1093,
+   "id": 1099,
    "type": "Note",
    "pos": [
-    5995,
-    4270
+    9388,
+    1234
    ],
    "size": [
     672,
@@ -373,11 +373,11 @@
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1094,
+   "id": 1100,
    "type": "Note",
    "pos": [
-    8125,
-    4270
+    11928,
+    1234
    ],
    "size": [
     720,
@@ -396,14 +396,14 @@
    "bgcolor": "#2c313a"
   },
   {
-   "id": 1095,
+   "id": 1101,
    "type": "Note",
    "pos": [
-    11535,
-    4270
+    14968,
+    1234
    ],
    "size": [
-    1122,
+    1170,
     76
    ],
    "flags": {},
@@ -413,7 +413,7 @@
    "outputs": [],
    "properties": {},
    "widgets_values": [
-    "Bramka 6: wersja do wysyłki (25 MiB), web (15 MB) i plakat w final/. Nic nie publikujemy bez Twojej prośby. Potem: 'Po produkcji' w script.md i skasowanie maszyny (dysk zostaje)."
+    "Bramka 6: share (25 MiB), web (15 MB) i plakat dla każdego formatu. Manifest SHA-256 w final/. Nic nie publikujemy. Potem: 'Po produkcji' w script.md i skasowanie maszyny (dysk zostaje)."
    ],
    "color": "#6e5f36",
    "bgcolor": "#2c313a"
@@ -422,8 +422,8 @@
    "id": 1001,
    "type": "FL_ChatterboxMultilingualTTS",
    "pos": [
-    1936,
-    2857
+    1950,
+    260
    ],
    "size": [
     405.6428250398121,
@@ -437,7 +437,7 @@
      "name": "audio_prompt",
      "shape": 7,
      "type": "AUDIO",
-     "link": 44
+     "link": 45
     },
     {
      "name": "text",
@@ -445,7 +445,7 @@
      "widget": {
       "name": "text"
      },
-     "link": 43
+     "link": 44
     },
     {
      "name": "exaggeration",
@@ -453,7 +453,7 @@
      "widget": {
       "name": "exaggeration"
      },
-     "link": 45
+     "link": 46
     },
     {
      "name": "cfg_weight",
@@ -461,7 +461,7 @@
      "widget": {
       "name": "cfg_weight"
      },
-     "link": 46
+     "link": 47
     },
     {
      "name": "seed",
@@ -469,7 +469,15 @@
      "widget": {
       "name": "seed"
      },
-     "link": 47
+     "link": 48
+    },
+    {
+     "name": "language",
+     "type": "COMBO",
+     "widget": {
+      "name": "language"
+     },
+     "link": 49
     }
    ],
    "outputs": [
@@ -477,8 +485,7 @@
      "name": "audio",
      "type": "AUDIO",
      "links": [
-      2,
-      56
+      58
      ]
     },
     {
@@ -506,44 +513,11 @@
    ]
   },
   {
-   "id": 1002,
-   "type": "SaveAudioAdvanced",
-   "pos": [
-    2432,
-    2911
-   ],
-   "size": [
-    300,
-    150
-   ],
-   "flags": {},
-   "order": 3,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "audio",
-     "type": "AUDIO",
-     "link": 2
-    }
-   ],
-   "outputs": [],
-   "properties": {
-    "Node name for S&R": "SaveAudioAdvanced"
-   },
-   "widgets_values": [
-    "yesopen/voice-line",
-    "mp3",
-    "V0"
-   ],
-   "color": "#8f4a52",
-   "bgcolor": "#282c34"
-  },
-  {
    "id": 1003,
    "type": "SaveImage",
    "pos": [
-    2426,
-    1436
+    2440,
+    1370
    ],
    "size": [
     290,
@@ -551,7 +525,7 @@
    ],
    "flags": {},
    "order": 2,
-   "mode": 0,
+   "mode": 2,
    "inputs": [
     {
      "name": "images",
@@ -588,8 +562,8 @@
    "id": 1004,
    "type": "f2fdebf6-dfaf-43b6-9eb2-7f70613cfdc1",
    "pos": [
-    1936,
-    1382
+    1950,
+    1370
    ],
    "size": [
     400,
@@ -597,7 +571,7 @@
    ],
    "flags": {},
    "order": 1,
-   "mode": 0,
+   "mode": 2,
    "inputs": [
     {
      "label": "prompt",
@@ -606,7 +580,7 @@
      "widget": {
       "name": "text"
      },
-     "link": 48
+     "link": 50
     }
    ],
    "outputs": [
@@ -614,8 +588,7 @@
      "name": "IMAGE",
      "type": "IMAGE",
      "links": [
-      3,
-      58
+      3
      ]
     }
    ],
@@ -676,8 +649,8 @@
    "id": 1005,
    "type": "PrimitiveInt",
    "pos": [
-    3742,
-    1412
+    3402,
+    1400
    ],
    "size": [
     230,
@@ -692,9 +665,9 @@
      "name": "INT",
      "type": "INT",
      "links": [
+      83,
       84,
-      85,
-      86
+      85
      ]
     }
    ],
@@ -713,8 +686,8 @@
    "id": 1006,
    "type": "PrimitiveInt",
    "pos": [
-    3786,
-    1592
+    3446,
+    1580
    ],
    "size": [
     230,
@@ -729,9 +702,9 @@
      "name": "INT",
      "type": "INT",
      "links": [
+      86,
       87,
-      88,
-      89
+      88
      ]
     }
    ],
@@ -750,8 +723,8 @@
    "id": 1008,
    "type": "PrimitiveInt",
    "pos": [
-    3830,
-    1772
+    3490,
+    1760
    ],
    "size": [
     230,
@@ -766,10 +739,10 @@
      "name": "INT",
      "type": "INT",
      "links": [
+      89,
       90,
       91,
-      92,
-      93
+      92
      ]
     }
    ],
@@ -785,66 +758,11 @@
    "bgcolor": "#282c34"
   },
   {
-   "id": 1010,
-   "type": "SaveVideo",
-   "pos": [
-    5381,
-    3854
-   ],
-   "size": [
-    290,
-    560
-   ],
-   "flags": {},
-   "order": 5,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "video",
-     "type": "VIDEO",
-     "link": 6
-    }
-   ],
-   "outputs": [
-    {
-     "name": "video",
-     "type": "VIDEO",
-     "links": null
-    }
-   ],
-   "properties": {
-    "Node name for S&R": "SaveVideo",
-    "cnr_id": "comfy-core",
-    "ver": "0.16.3",
-    "enableTabs": false,
-    "tabWidth": 65,
-    "tabXOffset": 10,
-    "hasSecondTab": false,
-    "secondTabText": "Send Back",
-    "secondTabOffset": 80,
-    "secondTabWidth": 65
-   },
-   "widgets_values": [
-    "yesopen/take-talk",
-    "auto",
-    "auto",
-    "auto"
-   ],
-   "widgets_values_named": {
-    "filename_prefix": "video/LTX_2.3_ia2v",
-    "format": "auto",
-    "format.codec": "auto",
-    "codec": "auto"
-   },
-   "color": "#8f4a52",
-   "bgcolor": "#282c34"
-  },
-  {
    "id": 1012,
    "type": "98ee9e5b-467b-40aa-a534-36033f27d0b4",
    "pos": [
-    4891,
-    3053
+    4056,
+    326
    ],
    "size": [
     400,
@@ -858,12 +776,12 @@
      "label": "first_frame",
      "name": "input",
      "type": "IMAGE,MASK",
-     "link": 61
+     "link": 60
     },
     {
      "name": "audio",
      "type": "AUDIO",
-     "link": 71
+     "link": 70
     },
     {
      "label": "prompt",
@@ -872,7 +790,7 @@
      "widget": {
       "name": "value"
      },
-     "link": 63
+     "link": 62
     },
     {
      "label": "prompt_enhance",
@@ -890,7 +808,7 @@
      "widget": {
       "name": "value_1"
      },
-     "link": 84
+     "link": 83
     },
     {
      "label": "height",
@@ -899,7 +817,7 @@
      "widget": {
       "name": "value_2"
      },
-     "link": 87
+     "link": 86
     },
     {
      "label": "audio_start",
@@ -917,7 +835,7 @@
      "widget": {
       "name": "value_4"
      },
-     "link": 64
+     "link": 63
     },
     {
      "label": "fps",
@@ -935,7 +853,7 @@
      "widget": {
       "name": "noise_seed"
      },
-     "link": 65
+     "link": 64
     },
     {
      "label": "distilled_lora",
@@ -970,9 +888,7 @@
      "name": "VIDEO",
      "type": "VIDEO",
      "links": [
-      6,
-      72,
-      96
+      71
      ]
     }
    ],
@@ -1038,8 +954,8 @@
    "id": 1013,
    "type": "SaveVideo",
    "pos": [
-    5101,
-    1396
+    4626,
+    1384
    ],
    "size": [
     290,
@@ -1083,8 +999,8 @@
    "id": 1016,
    "type": "4c314f31-ecda-4b08-ae98-faaba1bf613f",
    "pos": [
-    4531,
-    1396
+    4056,
+    1384
    ],
    "size": [
     480,
@@ -1098,7 +1014,7 @@
      "name": "first_frame",
      "shape": 7,
      "type": "IMAGE",
-     "link": 62
+     "link": 61
     },
     {
      "name": "last_frame",
@@ -1112,7 +1028,7 @@
      "widget": {
       "name": "width"
      },
-     "link": 86
+     "link": 85
     },
     {
      "name": "height",
@@ -1120,7 +1036,7 @@
      "widget": {
       "name": "height"
      },
-     "link": 89
+     "link": 88
     },
     {
      "label": "duration",
@@ -1129,7 +1045,7 @@
      "widget": {
       "name": "value_1"
      },
-     "link": 66
+     "link": 65
     },
     {
      "label": "audio_vae",
@@ -1173,7 +1089,7 @@
      "widget": {
       "name": "noise_seed"
      },
-     "link": 91
+     "link": 90
     }
    ],
    "outputs": [
@@ -1227,8 +1143,8 @@
    "id": 1020,
    "type": "cdb2cf24-c432-439b-b5c8-5f69838580c9",
    "pos": [
-    4531,
-    216
+    4056,
+    2891
    ],
    "size": [
     460,
@@ -1236,13 +1152,13 @@
    ],
    "flags": {},
    "order": 3,
-   "mode": 0,
+   "mode": 2,
    "inputs": [
     {
      "label": "image1",
      "name": "image",
      "type": "IMAGE",
-     "link": 60
+     "link": 59
     },
     {
      "name": "image2",
@@ -1316,7 +1232,7 @@
      "widget": {
       "name": "seed"
      },
-     "link": 92
+     "link": 91
     }
    ],
    "outputs": [
@@ -1325,7 +1241,7 @@
      "type": "IMAGE",
      "links": [
       13,
-      67
+      66
      ]
     }
    ],
@@ -1379,8 +1295,8 @@
    "id": 1021,
    "type": "SaveImageAdvanced",
    "pos": [
-    5081,
-    270
+    4606,
+    2945
    ],
    "size": [
     290,
@@ -1388,7 +1304,7 @@
    ],
    "flags": {},
    "order": 4,
-   "mode": 0,
+   "mode": 2,
    "inputs": [
     {
      "name": "images",
@@ -1419,8 +1335,8 @@
    "id": 1022,
    "type": "1970dcb4-982a-4c01-a373-4d239a3041e4",
    "pos": [
-    5995,
-    3053
+    5208,
+    296
    ],
    "size": [
     450,
@@ -1433,7 +1349,7 @@
     {
      "name": "video",
      "type": "VIDEO",
-     "link": 72
+     "link": 71
     },
     {
      "label": "trim_video",
@@ -1469,7 +1385,7 @@
      "widget": {
       "name": "seed_1"
      },
-     "link": 93
+     "link": 92
     },
     {
      "label": "split_latent",
@@ -1495,8 +1411,7 @@
      "name": "VIDEO",
      "type": "VIDEO",
      "links": [
-      15,
-      73
+      72
      ]
     }
    ],
@@ -1563,52 +1478,11 @@
    "bgcolor": "#282c34"
   },
   {
-   "id": 1024,
-   "type": "SaveVideo",
-   "pos": [
-    6535,
-    3107
-   ],
-   "size": [
-    290,
-    560
-   ],
-   "flags": {},
-   "order": 4,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "video",
-     "type": "VIDEO",
-     "link": 15
-    }
-   ],
-   "outputs": [
-    {
-     "name": "video",
-     "type": "VIDEO",
-     "links": null
-    }
-   ],
-   "properties": {
-    "cnr_id": "comfy-core",
-    "ver": "0.28.0",
-    "Node name for S&R": "SaveVideo"
-   },
-   "widgets_values": [
-    "yesopen/take-upscaled",
-    "auto",
-    "auto"
-   ],
-   "color": "#8f4a52",
-   "bgcolor": "#282c34"
-  },
-  {
    "id": 1025,
    "type": "FL_ChatterboxDialogTTS",
    "pos": [
-    3359,
-    4406
+    423,
+    2891
    ],
    "size": [
     374.60725574976755,
@@ -1616,7 +1490,7 @@
    ],
    "flags": {},
    "order": 4,
-   "mode": 0,
+   "mode": 2,
    "inputs": [
     {
      "name": "speaker_A_Audio",
@@ -1646,8 +1520,7 @@
      "name": "dialog_audio",
      "type": "AUDIO",
      "links": [
-      18,
-      69
+      18
      ]
     },
     {
@@ -1694,8 +1567,8 @@
    "id": 1026,
    "type": "SaveAudioAdvanced",
    "pos": [
-    3824,
-    4460
+    888,
+    2891
    ],
    "size": [
     300,
@@ -1703,7 +1576,7 @@
    ],
    "flags": {},
    "order": 5,
-   "mode": 0,
+   "mode": 2,
    "inputs": [
     {
      "name": "audio",
@@ -1727,8 +1600,8 @@
    "id": 1027,
    "type": "LoadAudio",
    "pos": [
-    2986,
-    4406
+    50,
+    2891
    ],
    "size": [
     282.798828125,
@@ -1736,7 +1609,7 @@
    ],
    "flags": {},
    "order": 1,
-   "mode": 0,
+   "mode": 2,
    "inputs": [],
    "outputs": [
     {
@@ -1762,8 +1635,8 @@
    "id": 1028,
    "type": "LoadAudio",
    "pos": [
-    2986,
-    4614
+    50,
+    3099
    ],
    "size": [
     282.798828125,
@@ -1771,7 +1644,7 @@
    ],
    "flags": {},
    "order": 2,
-   "mode": 0,
+   "mode": 2,
    "inputs": [],
    "outputs": [
     {
@@ -1797,8 +1670,8 @@
    "id": 1030,
    "type": "SaveVideo",
    "pos": [
-    6585,
-    1382
+    5798,
+    1385
    ],
    "size": [
     290,
@@ -1806,7 +1679,7 @@
    ],
    "flags": {},
    "order": 7,
-   "mode": 0,
+   "mode": 2,
    "inputs": [
     {
      "name": "video",
@@ -1850,8 +1723,8 @@
    "id": 1031,
    "type": "6e397a2b-68f7-48f6-8930-f3a5491a163c",
    "pos": [
-    5995,
-    1382
+    5208,
+    1385
    ],
    "size": [
     500,
@@ -1859,13 +1732,13 @@
    ],
    "flags": {},
    "order": 6,
-   "mode": 0,
+   "mode": 2,
    "inputs": [
     {
      "label": "first_frame",
      "name": "input",
      "type": "IMAGE,MASK",
-     "link": 67
+     "link": 66
     },
     {
      "label": "prompt",
@@ -1901,7 +1774,7 @@
      "widget": {
       "name": "value_3"
      },
-     "link": 85
+     "link": 84
     },
     {
      "label": "height",
@@ -1910,7 +1783,7 @@
      "widget": {
       "name": "value_4"
      },
-     "link": 88
+     "link": 87
     },
     {
      "label": "frame_rate",
@@ -1963,7 +1836,7 @@
      "widget": {
       "name": "noise_seed"
      },
-     "link": 90
+     "link": 89
     }
    ],
    "outputs": [
@@ -1999,53 +1872,11 @@
    "bgcolor": "#282c34"
   },
   {
-   "id": 1034,
-   "type": "SaveVideo",
-   "pos": [
-    8625,
-    3107
-   ],
-   "size": [
-    290,
-    560
-   ],
-   "flags": {},
-   "order": 3,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "video",
-     "type": "VIDEO",
-     "link": 24
-    }
-   ],
-   "outputs": [],
-   "properties": {
-    "enableTabs": false,
-    "tabWidth": 65,
-    "tabXOffset": 10,
-    "hasSecondTab": false,
-    "secondTabText": "Send Back",
-    "secondTabOffset": 80,
-    "secondTabWidth": 65,
-    "cnr_id": "comfy-core",
-    "ver": "0.19.3",
-    "Node name for S&R": "SaveVideo"
-   },
-   "widgets_values": [
-    "yesopen/take-48fps",
-    "auto",
-    "auto"
-   ],
-   "color": "#8f4a52",
-   "bgcolor": "#282c34"
-  },
-  {
    "id": 1035,
    "type": "022693be-2baa-4009-870a-28921508a7ef",
    "pos": [
-    8125,
-    3053
+    6348,
+    296
    ],
    "size": [
     410,
@@ -2058,7 +1889,7 @@
     {
      "name": "video",
      "type": "VIDEO",
-     "link": 73
+     "link": 72
     },
     {
      "label": "multiplier",
@@ -2085,8 +1916,8 @@
      "name": "VIDEO_1",
      "type": "VIDEO",
      "links": [
-      24,
-      74
+      73,
+      95
      ]
     },
     {
@@ -2129,8 +1960,8 @@
    "id": 1036,
    "type": "UNETLoader",
    "pos": [
-    8631,
-    1478
+    6854,
+    1466
    ],
    "size": [
     380,
@@ -2181,8 +2012,8 @@
    "id": 1037,
    "type": "VAELoader",
    "pos": [
-    9805,
-    1478
+    8028,
+    1466
    ],
    "size": [
     380,
@@ -2231,8 +2062,8 @@
    "id": 1038,
    "type": "PrimitiveNode",
    "pos": [
-    8125,
-    1728
+    6348,
+    1716
    ],
    "size": [
     280,
@@ -2272,8 +2103,8 @@
    "id": 1039,
    "type": "EmptyAceStep1.5LatentAudio",
    "pos": [
-    9305,
-    1702
+    7528,
+    1690
    ],
    "size": [
     225,
@@ -2326,8 +2157,8 @@
    "id": 1040,
    "type": "ConditioningZeroOut",
    "pos": [
-    9305,
-    1862
+    7528,
+    1850
    ],
    "size": [
     225,
@@ -2369,8 +2200,8 @@
    "id": 1041,
    "type": "KSampler",
    "pos": [
-    9805,
-    1658
+    8028,
+    1646
    ],
    "size": [
     330,
@@ -2454,8 +2285,8 @@
    "id": 1042,
    "type": "ModelSamplingAuraFlow",
    "pos": [
-    9305,
-    1478
+    7528,
+    1466
    ],
    "size": [
     330,
@@ -2503,8 +2334,8 @@
    "id": 1043,
    "type": "VAEDecodeAudio",
    "pos": [
-    10275,
-    1658
+    8498,
+    1646
    ],
    "size": [
     230,
@@ -2530,8 +2361,8 @@
      "name": "AUDIO",
      "type": "AUDIO",
      "links": [
-      38,
-      75
+      74,
+      100
      ]
     }
    ],
@@ -2552,8 +2383,8 @@
    "id": 1044,
    "type": "DualCLIPLoader",
    "pos": [
-    8125,
-    1478
+    6348,
+    1466
    ],
    "size": [
     380,
@@ -2613,8 +2444,8 @@
    "id": 1045,
    "type": "TextEncodeAceStepAudio1.5",
    "pos": [
-    8631,
-    1666
+    6854,
+    1654
    ],
    "size": [
     570,
@@ -2707,8 +2538,8 @@
    "id": 1046,
    "type": "PrimitiveInt",
    "pos": [
-    8125,
-    1908
+    6348,
+    1896
    ],
    "size": [
     270,
@@ -2751,138 +2582,11 @@
    }
   },
   {
-   "id": 1047,
-   "type": "SaveAudioAdvanced",
-   "pos": [
-    10595,
-    1712
-   ],
-   "size": [
-    680,
-    178
-   ],
-   "flags": {},
-   "order": 12,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "audio",
-     "type": "AUDIO",
-     "link": 38
-    }
-   ],
-   "outputs": [
-    {
-     "name": "audio",
-     "type": "AUDIO",
-     "links": null
-    }
-   ],
-   "properties": {},
-   "widgets_values": [
-    "yesopen/music",
-    "mp3",
-    "V0"
-   ],
-   "widgets_values_named": {
-    "filename_prefix": "audio/ACE_Step1.5_xl_turbo",
-    "format": "mp3",
-    "format.quality": "V0"
-   },
-   "color": "#8f4a52",
-   "bgcolor": "#282c34"
-  },
-  {
-   "id": 1048,
-   "type": "PrimitiveBoolean",
-   "pos": [
-    3874,
-    1952
-   ],
-   "size": [
-    230,
-    90
-   ],
-   "flags": {},
-   "order": 0,
-   "mode": 0,
-   "inputs": [],
-   "outputs": [
-    {
-     "name": "BOOLEAN",
-     "type": "BOOLEAN",
-     "links": [
-      70
-     ]
-    }
-   ],
-   "title": "Rozmowa zamiast kwestii",
-   "properties": {
-    "Node name for S&R": "PrimitiveBoolean"
-   },
-   "widgets_values": [
-    false
-   ],
-   "color": "#6f4a8a",
-   "bgcolor": "#282c34"
-  },
-  {
    "id": 1049,
-   "type": "ComfySwitchNode",
-   "pos": [
-    4531,
-    2922
-   ],
-   "size": [
-    270,
-    130
-   ],
-   "flags": {},
-   "order": 0,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "on_false",
-     "type": "AUDIO",
-     "link": 68
-    },
-    {
-     "name": "on_true",
-     "type": "AUDIO",
-     "link": 69
-    },
-    {
-     "name": "switch",
-     "type": "BOOLEAN",
-     "link": 70,
-     "widget": {
-      "name": "switch"
-     }
-    }
-   ],
-   "outputs": [
-    {
-     "name": "output",
-     "type": "AUDIO",
-     "links": [
-      71
-     ]
-    }
-   ],
-   "title": "Głos: kwestia / rozmowa",
-   "properties": {
-    "Node name for S&R": "ComfySwitchNode"
-   },
-   "widgets_values": [
-    false
-   ]
-  },
-  {
-   "id": 1050,
    "type": "GetVideoComponents",
    "pos": [
-    11925,
-    3053
+    9778,
+    451
    ],
    "size": [
     300,
@@ -2890,12 +2594,12 @@
    ],
    "flags": {},
    "order": 0,
-   "mode": 0,
+   "mode": 2,
    "inputs": [
     {
      "name": "video",
      "type": "VIDEO",
-     "link": 74
+     "link": 73
     }
    ],
    "outputs": [
@@ -2903,21 +2607,21 @@
      "name": "images",
      "type": "IMAGE",
      "links": [
-      80
+      79
      ]
     },
     {
      "name": "audio",
      "type": "AUDIO",
      "links": [
-      78
+      77
      ]
     },
     {
      "name": "fps",
      "type": "FLOAT",
      "links": [
-      81
+      80
      ]
     },
     {
@@ -2938,11 +2642,11 @@
    "widgets_values": []
   },
   {
-   "id": 1051,
+   "id": 1050,
    "type": "TrimAudioDuration",
    "pos": [
-    11535,
-    2932
+    9388,
+    290
    ],
    "size": [
     300,
@@ -2950,17 +2654,17 @@
    ],
    "flags": {},
    "order": 0,
-   "mode": 0,
+   "mode": 2,
    "inputs": [
     {
      "name": "audio",
      "type": "AUDIO",
-     "link": 75
+     "link": 74
     },
     {
      "name": "duration",
      "type": "FLOAT",
-     "link": 76,
+     "link": 75,
      "widget": {
       "name": "duration"
      }
@@ -2971,7 +2675,7 @@
      "name": "AUDIO",
      "type": "AUDIO",
      "links": [
-      77
+      76
      ]
     }
    ],
@@ -2985,11 +2689,11 @@
    ]
   },
   {
-   "id": 1052,
+   "id": 1051,
    "type": "AudioAdjustVolume",
    "pos": [
-    11925,
-    3283
+    9778,
+    651
    ],
    "size": [
     300,
@@ -2997,12 +2701,12 @@
    ],
    "flags": {},
    "order": 0,
-   "mode": 0,
+   "mode": 2,
    "inputs": [
     {
      "name": "audio",
      "type": "AUDIO",
-     "link": 77
+     "link": 76
     }
    ],
    "outputs": [
@@ -3010,7 +2714,7 @@
      "name": "AUDIO",
      "type": "AUDIO",
      "links": [
-      79
+      78
      ]
     }
    ],
@@ -3023,11 +2727,11 @@
    ]
   },
   {
-   "id": 1053,
+   "id": 1052,
    "type": "AudioMerge",
    "pos": [
-    12351,
-    3073
+    10204,
+    471
    ],
    "size": [
     300,
@@ -3035,17 +2739,17 @@
    ],
    "flags": {},
    "order": 0,
-   "mode": 0,
+   "mode": 2,
    "inputs": [
     {
      "name": "audio1",
      "type": "AUDIO",
-     "link": 78
+     "link": 77
     },
     {
      "name": "audio2",
      "type": "AUDIO",
-     "link": 79
+     "link": 78
     }
    ],
    "outputs": [
@@ -3053,7 +2757,7 @@
      "name": "AUDIO",
      "type": "AUDIO",
      "links": [
-      82
+      81
      ]
     }
    ],
@@ -3066,11 +2770,11 @@
    ]
   },
   {
-   "id": 1054,
+   "id": 1053,
    "type": "CreateVideo",
    "pos": [
-    12755,
-    3053
+    10608,
+    451
    ],
    "size": [
     300,
@@ -3078,17 +2782,17 @@
    ],
    "flags": {},
    "order": 0,
-   "mode": 0,
+   "mode": 2,
    "inputs": [
     {
      "name": "images",
      "type": "IMAGE",
-     "link": 80
+     "link": 79
     },
     {
      "name": "fps",
      "type": "FLOAT",
-     "link": 81,
+     "link": 80,
      "widget": {
       "name": "fps"
      }
@@ -3096,7 +2800,7 @@
     {
      "name": "audio",
      "type": "AUDIO",
-     "link": 82
+     "link": 81
     }
    ],
    "outputs": [
@@ -3104,7 +2808,7 @@
      "name": "VIDEO",
      "type": "VIDEO",
      "links": [
-      83
+      82
      ]
     }
    ],
@@ -3119,11 +2823,11 @@
    ]
   },
   {
-   "id": 1055,
+   "id": 1054,
    "type": "SaveVideo",
    "pos": [
-    13145,
-    3053
+    10998,
+    451
    ],
    "size": [
     290,
@@ -3131,12 +2835,12 @@
    ],
    "flags": {},
    "order": 0,
-   "mode": 0,
+   "mode": 2,
    "inputs": [
     {
      "name": "video",
      "type": "VIDEO",
-     "link": 83
+     "link": 82
     }
    ],
    "outputs": [],
@@ -3153,11 +2857,11 @@
    "bgcolor": "#282c34"
   },
   {
-   "id": 1056,
+   "id": 1055,
    "type": "YesOpenProject",
    "pos": [
     50,
-    2862
+    231
    ],
    "size": [
     320,
@@ -3172,7 +2876,7 @@
      "name": "project",
      "type": "YESOPEN_PROJECT",
      "links": [
-      39
+      40
      ]
     },
     {
@@ -3190,50 +2894,11 @@
    ]
   },
   {
-   "id": 1057,
+   "id": 1056,
    "type": "YesOpenGate",
    "pos": [
-    460,
-    2862
-   ],
-   "size": [
-    320,
-    120
-   ],
-   "flags": {},
-   "order": 0,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "project",
-     "type": "YESOPEN_PROJECT",
-     "link": 39
-    }
-   ],
-   "outputs": [
-    {
-     "name": "project",
-     "type": "YESOPEN_PROJECT",
-     "links": [
-      40
-     ]
-    }
-   ],
-   "title": "Bramka 1 · Referencja",
-   "properties": {
-    "Node name for S&R": "YesOpenGate"
-   },
-   "widgets_values": [
-    "1 · Referencja",
-    false
-   ]
-  },
-  {
-   "id": 1058,
-   "type": "YesOpenGate",
-   "pos": [
-    870,
-    2862
+    430,
+    231
    ],
    "size": [
     320,
@@ -3254,26 +2919,25 @@
      "name": "project",
      "type": "YESOPEN_PROJECT",
      "links": [
-      41,
-      42
+      41
      ]
     }
    ],
-   "title": "Bramka 2 · Scenariusz",
+   "title": "Bramka 1 · Referencja",
    "properties": {
     "Node name for S&R": "YesOpenGate"
    },
    "widgets_values": [
-    "2 · Scenariusz (Twoje TAK)",
+    "1 · Referencja",
     false
    ]
   },
   {
-   "id": 1059,
+   "id": 1057,
    "type": "YesOpenGate",
    "pos": [
-    1280,
-    2862
+    840,
+    231
    ],
    "size": [
     320,
@@ -3294,30 +2958,31 @@
      "name": "project",
      "type": "YESOPEN_PROJECT",
      "links": [
-      53,
-      94
+      42,
+      43,
+      99
      ]
     }
    ],
-   "title": "Bramka 3 · Obsada",
+   "title": "Bramka 2 · Scenariusz",
    "properties": {
     "Node name for S&R": "YesOpenGate"
    },
    "widgets_values": [
-    "3 · Obsada (wybrane stille)",
+    "2 · Scenariusz (Twoje TAK)",
     false
    ]
   },
   {
-   "id": 1060,
-   "type": "YesOpenLine",
+   "id": 1058,
+   "type": "YesOpenGate",
    "pos": [
-    1280,
-    3052
+    1250,
+    285
    ],
    "size": [
     320,
-    240
+    120
    ],
    "flags": {},
    "order": 0,
@@ -3331,46 +2996,87 @@
    ],
    "outputs": [
     {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "links": [
+      55,
+      67,
+      93
+     ]
+    }
+   ],
+   "title": "Bramka 3 · Obsada",
+   "properties": {
+    "Node name for S&R": "YesOpenGate"
+   },
+   "widgets_values": [
+    "3 · Obsada (wybrane stille)",
+    false
+   ]
+  },
+  {
+   "id": 1059,
+   "type": "YesOpenLine",
+   "pos": [
+    1250,
+    475
+   ],
+   "size": [
+    320,
+    260
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "link": 43
+    }
+   ],
+   "outputs": [
+    {
      "name": "text",
      "type": "STRING",
      "links": [
-      43
+      44
      ]
     },
     {
      "name": "voice",
      "type": "AUDIO",
      "links": [
-      44
+      45
      ]
     },
     {
      "name": "exaggeration",
      "type": "FLOAT",
      "links": [
-      45
+      46
      ]
     },
     {
      "name": "cfg_weight",
      "type": "FLOAT",
      "links": [
-      46
+      47
      ]
     },
     {
      "name": "seed",
      "type": "INT",
      "links": [
-      47,
-      55
+      48,
+      57
      ]
     },
     {
      "name": "look",
      "type": "STRING",
      "links": [
-      48
+      50
      ]
     },
     {
@@ -3382,8 +3088,15 @@
      "name": "line",
      "type": "STRING",
      "links": [
-      54,
-      95
+      56,
+      94
+     ]
+    },
+    {
+     "name": "language",
+     "type": "COMBO",
+     "links": [
+      49
      ]
     }
    ],
@@ -3392,7 +3105,7 @@
     "Node name for S&R": "YesOpenLine"
    },
    "widgets_values": [
-    "l01",
+    "*",
     0
    ]
   },
@@ -3400,8 +3113,8 @@
    "id": 1061,
    "type": "YesOpenFitLine",
    "pos": [
-    2986,
-    2837
+    2990,
+    246
    ],
    "size": [
     320,
@@ -3414,12 +3127,12 @@
     {
      "name": "project",
      "type": "YESOPEN_PROJECT",
-     "link": 53
+     "link": 55
     },
     {
      "name": "line",
      "type": "STRING",
-     "link": 54,
+     "link": 56,
      "widget": {
       "name": "line"
      }
@@ -3427,12 +3140,12 @@
     {
      "name": "audio",
      "type": "AUDIO",
-     "link": 56
+     "link": 58
     },
     {
      "name": "seed",
      "type": "INT",
-     "link": 55,
+     "link": 57,
      "widget": {
       "name": "seed"
      }
@@ -3443,45 +3156,46 @@
      "name": "line_audio",
      "type": "AUDIO",
      "links": [
-      68
+      68,
+      69
      ]
     },
     {
      "name": "take_prompt",
      "type": "STRING",
      "links": [
-      63
+      62
      ]
     },
     {
      "name": "seconds",
      "type": "FLOAT",
      "links": [
-      64,
-      66,
-      76
+      63,
+      65,
+      75
      ]
     },
     {
      "name": "take_seed",
      "type": "INT",
      "links": [
-      65
+      64
      ]
     },
     {
      "name": "still",
      "type": "IMAGE",
      "links": [
-      57
+      59,
+      60,
+      61
      ]
     },
     {
      "name": "has_still",
      "type": "BOOLEAN",
-     "links": [
-      59
-     ]
+     "links": []
     },
     {
      "name": "report",
@@ -3500,13 +3214,56 @@
   },
   {
    "id": 1062,
-   "type": "ComfySwitchNode",
+   "type": "YesOpenVoiceApproval",
    "pos": [
-    3410,
-    3068
+    3400,
+    477
    ],
    "size": [
-    270,
+    320,
+    140
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "link": 67
+    },
+    {
+     "name": "audio",
+     "type": "AUDIO",
+     "link": 68
+    }
+   ],
+   "outputs": [
+    {
+     "name": "audio",
+     "type": "AUDIO",
+     "links": [
+      70
+     ]
+    }
+   ],
+   "title": "Odsłuch zatwierdzony",
+   "properties": {
+    "Node name for S&R": "YesOpenVoiceApproval"
+   },
+   "widgets_values": [
+    false
+   ]
+  },
+  {
+   "id": 1063,
+   "type": "SaveAudioAdvanced",
+   "pos": [
+    3400,
+    687
+   ],
+   "size": [
+    300,
     130
    ],
    "flags": {},
@@ -3514,53 +3271,33 @@
    "mode": 0,
    "inputs": [
     {
-     "name": "on_false",
-     "type": "IMAGE",
-     "link": 58
-    },
-    {
-     "name": "on_true",
-     "type": "IMAGE",
-     "link": 57
-    },
-    {
-     "name": "switch",
-     "type": "BOOLEAN",
-     "link": 59,
-     "widget": {
-      "name": "switch"
-     }
+     "name": "audio",
+     "type": "AUDIO",
+     "link": 69
     }
    ],
-   "outputs": [
-    {
-     "name": "output",
-     "type": "IMAGE",
-     "links": [
-      60,
-      61,
-      62
-     ]
-    }
-   ],
-   "title": "Still: wybrany / z Z-Image",
+   "outputs": [],
+   "title": "Odsłuch kwestii",
    "properties": {
-    "Node name for S&R": "ComfySwitchNode"
+    "Node name for S&R": "SaveAudioAdvanced"
    },
    "widgets_values": [
-    false
-   ]
+    "yesopen/voice-review",
+    "flac"
+   ],
+   "color": "#8f4a52",
+   "bgcolor": "#282c34"
   },
   {
-   "id": 1064,
+   "id": 1065,
    "type": "YesOpenSaveTake",
    "pos": [
-    5381,
-    3664
+    6848,
+    497
    ],
    "size": [
     300,
-    120
+    140
    ],
    "flags": {},
    "order": 0,
@@ -3569,12 +3306,12 @@
     {
      "name": "project",
      "type": "YESOPEN_PROJECT",
-     "link": 94
+     "link": 93
     },
     {
      "name": "line",
      "type": "STRING",
-     "link": 95,
+     "link": 94,
      "widget": {
       "name": "line"
      }
@@ -3582,7 +3319,7 @@
     {
      "name": "video",
      "type": "VIDEO",
-     "link": 96
+     "link": 95
     }
    ],
    "outputs": [
@@ -3590,7 +3327,7 @@
      "name": "project",
      "type": "YESOPEN_PROJECT",
      "links": [
-      99
+      101
      ]
     },
     {
@@ -3604,15 +3341,105 @@
     "Node name for S&R": "YesOpenSaveTake"
    },
    "widgets_values": [
-    "l01"
+    "l01",
+    ""
    ]
   },
   {
-   "id": 1066,
+   "id": 1067,
+   "type": "YesOpenSaveMusic",
+   "pos": [
+    8818,
+    2355
+   ],
+   "size": [
+    300,
+    110
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "link": 99
+    },
+    {
+     "name": "audio",
+     "type": "AUDIO",
+     "link": 100
+    }
+   ],
+   "outputs": [
+    {
+     "name": "path",
+     "type": "STRING",
+     "links": [
+      102
+     ]
+    }
+   ],
+   "title": "Muzyka do projektu",
+   "properties": {
+    "Node name for S&R": "YesOpenSaveMusic"
+   },
+   "widgets_values": [
+    "bed"
+   ]
+  },
+  {
+   "id": 1068,
+   "type": "YesOpenJoinProduction",
+   "pos": [
+    9388,
+    1370
+   ],
+   "size": [
+    320,
+    130
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "link": 101
+    },
+    {
+     "name": "music",
+     "type": "STRING",
+     "link": 102
+    }
+   ],
+   "outputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "links": [
+      103
+     ]
+    },
+    {
+     "name": "report",
+     "type": "STRING",
+     "links": []
+    }
+   ],
+   "title": "Wszystkie ujęcia i muzyka",
+   "properties": {
+    "Node name for S&R": "YesOpenJoinProduction"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 1069,
    "type": "YesOpenGate",
    "pos": [
-    5995,
-    4406
+    9798,
+    1370
    ],
    "size": [
     320,
@@ -3625,7 +3452,7 @@
     {
      "name": "project",
      "type": "YESOPEN_PROJECT",
-     "link": 99
+     "link": 103
     }
    ],
    "outputs": [
@@ -3633,7 +3460,7 @@
      "name": "project",
      "type": "YESOPEN_PROJECT",
      "links": [
-      100
+      104
      ]
     }
    ],
@@ -3647,182 +3474,15 @@
    ]
   },
   {
-   "id": 1067,
+   "id": 1070,
    "type": "YesOpenBuildAssets",
    "pos": [
-    6405,
-    4406
+    10208,
+    1370
    ],
    "size": [
     300,
     90
-   ],
-   "flags": {},
-   "order": 0,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "project",
-     "type": "YESOPEN_PROJECT",
-     "link": 100
-    }
-   ],
-   "outputs": [
-    {
-     "name": "project",
-     "type": "YESOPEN_PROJECT",
-     "links": [
-      101
-     ]
-    },
-    {
-     "name": "log",
-     "type": "STRING",
-     "links": []
-    }
-   ],
-   "title": "Assety montażu",
-   "properties": {
-    "Node name for S&R": "YesOpenBuildAssets"
-   },
-   "widgets_values": []
-  },
-  {
-   "id": 1068,
-   "type": "YesOpenMakeEDL",
-   "pos": [
-    6795,
-    4406
-   ],
-   "size": [
-    300,
-    90
-   ],
-   "flags": {},
-   "order": 0,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "project",
-     "type": "YESOPEN_PROJECT",
-     "link": 101
-    }
-   ],
-   "outputs": [
-    {
-     "name": "project",
-     "type": "YESOPEN_PROJECT",
-     "links": [
-      102
-     ]
-    },
-    {
-     "name": "log",
-     "type": "STRING",
-     "links": []
-    }
-   ],
-   "title": "EDL",
-   "properties": {
-    "Node name for S&R": "YesOpenMakeEDL"
-   },
-   "widgets_values": []
-  },
-  {
-   "id": 1069,
-   "type": "YesOpenAssemble",
-   "pos": [
-    7185,
-    4406
-   ],
-   "size": [
-    300,
-    140
-   ],
-   "flags": {},
-   "order": 0,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "project",
-     "type": "YESOPEN_PROJECT",
-     "link": 102
-    }
-   ],
-   "outputs": [
-    {
-     "name": "project",
-     "type": "YESOPEN_PROJECT",
-     "links": [
-      104
-     ]
-    },
-    {
-     "name": "video",
-     "type": "VIDEO",
-     "links": [
-      103
-     ]
-    },
-    {
-     "name": "log",
-     "type": "STRING",
-     "links": []
-    }
-   ],
-   "title": "Render 9:16",
-   "properties": {
-    "Node name for S&R": "YesOpenAssemble"
-   },
-   "widgets_values": [
-    "9:16",
-    true
-   ]
-  },
-  {
-   "id": 1070,
-   "type": "SaveVideo",
-   "pos": [
-    7575,
-    4460
-   ],
-   "size": [
-    290,
-    560
-   ],
-   "flags": {},
-   "order": 0,
-   "mode": 0,
-   "inputs": [
-    {
-     "name": "video",
-     "type": "VIDEO",
-     "link": 103
-    }
-   ],
-   "outputs": [],
-   "title": "Podgląd 9:16",
-   "properties": {
-    "Node name for S&R": "SaveVideo"
-   },
-   "widgets_values": [
-    "yesopen/final-9x16",
-    "auto",
-    "auto"
-   ],
-   "color": "#8f4a52",
-   "bgcolor": "#282c34"
-  },
-  {
-   "id": 1071,
-   "type": "YesOpenGate",
-   "pos": [
-    8125,
-    4406
-   ],
-   "size": [
-    320,
-    120
    ],
    "flags": {},
    "order": 0,
@@ -3841,23 +3501,25 @@
      "links": [
       105
      ]
+    },
+    {
+     "name": "log",
+     "type": "STRING",
+     "links": []
     }
    ],
-   "title": "Bramka 5 · Montaż",
+   "title": "Assety montażu",
    "properties": {
-    "Node name for S&R": "YesOpenGate"
+    "Node name for S&R": "YesOpenBuildAssets"
    },
-   "widgets_values": [
-    "5 · Montaż",
-    false
-   ]
+   "widgets_values": []
   },
   {
-   "id": 1072,
-   "type": "YesOpenCropFormats",
+   "id": 1071,
+   "type": "YesOpenMakeEDL",
    "pos": [
-    8535,
-    4406
+    10598,
+    1370
    ],
    "size": [
     300,
@@ -3887,18 +3549,18 @@
      "links": []
     }
    ],
-   "title": "Formaty 4:5 i 1:1",
+   "title": "EDL",
    "properties": {
-    "Node name for S&R": "YesOpenCropFormats"
+    "Node name for S&R": "YesOpenMakeEDL"
    },
    "widgets_values": []
   },
   {
-   "id": 1073,
+   "id": 1072,
    "type": "YesOpenAssemble",
    "pos": [
-    8925,
-    4406
+    10988,
+    1370
    ],
    "size": [
     300,
@@ -3919,7 +3581,172 @@
      "name": "project",
      "type": "YESOPEN_PROJECT",
      "links": [
+      108
+     ]
+    },
+    {
+     "name": "video",
+     "type": "VIDEO",
+     "links": [
       107
+     ]
+    },
+    {
+     "name": "log",
+     "type": "STRING",
+     "links": []
+    }
+   ],
+   "title": "Render 9:16",
+   "properties": {
+    "Node name for S&R": "YesOpenAssemble"
+   },
+   "widgets_values": [
+    "9:16",
+    true
+   ]
+  },
+  {
+   "id": 1073,
+   "type": "SaveVideo",
+   "pos": [
+    11378,
+    1424
+   ],
+   "size": [
+    290,
+    560
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "video",
+     "type": "VIDEO",
+     "link": 107
+    }
+   ],
+   "outputs": [],
+   "title": "Podgląd 9:16",
+   "properties": {
+    "Node name for S&R": "SaveVideo"
+   },
+   "widgets_values": [
+    "yesopen/final-9x16",
+    "auto",
+    "auto"
+   ],
+   "color": "#8f4a52",
+   "bgcolor": "#282c34"
+  },
+  {
+   "id": 1074,
+   "type": "YesOpenGate",
+   "pos": [
+    11928,
+    1370
+   ],
+   "size": [
+    320,
+    120
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "link": 108
+    }
+   ],
+   "outputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "links": [
+      109
+     ]
+    }
+   ],
+   "title": "Bramka 5 · Montaż",
+   "properties": {
+    "Node name for S&R": "YesOpenGate"
+   },
+   "widgets_values": [
+    "5 · Montaż",
+    false
+   ]
+  },
+  {
+   "id": 1075,
+   "type": "YesOpenCropFormats",
+   "pos": [
+    12338,
+    1370
+   ],
+   "size": [
+    300,
+    90
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "link": 109
+    }
+   ],
+   "outputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "links": [
+      110
+     ]
+    },
+    {
+     "name": "log",
+     "type": "STRING",
+     "links": []
+    }
+   ],
+   "title": "Formaty 4:5 i 1:1",
+   "properties": {
+    "Node name for S&R": "YesOpenCropFormats"
+   },
+   "widgets_values": []
+  },
+  {
+   "id": 1076,
+   "type": "YesOpenAssemble",
+   "pos": [
+    12728,
+    1370
+   ],
+   "size": [
+    300,
+    140
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "link": 110
+    }
+   ],
+   "outputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "links": [
+      111
      ]
     },
     {
@@ -3943,11 +3770,11 @@
    ]
   },
   {
-   "id": 1074,
+   "id": 1077,
    "type": "YesOpenQAReport",
    "pos": [
-    9315,
-    4406
+    13118,
+    1370
    ],
    "size": [
     300,
@@ -3960,7 +3787,7 @@
     {
      "name": "project",
      "type": "YESOPEN_PROJECT",
-     "link": 107
+     "link": 111
     }
    ],
    "outputs": [
@@ -3968,14 +3795,14 @@
      "name": "project",
      "type": "YESOPEN_PROJECT",
      "links": [
-      109
+      113
      ]
     },
     {
      "name": "log",
      "type": "STRING",
      "links": [
-      108
+      112
      ]
     }
    ],
@@ -3989,11 +3816,143 @@
    ]
   },
   {
-   "id": 1075,
+   "id": 1078,
+   "type": "YesOpenQAReport",
+   "pos": [
+    13508,
+    1370
+   ],
+   "size": [
+    300,
+    140
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "link": 113
+    }
+   ],
+   "outputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "links": [
+      114
+     ]
+    },
+    {
+     "name": "log",
+     "type": "STRING",
+     "links": []
+    }
+   ],
+   "title": "QA 4:5",
+   "properties": {
+    "Node name for S&R": "YesOpenQAReport"
+   },
+   "widgets_values": [
+    "4:5",
+    false
+   ]
+  },
+  {
+   "id": 1079,
+   "type": "YesOpenQAReport",
+   "pos": [
+    14018,
+    1370
+   ],
+   "size": [
+    300,
+    140
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "link": 114
+    }
+   ],
+   "outputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "links": [
+      115
+     ]
+    },
+    {
+     "name": "log",
+     "type": "STRING",
+     "links": []
+    }
+   ],
+   "title": "QA 1:1",
+   "properties": {
+    "Node name for S&R": "YesOpenQAReport"
+   },
+   "widgets_values": [
+    "1:1",
+    false
+   ]
+  },
+  {
+   "id": 1080,
+   "type": "YesOpenQAReport",
+   "pos": [
+    14408,
+    1370
+   ],
+   "size": [
+    300,
+    140
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "link": 115
+    }
+   ],
+   "outputs": [
+    {
+     "name": "project",
+     "type": "YESOPEN_PROJECT",
+     "links": [
+      116
+     ]
+    },
+    {
+     "name": "log",
+     "type": "STRING",
+     "links": []
+    }
+   ],
+   "title": "QA 16:9",
+   "properties": {
+    "Node name for S&R": "YesOpenQAReport"
+   },
+   "widgets_values": [
+    "16:9",
+    false
+   ]
+  },
+  {
+   "id": 1081,
    "type": "PreviewAny",
    "pos": [
-    9705,
-    4460
+    13508,
+    1580
    ],
    "size": [
     420,
@@ -4006,7 +3965,7 @@
     {
      "name": "source",
      "type": "*",
-     "link": 108
+     "link": 112
     }
    ],
    "outputs": [
@@ -4023,11 +3982,11 @@
    "widgets_values": []
   },
   {
-   "id": 1076,
+   "id": 1082,
    "type": "YesOpenGate",
    "pos": [
-    11535,
-    4406
+    14968,
+    1370
    ],
    "size": [
     320,
@@ -4040,7 +3999,7 @@
     {
      "name": "project",
      "type": "YESOPEN_PROJECT",
-     "link": 109
+     "link": 116
     }
    ],
    "outputs": [
@@ -4048,7 +4007,7 @@
      "name": "project",
      "type": "YESOPEN_PROJECT",
      "links": [
-      110
+      117
      ]
     }
    ],
@@ -4062,11 +4021,11 @@
    ]
   },
   {
-   "id": 1077,
+   "id": 1083,
    "type": "YesOpenEncodeVariants",
    "pos": [
-    11945,
-    4406
+    15378,
+    1370
    ],
    "size": [
     300,
@@ -4079,7 +4038,7 @@
     {
      "name": "project",
      "type": "YESOPEN_PROJECT",
-     "link": 110
+     "link": 117
     }
    ],
    "outputs": [
@@ -4092,7 +4051,7 @@
      "name": "log",
      "type": "STRING",
      "links": [
-      111
+      118
      ]
     }
    ],
@@ -4103,11 +4062,11 @@
    "widgets_values": []
   },
   {
-   "id": 1078,
+   "id": 1084,
    "type": "PreviewAny",
    "pos": [
-    12335,
-    4426
+    15768,
+    1390
    ],
    "size": [
     420,
@@ -4120,7 +4079,7 @@
     {
      "name": "source",
      "type": "*",
-     "link": 111
+     "link": 118
     }
    ],
    "outputs": [
@@ -4139,28 +4098,12 @@
  ],
  "links": [
   [
-   2,
-   1001,
-   0,
-   1002,
-   0,
-   "AUDIO"
-  ],
-  [
    3,
    1004,
    0,
    1003,
    0,
    "IMAGE"
-  ],
-  [
-   6,
-   1012,
-   0,
-   1010,
-   0,
-   "VIDEO"
   ],
   [
    7,
@@ -4177,14 +4120,6 @@
    1021,
    0,
    "IMAGE"
-  ],
-  [
-   15,
-   1022,
-   0,
-   1024,
-   0,
-   "VIDEO"
   ],
   [
    16,
@@ -4215,14 +4150,6 @@
    1031,
    0,
    1030,
-   0,
-   "VIDEO"
-  ],
-  [
-   24,
-   1035,
-   0,
-   1034,
    0,
    "VIDEO"
   ],
@@ -4331,15 +4258,15 @@
    "INT"
   ],
   [
-   38,
-   1043,
+   40,
+   1055,
    0,
-   1047,
+   1056,
    0,
-   "AUDIO"
+   "YESOPEN_PROJECT"
   ],
   [
-   39,
+   41,
    1056,
    0,
    1057,
@@ -4347,7 +4274,7 @@
    "YESOPEN_PROJECT"
   ],
   [
-   40,
+   42,
    1057,
    0,
    1058,
@@ -4355,95 +4282,95 @@
    "YESOPEN_PROJECT"
   ],
   [
-   41,
-   1058,
+   43,
+   1057,
    0,
    1059,
    0,
    "YESOPEN_PROJECT"
   ],
   [
-   42,
-   1058,
-   0,
-   1060,
-   0,
-   "YESOPEN_PROJECT"
-  ],
-  [
-   43,
-   1060,
+   44,
+   1059,
    0,
    1001,
    1,
    "STRING"
   ],
   [
-   44,
-   1060,
+   45,
+   1059,
    1,
    1001,
    0,
    "AUDIO"
   ],
   [
-   45,
-   1060,
-   2,
-   1001,
-   2,
-   "FLOAT"
-  ],
-  [
    46,
-   1060,
-   3,
+   1059,
+   2,
    1001,
-   3,
+   2,
    "FLOAT"
   ],
   [
    47,
-   1060,
+   1059,
+   3,
+   1001,
+   3,
+   "FLOAT"
+  ],
+  [
+   48,
+   1059,
    4,
    1001,
    4,
    "INT"
   ],
   [
-   48,
-   1060,
+   49,
+   1059,
+   8,
+   1001,
+   5,
+   "COMBO"
+  ],
+  [
+   50,
+   1059,
    5,
    1004,
    0,
    "STRING"
   ],
   [
-   53,
-   1059,
+   55,
+   1058,
    0,
    1061,
    0,
    "YESOPEN_PROJECT"
   ],
   [
-   54,
-   1060,
+   56,
+   1059,
    7,
    1061,
    1,
    "STRING"
   ],
   [
-   55,
-   1060,
+   57,
+   1059,
    4,
    1061,
    3,
    "INT"
   ],
   [
-   56,
+   58,
    1001,
    0,
    1061,
@@ -4451,55 +4378,31 @@
    "AUDIO"
   ],
   [
-   57,
-   1061,
-   4,
-   1062,
-   1,
-   "IMAGE"
-  ],
-  [
-   58,
-   1004,
-   0,
-   1062,
-   0,
-   "IMAGE"
-  ],
-  [
    59,
    1061,
-   5,
-   1062,
-   2,
-   "BOOLEAN"
-  ],
-  [
-   60,
-   1062,
-   0,
+   4,
    1020,
    0,
    "IMAGE"
   ],
   [
-   61,
-   1062,
-   0,
+   60,
+   1061,
+   4,
    1012,
    0,
    "IMAGE"
   ],
   [
-   62,
-   1062,
-   0,
+   61,
+   1061,
+   4,
    1016,
    0,
    "IMAGE"
   ],
   [
-   63,
+   62,
    1061,
    1,
    1012,
@@ -4507,7 +4410,7 @@
    "STRING"
   ],
   [
-   64,
+   63,
    1061,
    2,
    1012,
@@ -4515,7 +4418,7 @@
    "FLOAT"
   ],
   [
-   65,
+   64,
    1061,
    3,
    1012,
@@ -4523,7 +4426,7 @@
    "INT"
   ],
   [
-   66,
+   65,
    1061,
    2,
    1016,
@@ -4531,7 +4434,7 @@
    "FLOAT"
   ],
   [
-   67,
+   66,
    1020,
    0,
    1031,
@@ -4539,138 +4442,146 @@
    "IMAGE"
   ],
   [
+   67,
+   1058,
+   0,
+   1062,
+   0,
+   "YESOPEN_PROJECT"
+  ],
+  [
    68,
    1061,
    0,
-   1049,
-   0,
+   1062,
+   1,
    "AUDIO"
   ],
   [
    69,
-   1025,
+   1061,
    0,
-   1049,
-   1,
+   1063,
+   0,
    "AUDIO"
   ],
   [
    70,
-   1048,
-   0,
-   1049,
-   2,
-   "BOOLEAN"
-  ],
-  [
-   71,
-   1049,
+   1062,
    0,
    1012,
    1,
    "AUDIO"
   ],
   [
-   72,
+   71,
    1012,
    0,
    1022,
+   0,
+   "VIDEO"
+  ],
+  [
+   72,
+   1022,
+   0,
+   1035,
    0,
    "VIDEO"
   ],
   [
    73,
-   1022,
-   0,
    1035,
+   0,
+   1049,
    0,
    "VIDEO"
   ],
   [
    74,
-   1035,
+   1043,
    0,
    1050,
    0,
-   "VIDEO"
+   "AUDIO"
   ],
   [
    75,
-   1043,
+   1061,
+   2,
+   1050,
+   1,
+   "FLOAT"
+  ],
+  [
+   76,
+   1050,
    0,
    1051,
    0,
    "AUDIO"
   ],
   [
-   76,
-   1061,
-   2,
-   1051,
-   1,
-   "FLOAT"
-  ],
-  [
    77,
-   1051,
-   0,
+   1049,
+   1,
    1052,
    0,
    "AUDIO"
   ],
   [
    78,
-   1050,
-   1,
-   1053,
+   1051,
    0,
+   1052,
+   1,
    "AUDIO"
   ],
   [
    79,
-   1052,
+   1049,
    0,
    1053,
-   1,
-   "AUDIO"
-  ],
-  [
-   80,
-   1050,
-   0,
-   1054,
    0,
    "IMAGE"
   ],
   [
-   81,
-   1050,
+   80,
+   1049,
    2,
-   1054,
+   1053,
    1,
    "FLOAT"
+  ],
+  [
+   81,
+   1052,
+   0,
+   1053,
+   2,
+   "AUDIO"
   ],
   [
    82,
    1053,
    0,
    1054,
-   2,
-   "AUDIO"
+   0,
+   "VIDEO"
   ],
   [
    83,
-   1054,
+   1005,
    0,
-   1055,
-   0,
-   "VIDEO"
+   1012,
+   4,
+   "INT"
   ],
   [
    84,
    1005,
    0,
-   1012,
+   1031,
    4,
    "INT"
   ],
@@ -4678,23 +4589,23 @@
    85,
    1005,
    0,
-   1031,
-   4,
+   1016,
+   2,
    "INT"
   ],
   [
    86,
-   1005,
+   1006,
    0,
-   1016,
-   2,
+   1012,
+   5,
    "INT"
   ],
   [
    87,
    1006,
    0,
-   1012,
+   1031,
    5,
    "INT"
   ],
@@ -4702,20 +4613,12 @@
    88,
    1006,
    0,
-   1031,
-   5,
-   "INT"
-  ],
-  [
-   89,
-   1006,
-   0,
    1016,
    3,
    "INT"
   ],
   [
-   90,
+   89,
    1008,
    0,
    1031,
@@ -4723,7 +4626,7 @@
    "INT"
   ],
   [
-   91,
+   90,
    1008,
    0,
    1016,
@@ -4731,7 +4634,7 @@
    "INT"
   ],
   [
-   92,
+   91,
    1008,
    0,
    1020,
@@ -4739,7 +4642,7 @@
    "INT"
   ],
   [
-   93,
+   92,
    1008,
    0,
    1022,
@@ -4747,48 +4650,48 @@
    "INT"
   ],
   [
-   94,
-   1059,
+   93,
+   1058,
    0,
-   1064,
+   1065,
    0,
    "YESOPEN_PROJECT"
   ],
   [
-   95,
-   1060,
+   94,
+   1059,
    7,
-   1064,
+   1065,
    1,
    "STRING"
   ],
   [
-   96,
-   1012,
+   95,
+   1035,
    0,
-   1064,
+   1065,
    2,
    "VIDEO"
   ],
   [
    99,
-   1064,
+   1057,
    0,
-   1066,
+   1067,
    0,
    "YESOPEN_PROJECT"
   ],
   [
    100,
-   1066,
+   1043,
    0,
    1067,
-   0,
-   "YESOPEN_PROJECT"
+   1,
+   "AUDIO"
   ],
   [
    101,
-   1067,
+   1065,
    0,
    1068,
    0,
@@ -4796,6 +4699,14 @@
   ],
   [
    102,
+   1067,
+   0,
+   1068,
+   1,
+   "STRING"
+  ],
+  [
+   103,
    1068,
    0,
    1069,
@@ -4803,23 +4714,23 @@
    "YESOPEN_PROJECT"
   ],
   [
-   103,
-   1069,
-   1,
-   1070,
-   0,
-   "VIDEO"
-  ],
-  [
    104,
    1069,
    0,
-   1071,
+   1070,
    0,
    "YESOPEN_PROJECT"
   ],
   [
    105,
+   1070,
+   0,
+   1071,
+   0,
+   "YESOPEN_PROJECT"
+  ],
+  [
+   106,
    1071,
    0,
    1072,
@@ -4827,39 +4738,39 @@
    "YESOPEN_PROJECT"
   ],
   [
-   106,
-   1072,
-   0,
-   1073,
-   0,
-   "YESOPEN_PROJECT"
-  ],
-  [
    107,
+   1072,
+   1,
    1073,
    0,
-   1074,
-   0,
-   "YESOPEN_PROJECT"
+   "VIDEO"
   ],
   [
    108,
-   1074,
-   1,
-   1075,
+   1072,
    0,
-   "STRING"
+   1074,
+   0,
+   "YESOPEN_PROJECT"
   ],
   [
    109,
    1074,
    0,
-   1076,
+   1075,
    0,
    "YESOPEN_PROJECT"
   ],
   [
    110,
+   1075,
+   0,
+   1076,
+   0,
+   "YESOPEN_PROJECT"
+  ],
+  [
+   111,
    1076,
    0,
    1077,
@@ -4867,10 +4778,58 @@
    "YESOPEN_PROJECT"
   ],
   [
-   111,
+   112,
    1077,
    1,
+   1081,
+   0,
+   "STRING"
+  ],
+  [
+   113,
+   1077,
+   0,
    1078,
+   0,
+   "YESOPEN_PROJECT"
+  ],
+  [
+   114,
+   1078,
+   0,
+   1079,
+   0,
+   "YESOPEN_PROJECT"
+  ],
+  [
+   115,
+   1079,
+   0,
+   1080,
+   0,
+   "YESOPEN_PROJECT"
+  ],
+  [
+   116,
+   1080,
+   0,
+   1082,
+   0,
+   "YESOPEN_PROJECT"
+  ],
+  [
+   117,
+   1082,
+   0,
+   1083,
+   0,
+   "YESOPEN_PROJECT"
+  ],
+  [
+   118,
+   1083,
+   1,
+   1084,
    0,
    "STRING"
   ]
@@ -4882,8 +4841,8 @@
    "bounding": [
     -60,
     -120,
-    13605,
-    5250
+    16358,
+    3861
    ],
    "color": "#3e4451",
    "font_size": 54,
@@ -4893,9 +4852,9 @@
    "title": "0-2 · Projekt, referencja, scenariusz",
    "bounding": [
     0,
-    2606,
-    1650,
-    736
+    0,
+    1620,
+    785
    ],
    "color": "#5c6370",
    "font_size": 30,
@@ -4905,10 +4864,10 @@
   {
    "title": "4a · Kwestia (Chatterbox Multilingual)",
    "bounding": [
-    1886,
-    2606,
-    879,
-    727
+    1900,
+    0,
+    506,
+    736
    ],
    "color": "#98c379",
    "font_size": 30,
@@ -4918,10 +4877,10 @@
   {
    "title": "3 · Still postaci (Z-Image Turbo)",
    "bounding": [
-    1886,
-    1166,
+    1900,
+    1154,
     880,
-    820
+    766
    ],
    "color": "#61afef",
    "font_size": 30,
@@ -4931,10 +4890,10 @@
   {
    "title": "USTAWIENIA SKECZU (wspólne)",
    "bounding": [
-    2936,
-    1166,
-    1221,
-    926
+    2940,
+    1154,
+    830,
+    766
    ],
    "color": "#c678dd",
    "font_size": 30,
@@ -4944,10 +4903,10 @@
   {
    "title": "4a · Dopasowanie kwestii i still ujęcia",
    "bounding": [
-    2936,
-    2606,
-    794,
-    642
+    2940,
+    0,
+    830,
+    867
    ],
    "color": "#98c379",
    "font_size": 30,
@@ -4957,10 +4916,10 @@
   {
    "title": "4b · Mówiąca postać, lip sync (LTX-2.3)",
    "bounding": [
-    4481,
-    2606,
-    1250,
-    1424
+    4006,
+    0,
+    500,
+    986
    ],
    "color": "#e5c07b",
    "font_size": 30,
@@ -4970,8 +4929,8 @@
   {
    "title": "4b · MiniMax H3 (wyciszony: tylko za zgodą MiniMax)",
    "bounding": [
-    4481,
-    1166,
+    4006,
+    1154,
     960,
     910
    ],
@@ -4983,8 +4942,8 @@
   {
    "title": "3b · Wariant pozy / rekwizytu (Qwen-Image-Edit 2511)",
    "bounding": [
-    4481,
-    0,
+    4006,
+    2675,
     940,
     1006
    ],
@@ -4996,10 +4955,10 @@
   {
    "title": "4d · Upscale (SeedVR2 3B)",
    "bounding": [
-    5945,
-    2606,
-    930,
-    1047
+    5158,
+    0,
+    550,
+    896
    ],
    "color": "#d19a66",
    "font_size": 30,
@@ -5009,8 +4968,8 @@
   {
    "title": "4a · Rozmowa dwóch głosów (Chatterbox)",
    "bounding": [
-    2936,
-    4190,
+    0,
+    2675,
     1221,
     681
    ],
@@ -5022,10 +4981,10 @@
   {
    "title": "4b · Cichy ruch / B-roll (LTX-2.5)",
    "bounding": [
-    5945,
-    1166,
+    5158,
+    1154,
     980,
-    936
+    951
    ],
    "color": "#e5c07b",
    "font_size": 30,
@@ -5035,10 +4994,10 @@
   {
    "title": "4d · Interpolacja klatek (FILM)",
    "bounding": [
-    8075,
-    2606,
-    890,
-    697
+    6298,
+    0,
+    900,
+    687
    ],
    "color": "#d19a66",
    "font_size": 30,
@@ -5048,10 +5007,10 @@
   {
    "title": "4c · Podkład muzyczny (ACE-Step 1.5 XL Turbo)",
    "bounding": [
-    8075,
-    1166,
-    3250,
-    1250
+    6298,
+    1154,
+    2870,
+    1361
    ],
    "color": "#c678dd",
    "font_size": 30,
@@ -5061,10 +5020,10 @@
   {
    "title": "5a · Podgląd ujęcia z muzyką",
    "bounding": [
-    11485,
-    2606,
-    2000,
-    827
+    9338,
+    0,
+    2010,
+    821
    ],
    "color": "#56b6c2",
    "font_size": 30,
@@ -5074,9 +5033,9 @@
   {
    "title": "5 · Montaż (assemble.py)",
    "bounding": [
-    5945,
-    4190,
-    1970,
+    9338,
+    1154,
+    2380,
     880
    ],
    "color": "#56b6c2",
@@ -5087,10 +5046,10 @@
   {
    "title": "6 · Formaty i QA",
    "bounding": [
-    8075,
-    4190,
-    2100,
-    620
+    11878,
+    1154,
+    2880,
+    776
    ],
    "color": "#61afef",
    "font_size": 30,
@@ -5100,8 +5059,8 @@
   {
    "title": "7 · Dostawa",
    "bounding": [
-    11485,
-    4190,
+    14918,
+    1154,
     1320,
     526
    ],
@@ -5124,8 +5083,8 @@
    {
     "id": 1,
     "pos": [
-     9723,
-     1874
+     7946,
+     1862
     ],
     "linkIds": [
      25
@@ -5134,8 +5093,8 @@
    {
     "id": 2,
     "pos": [
-     8631,
-     1433
+     6854,
+     1421
     ],
     "linkIds": [
      28
@@ -5144,8 +5103,8 @@
    {
     "id": 3,
     "pos": [
-     9245,
-     1433
+     7468,
+     1421
     ],
     "linkIds": [
      28
@@ -5155,8 +5114,8 @@
    {
     "id": 4,
     "pos": [
-     9305,
-     1411
+     7528,
+     1399
     ],
     "linkIds": [
      30
@@ -5165,8 +5124,8 @@
    {
     "id": 5,
     "pos": [
-     9569,
-     1411
+     7792,
+     1399
     ],
     "linkIds": [
      30
@@ -5176,8 +5135,8 @@
    {
     "id": 6,
     "pos": [
-     8439,
-     1920
+     6662,
+     1908
     ],
     "linkIds": [
      36
@@ -5186,8 +5145,8 @@
    {
     "id": 7,
     "pos": [
-     8675,
-     1389
+     6898,
+     1377
     ],
     "linkIds": [
      37
@@ -5196,8 +5155,8 @@
    {
     "id": 8,
     "pos": [
-     9525,
-     1389
+     7748,
+     1377
     ],
     "linkIds": [
      37
@@ -5207,28 +5166,28 @@
    {
     "id": 9,
     "pos": [
-     1804,
-     2935
-    ],
-    "linkIds": [
-     43
-    ]
-   },
-   {
-    "id": 10,
-    "pos": [
-     1848,
-     2869
+     1774,
+     338
     ],
     "linkIds": [
      44
     ]
    },
    {
+    "id": 10,
+    "pos": [
+     1818,
+     272
+    ],
+    "linkIds": [
+     45
+    ]
+   },
+   {
     "id": 11,
     "pos": [
-     1644,
-     3124
+     1862,
+     414
     ],
     "linkIds": [
      46
@@ -5237,8 +5196,8 @@
    {
     "id": 12,
     "pos": [
-     1732,
-     3164
+     1658,
+     567
     ],
     "linkIds": [
      48
@@ -5247,231 +5206,337 @@
    {
     "id": 13,
     "pos": [
-     1760,
-     2566
+     1790,
+     647
     ],
     "linkIds": [
-     53,
-     94
+     49
     ]
    },
    {
     "id": 14,
     "pos": [
-     2606,
-     2566
+     1730,
+     -40
     ],
     "linkIds": [
-     53
-    ],
-    "parentId": 13
+     55,
+     67,
+     93
+    ]
    },
    {
     "id": 15,
     "pos": [
-     2112,
-     2544
+     2630,
+     -40
     ],
     "linkIds": [
-     54,
-     95
-    ]
+     55
+    ],
+    "parentId": 14
    },
    {
     "id": 16,
     "pos": [
-     2650,
-     2544
+     2082,
+     -62
     ],
     "linkIds": [
-     54
-    ],
-    "parentId": 15
+     56,
+     94
+    ]
    },
    {
     "id": 17,
     "pos": [
-     2024,
-     2522
+     2718,
+     -62
     ],
     "linkIds": [
-     55
-    ]
+     56
+    ],
+    "parentId": 16
    },
    {
     "id": 18,
     "pos": [
-     2694,
-     2522
-    ],
-    "linkIds": [
-     55
-    ],
-    "parentId": 17
-   },
-   {
-    "id": 19,
-    "pos": [
-     3350,
-     2929
+     1746,
+     -84
     ],
     "linkIds": [
      57
     ]
    },
    {
-    "id": 20,
+    "id": 19,
     "pos": [
-     3615,
-     2889
+     3720,
+     338
     ],
     "linkIds": [
-     64
+     59,
+     61
+    ]
+   },
+   {
+    "id": 20,
+    "pos": [
+     3896,
+     278
+    ],
+    "linkIds": [
+     62
     ]
    },
    {
     "id": 21,
     "pos": [
-     3571,
-     2909
+     3808,
+     298
     ],
     "linkIds": [
+     63,
      65
     ]
    },
    {
     "id": 22,
     "pos": [
-     3975,
-     2889
+     3764,
+     318
+    ],
+    "linkIds": [
+     64
+    ]
+   },
+   {
+    "id": 23,
+    "pos": [
+     5004,
+     2903
     ],
     "linkIds": [
      66
     ]
    },
    {
-    "id": 23,
+    "id": 24,
     "pos": [
-     4151,
-     1964
+     2220,
+     -40
+    ],
+    "linkIds": [
+     67
+    ],
+    "parentId": 14
+   },
+   {
+    "id": 25,
+    "pos": [
+     3852,
+     489
     ],
     "linkIds": [
      70
     ]
    },
    {
-    "id": 24,
+    "id": 26,
     "pos": [
-     11219,
-     1670
+     4124,
+     -106
     ],
     "linkIds": [
      75
     ]
    },
    {
-    "id": 25,
-    "pos": [
-     12285,
-     2887
-    ],
-    "linkIds": [
-     80
-    ]
-   },
-   {
-    "id": 26,
-    "pos": [
-     12651,
-     2887
-    ],
-    "linkIds": [
-     80
-    ],
-    "parentId": 25
-   },
-   {
     "id": 27,
     "pos": [
-     12329,
-     2865
+     10168,
+     245
     ],
     "linkIds": [
-     81
+     79
     ]
    },
    {
     "id": 28,
     "pos": [
-     12607,
-     2865
+     10504,
+     245
     ],
     "linkIds": [
-     81
+     79
     ],
     "parentId": 27
    },
    {
     "id": 29,
     "pos": [
-     4786,
-     1126
+     10212,
+     223
     ],
     "linkIds": [
-     85
+     80
     ]
    },
    {
     "id": 30,
     "pos": [
-     4808,
-     1104
+     10460,
+     223
+    ],
+    "linkIds": [
+     80
+    ],
+    "parentId": 29
+   },
+   {
+    "id": 31,
+    "pos": [
+     4056,
+     1114
+    ],
+    "linkIds": [
+     84
+    ]
+   },
+   {
+    "id": 32,
+    "pos": [
+     4960,
+     1114
+    ],
+    "linkIds": [
+     84
+    ],
+    "parentId": 31
+   },
+   {
+    "id": 33,
+    "pos": [
+     3924,
+     636
+    ],
+    "linkIds": [
+     86
+    ]
+   },
+   {
+    "id": 34,
+    "pos": [
+     3924,
+     1092
+    ],
+    "linkIds": [
+     87
+    ]
+   },
+   {
+    "id": 35,
+    "pos": [
+     4916,
+     1092
+    ],
+    "linkIds": [
+     87
+    ],
+    "parentId": 34
+   },
+   {
+    "id": 36,
+    "pos": [
+     3924,
+     1686
     ],
     "linkIds": [
      88
     ]
    },
    {
-    "id": 31,
+    "id": 37,
     "pos": [
-     4830,
-     1082
+     4012,
+     1070
+    ],
+    "linkIds": [
+     89
+    ]
+   },
+   {
+    "id": 38,
+    "pos": [
+     4872,
+     1070
+    ],
+    "linkIds": [
+     89
+    ],
+    "parentId": 37
+   },
+   {
+    "id": 39,
+    "pos": [
+     4012,
+     1742
     ],
     "linkIds": [
      90
     ]
    },
    {
-    "id": 32,
+    "id": 40,
     "pos": [
-     4588,
-     2478
+     4012,
+     3583
     ],
     "linkIds": [
-     93
+     91
     ]
    },
    {
-    "id": 33,
+    "id": 41,
     "pos": [
-     3213,
-     2566
+     3731,
+     -128
+    ],
+    "linkIds": [
+     92
+    ]
+   },
+   {
+    "id": 42,
+    "pos": [
+     5532,
+     -40
+    ],
+    "linkIds": [
+     93
+    ],
+    "parentId": 14
+   },
+   {
+    "id": 43,
+    "pos": [
+     5488,
+     -62
     ],
     "linkIds": [
      94
     ],
-    "parentId": 13
+    "parentId": 16
    },
    {
-    "id": 34,
+    "id": 44,
     "pos": [
-     3257,
-     2544
+     1160,
+     1048
     ],
     "linkIds": [
-     95
-    ],
-    "parentId": 15
+     99
+    ]
    }
   ],
   "linkExtensions": [
@@ -5496,11 +5561,11 @@
     "parentId": 8
    },
    {
-    "id": 43,
+    "id": 44,
     "parentId": 9
    },
    {
-    "id": 44,
+    "id": 45,
     "parentId": 10
    },
    {
@@ -5512,24 +5577,40 @@
     "parentId": 12
    },
    {
-    "id": 53,
-    "parentId": 14
-   },
-   {
-    "id": 54,
-    "parentId": 16
+    "id": 49,
+    "parentId": 13
    },
    {
     "id": 55,
-    "parentId": 18
+    "parentId": 15
+   },
+   {
+    "id": 56,
+    "parentId": 17
    },
    {
     "id": 57,
+    "parentId": 18
+   },
+   {
+    "id": 59,
     "parentId": 19
    },
    {
-    "id": 64,
+    "id": 61,
+    "parentId": 19
+   },
+   {
+    "id": 62,
     "parentId": 20
+   },
+   {
+    "id": 63,
+    "parentId": 21
+   },
+   {
+    "id": 64,
+    "parentId": 22
    },
    {
     "id": 65,
@@ -5537,47 +5618,71 @@
    },
    {
     "id": 66,
-    "parentId": 22
-   },
-   {
-    "id": 70,
     "parentId": 23
    },
    {
-    "id": 75,
+    "id": 67,
     "parentId": 24
    },
    {
-    "id": 80,
+    "id": 70,
+    "parentId": 25
+   },
+   {
+    "id": 75,
     "parentId": 26
    },
    {
-    "id": 81,
+    "id": 79,
     "parentId": 28
    },
    {
-    "id": 85,
-    "parentId": 29
-   },
-   {
-    "id": 88,
+    "id": 80,
     "parentId": 30
    },
    {
-    "id": 90,
-    "parentId": 31
-   },
-   {
-    "id": 93,
+    "id": 84,
     "parentId": 32
    },
    {
-    "id": 94,
+    "id": 86,
     "parentId": 33
    },
    {
-    "id": 95,
-    "parentId": 34
+    "id": 87,
+    "parentId": 35
+   },
+   {
+    "id": 88,
+    "parentId": 36
+   },
+   {
+    "id": 89,
+    "parentId": 38
+   },
+   {
+    "id": 90,
+    "parentId": 39
+   },
+   {
+    "id": 91,
+    "parentId": 40
+   },
+   {
+    "id": 92,
+    "parentId": 41
+   },
+   {
+    "id": 93,
+    "parentId": 42
+   },
+   {
+    "id": 94,
+    "parentId": 43
+   },
+   {
+    "id": 99,
+    "parentId": 44
    }
   ]
  },
