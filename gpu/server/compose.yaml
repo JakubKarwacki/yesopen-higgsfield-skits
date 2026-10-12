@@ -14,9 +14,15 @@ services:
       - ${YESOPEN_DATA:-/srv/yesopen}/comfy/input:/opt/ComfyUI/input
       - ${YESOPEN_DATA:-/srv/yesopen}/comfy/output:/opt/ComfyUI/output
       - ${YESOPEN_DATA:-/srv/yesopen}/comfy/user:/opt/ComfyUI/user
+      # live refresh of saved workflows in every open browser (gpu/server/live_refresh; copied here by docker/comfy-link.sh)
+      - ${YESOPEN_DATA:-/srv/yesopen}/comfy/live_refresh:/opt/ComfyUI/custom_nodes/yesopen_live_refresh:ro
+      # the YesOpen pipeline nodes (gpu/server/yesopen_pipeline) and the skit projects they read and write
+      - ${YESOPEN_DATA:-/srv/yesopen}/comfy/yesopen_pipeline:/opt/ComfyUI/custom_nodes/yesopen_pipeline:ro
+      - ${YESOPEN_DATA:-/srv/yesopen}/projects:/work
     environment:
       # every weight comes from fetch_models.py; nothing may download behind our back at run time
       HF_HUB_OFFLINE: "1"
+      YESOPEN_EDITOR_URL: http://editor-api:8190
     command: ${COMFY_COMMAND:-python main.py --listen 0.0.0.0 --port 8188 --disable-auto-launch}
     shm_size: 16gb
     deploy:
@@ -32,6 +38,20 @@ services:
       timeout: 10s
       retries: 5
       start_period: 180s
+
+  # the editor as a service for the YesOpen nodes: runs the skill's scripts (assemble.py, qa_report.py, ...) on a
+  # project in /work when ComfyUI asks (gpu/editor/api.py); on the compose network only, no published port
+  editor-api:
+    build: ../editor
+    image: yesopen-editor:latest
+    restart: unless-stopped
+    working_dir: /work
+    command: ["python3", "/opt/editor-api/api.py"]
+    volumes:
+      - ${YESOPEN_DATA:-/srv/yesopen}/projects:/work
+      - ${YESOPEN_DATA:-/srv/yesopen}/skill:/skill:ro
+      - ${YESOPEN_DATA:-/srv/yesopen}/cache/whisper:/root/.cache/whisper
+      - ../editor/api.py:/opt/editor-api/api.py:ro
 
   editor:
     build: ../editor

@@ -102,6 +102,48 @@ The skill already points here from `SKILL.md`. If Claude tries bare `python3` or
 Ordering a GPU bills from that moment. `gpu up` (and `start`) without `--yes` only shows the plan; with `--yes` it
 orders the machine and, if a kept disk named `yesopen-gpu-disk` exists, waits for a free card in the disk's location.
 
+## ComfyUI of the GPU machine in your browser
+
+With a machine running (`scripts\skill.ps1 nebius-up`, or `gpu start --yes` on Verda) and the secrets unlocked:
+
+```powershell
+docker compose --profile link up -d comfy-link      # open http://127.0.0.1:8188
+docker compose rm -sf comfy-link                    # stop the tunnel
+```
+
+The `comfy-link` service reads the machine's address from `state.json`, keeps an SSH tunnel to its ComfyUI and copies
+the 15 workflows of `gpu/workflows/ui` into the machine's ComfyUI (panel Workflows, key `W`). It follows a new address
+by itself after the next session. It orders and deletes nothing: the machine is ended with `nebius-down` / `gpu stop`.
+**Live refresh.** Every browser showing a workflow reloads it when its saved file changes on the machine (a toast says
+"Workflow odświeżony", the viewer's zoom and position stay). A tab with unsaved changes of its own is never
+overwritten: it only gets a message. This is the small extension in `gpu/server/live_refresh` (it watches the
+workflows folder and sends the event `yesopen.workflow_changed`); `comfy-link` copies it to the machine and
+`gpu/server/compose.yaml` mounts it, so it is active from ComfyUI's next start. Edit a workflow in the repo, rebuild
+it with `python3 gpu/tools/build_pipeline_graph.py` and restart `comfy-link` (it syncs the files): all open screens
+update by themselves. Saving in the ComfyUI UI (`Ctrl+S`) refreshes the other open tabs the same way.
+**Busy badge.** A badge at the top of every tab (`gpu/server/live_refresh/web/busy_indicator.js`) reads ComfyUI's queue: green "Wolne" = nobody generates, amber = you do, red = another browser does (your Run would queue behind it). Alt+R reloads the open workflow from the server. One "Run" runs the whole GPU pipeline of `yesopen-skit-pipeline` (MiniMax H3 is muted: it needs the vendor's written consent).
+
+**The whole pipeline in one graph.** `yesopen-skit-pipeline` runs a skit project from its script to the delivered files. The YesOpen nodes (`gpu/server/yesopen_pipeline`, mounted into ComfyUI by `compose.yaml`) read the project in `/srv/yesopen/projects/<project>` (`gpu.py push <project>`; the browser shows it as `/work/<project>`), feed one line of `lines.json` into Chatterbox and Z-Image, fit the recorded line (`fit_lines.py`), film the take to it with the project's prompt, length, seed and picked still, and save every result under the skill's names (`voice/`, `lines/`, `takes/`, `stills/`, `music/`). After gate 4 the same graph runs the edit (`build_assets.py`, `make_edl.py`, `assemble.py`), after gate 5 the formats and QA, after gate 6 the delivery copies (`encode_variants.py`). Those scripts run in the `editor-api` service (`gpu/editor/api.py`, the editor image: the same ffmpeg, Python and Whisper as on the Mac), on the compose network only. A gate passes the project on only when its `approved` switch is on; the reference (phase 1) stays on your computer and never reaches the server. `comfy-link` copies the nodes, the service and the skill's scripts to the machine; ComfyUI loads new nodes at its next start.
+
+**Theme and layout.** `theme.js` installs the One Dark colour palette (VS Code) and selects it on this server, and sets JetBrains Mono (the Nerd Font build when installed, else the web font) with bold node titles and brighter labels. In the pipeline the talking take speaks the Chatterbox line, or the two-voice dialog when "Rozmowa zamiast kwestii" is on in the settings panel; "5a · Podgląd ujęcia z muzyką" mixes the finished take with the music bed (cut to the take, 12 dB down) for a quick listen. The graph's layout and orthogonal wiring come from `gpu/tools/build_pipeline_graph.py` + `graph_layout.py`, using node and socket positions measured in the browser (`gpu/tools/measure_geometry.js` → `comfy_geometry.json`); measure again after changing node sizes, templates or the theme. Links draw at right angles only with the link render mode "Straight" (Settings → Lite Graph → Link Render Mode).
+
+The skill's own commands use the same tunnel from inside the Docker network when you point them at it, for example
+`docker compose run --rm --no-deps -T -e GPU_COMFY_URL=http://comfy-link:8188 skill python3 gpu/client/gpu.py health`
+(also `batch` and `run`); without it, `gpu start` opens its own tunnel as before.
+ComfyUI has no login, so the port is published on 127.0.0.1 only. A colleague on the same network opens it at your
+computer's address: start the service with `COMFY_LINK_BIND` set to your LAN address (not `0.0.0.0`, which would also
+open every other adapter), for example
+
+```powershell
+$env:COMFY_LINK_BIND = '192.168.1.84'     # ipconfig: the IPv4 address of your Ethernet / Wi-Fi
+docker compose --profile link up -d comfy-link      # colleague: http://192.168.1.84:8188
+```
+
+Windows Firewall must allow Docker Desktop's inbound connection on a private network (a network marked Public blocks it),
+and the colleague can then run jobs on the machine you pay for: share the address only with people you trust, and stop
+the service (`docker compose rm -sf comfy-link`) when you are done. Over SSH, with his own key on the machine, still works:
+`ssh -N -L 8188:127.0.0.1:8188 <user>@<address>`.
+
 ## 6. Update
 
 ```powershell

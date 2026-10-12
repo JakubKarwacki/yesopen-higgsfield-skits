@@ -27,6 +27,32 @@ services:
     stdin_open: true
     tty: true
 
+  # ComfyUI of the running GPU machine (Verda or Nebius) in your browser: http://127.0.0.1:8188. Follows the address in
+  # state.json, puts the skill's workflows into the machine's ComfyUI. Started on purpose, not by a plain `up`:
+  #   docker compose --profile link up -d comfy-link        (stop: docker compose rm -sf comfy-link)
+  # ComfyUI has no login, so the port is bound to this computer only. Orders and deletes nothing.
+  comfy-link:
+    profiles: [link]
+    image: yesopen-skill:local
+    working_dir: /skill
+    command: ["bash", "/skill/docker/comfy-link.sh"]
+    restart: unless-stopped
+    ports:
+      # 127.0.0.1 = this computer only. For colleagues on the same network set COMFY_LINK_BIND to this computer's LAN
+      # address for one run: $env:COMFY_LINK_BIND='192.168.1.84'; docker compose --profile link up -d comfy-link
+      - "${COMFY_LINK_BIND:-127.0.0.1}:8188:8188"
+    environment:
+      SECRETS_URL: http://secrets:8080
+      VERDA_CLIENT_ID:
+      VERDA_CLIENT_SECRET:
+      YESOPEN_GPU_SSH_KEY:
+      YESOPEN_GPU_SSH_KEY_PUB:
+    volumes:
+      - .:/skill
+      - gpu-home:/root/.config/yesopen-gpu
+    depends_on: [secrets]
+    networks: [secrets]
+
   # Holds the secrets in memory only. `scripts\skill.ps1 unlock` signs you in with your GitHub account and pulls them
   # from the private secrets repo (you must be its collaborator); `scripts\skill.ps1 lock` wipes them.
   # No published ports: only containers on the `secrets` network reach it.

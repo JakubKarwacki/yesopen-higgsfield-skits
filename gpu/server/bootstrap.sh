@@ -42,7 +42,7 @@ sshd -T 2>/dev/null | grep -E '^(passwordauthentication|permitrootlogin|kbdinter
 sshd -T 2>/dev/null | grep -qx 'passwordauthentication no' || echo "WARNING: SSH still accepts passwords, check /etc/ssh/sshd_config.d"
 
 step "3/6 folders"
-mkdir -p "$ROOT"/{models,comfy/input,comfy/output,comfy/user,projects,skill,cache/whisper}
+mkdir -p "$ROOT"/{models,comfy/input,comfy/output,comfy/user,comfy/live_refresh,comfy/yesopen_pipeline,projects,skill,cache/whisper}
 chmod 700 "$ROOT"
 df -h "$ROOT" | tail -1
 
@@ -60,7 +60,8 @@ if ! wait "$build"; then tail -40 "$ROOT/build.log"; exit 1; fi
 echo "images built"
 
 step "5/6 ComfyUI"
-docker compose up -d comfyui
+# editor-api: the skill's scripts for the YesOpen nodes in ComfyUI (montage, formats, QA, delivery)
+docker compose up -d comfyui editor-api
 for _ in $(seq 1 90); do
   curl -fsS http://127.0.0.1:8188/system_stats >/dev/null 2>&1 && break
   sleep 5
