@@ -82,7 +82,9 @@ Serwer GPU (`gpu`):
 
 - **Zdjęcia startowe:** Z-Image ze wstępem o kadrze, 4 kandydatów na postać (`gpu_batches.py stills`); powracające postacie z `assets/cast/`.
 - **Głos:** Chatterbox Multilingual V3 dla obsługiwanych języków, głos sklonowany z próbki w `voices/`; każda kwestia dwa razy, potem `fit_lines.py` sprawdza słowa i przycina.
-- **Ujęcia z mową:** LTX-2.3 do gotowej kwestii, jedno ujęcie na kwestię; kadr się nie zmienia, telefon tyłem do kamery.
+- **Ujęcia z mową:** MiniMax H3 (`h3-talk`) do gotowego, zatwierdzonego audio; `take.model: "h3"`, jedno ujęcie na kwestię, zgodnie z START/AKCJA/END/HOLD.
+- **Alternatywa do testów:** Wan 3.0 hostowany lokalnie, po potwierdzeniu oficjalnych wag, licencji i runtime; porównanie z MiniMax na dysku dev.
+- **Stan integracji:** batch API H3 jest dostępny; główny graf ComfyUI i domyślne ustawienia kodu wymagają migracji ([silniki wideo](../references/video-models.md)).
 - **Montaż:** skrypty skilla (`make_edl.py`, `assemble.py`), wyłącznie zamówione formaty z `project.json`.
 - **Szacunkowy koszt:** minuty GPU z `gpu_batches.py estimate` i czas całej sesji razy cena maszyny za godzinę; koniec pracy serwera zgodnie z bieżącą dyspozycją, pobraniem materiałów i sprawdzeniem wspólnej kolejki.
 

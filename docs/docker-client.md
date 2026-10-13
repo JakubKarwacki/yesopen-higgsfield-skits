@@ -122,7 +122,7 @@ workflows folder and sends the event `yesopen.workflow_changed`); `comfy-link` c
 `gpu/server/compose.yaml` mounts it, so it is active from ComfyUI's next start. Edit a workflow in the repo, rebuild
 it with `python3 gpu/tools/build_pipeline_graph.py` and restart `comfy-link` (it syncs the files): all open screens
 update by themselves. Saving in the ComfyUI UI (`Ctrl+S`) refreshes the other open tabs the same way.
-**Busy badge.** A badge at the top of every tab (`gpu/server/live_refresh/web/busy_indicator.js`) reads ComfyUI's queue: green "Wolne" = nobody generates, amber = you do, red = another browser does (your Run would queue behind it). Alt+R reloads the open workflow from the server. One "Run" runs the whole GPU pipeline of `yesopen-skit-pipeline` (MiniMax H3 is muted: it needs the vendor's written consent).
+**Busy badge.** A badge at the top of every tab (`gpu/server/live_refresh/web/busy_indicator.js`) reads ComfyUI's queue: green "Wolne" = nobody generates, amber = you do, red = another browser does (your Run would queue behind it). Alt+R reloads the open workflow from the server. The project's selected video engine is MiniMax H3, while the current graphical production branch still needs migration. Use the explicit H3 API batch from [gpu-engine.md](../references/gpu-engine.md); merely unmuting the experimental H3 group does not switch the full pipeline. Locally hosted Wan 3.0 is tracked as a test candidate in [video-models.md](../references/video-models.md).
 
 **Project workspace.** Opening the server without a workflow link loads the saved `yesopen-skit-pipeline` as the
 default graph. The node library includes only node classes used by the project's visual and API templates;
@@ -160,18 +160,18 @@ The language, text, sample voice and seeds come from the project. Run with gates
 off to prepare/listen to the fitted lines. Turn on `Odsłuch zatwierdzony` only after reviewing them; a changed
 audio hash rejects a retained approval (turn it off, run the review stage, then approve again).
 
-The project saver now receives the video after upscale and interpolation. It skips unchanged takes with valid
-source signatures and checkpoints, requesting GPU video lazily only when needed. Fitted voices and the music bed
-have the same resume behavior. The optional cast, Qwen/B-roll, dialog, MiniMax and mixed-preview groups start muted.
-The dialog experiment is no longer substituted into a single-line shot with an unrelated duration. B-roll is
-saved as `<id>-broll.video.mp4`; add its ID to `edit/cuts.json` if used. Cast selection and scripts/cuts remain
-operator-authored project files.
+The production generator expands the client's native API templates (H3 by default), with the project prompt,
+parameters and frame/audio preparation. Upscale and interpolation run only when explicitly enabled under
+`take.postprocess` or a line's `postprocess`. The project saver checks both MP4 and word timestamps; missing
+transcription resumes inspection without rerunning the model. Cast generation is opt-in and runs per character.
+Optional scene edits/B-roll require `lines[].variants.<name>` with an explicit template and parameter set,
+including prompt and seed; the graph contains no demo scene instruction. Add selected variant IDs to cuts.json.
 
-`Wszystkie ujęcia i muzyka` waits for the mapped takes, checks every shot required by `cuts.json`, and waits for
-the music saver, which also sets `project.json -> music.file`. Open gate 4 only after shot review. Gates 5–6
-still represent edit/final human approval. QA now checks all four formats and stops on failure; delivery also
-checks that each QA report belongs to the current master hash. Share, web and poster files are made for every
-format. `final/manifest.json` contains their sizes and SHA-256 hashes.
+`Komplet ujęć` checks the selected shots in cuts.json and their project manifest. Explicitly omitted dialogue
+must be listed in `project.edit.omitted_lines`. Music is optional: `enabled:false`, `mode:existing` with file/BPM,
+or `mode:generate` with tags, BPM, seed, key, meter and language. Its length derives from the EDL. Captions obey
+`captions.enabled`, including fallback behavior. Render, QA and delivery use `project.formats`; delivery checks
+the QA/master hashes and includes only the current project's selected-format files in final/manifest.json.
 
 After pulling the project, run `scripts\skill.ps1 python3 scripts/verify_delivery.py /videos/yesopen-skits/PROJECT`
 against the downloaded copy. Compute retirement is a separate operator action after verifying transfers and

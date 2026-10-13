@@ -4,6 +4,8 @@ Status: propozycja do uzgodnienia z Adrianem; wymagania zatwierdzone, rozwiązan
 Punkt odniesienia review kodu: `53476bdc54f161f0f525df9a38dd380024a04fe5` na `main`.
 Data: 2026-10-02.
 
+Aktualizacja 2026-10-13: silnik wideo w tej propozycji to MiniMax H3. Profile pamięci i nakładania pracy wymagają nowych pomiarów dla H3. Wan 3.0 hostowany lokalnie jest alternatywą do testów po potwierdzeniu oficjalnych wag i runtime; patrz references/video-models.md.
+
 ## Problem Statement
 
 Kilka czatów ma niezależnie prowadzić różne filmy, korzystając z jednego serwera. Komputer użytkownika nie musi wykonywać ciężkiego przetwarzania; wykonanie lokalne jest dopuszczone jako świadomie wybrana opcja. Celem jest nakładanie pracy etapów i ograniczenie przeładowywania modeli, przy zachowaniu jakości oraz niezależności produkcji.
@@ -62,7 +64,7 @@ flowchart TD
     B[Czat B: film B] --> K
     K --> G[Chatterbox: głos]
     G --> Q[Whisper i dopasowanie audio]
-    Q --> V[LTX: gotowe kwestie do wideo]
+    Q --> V[MiniMax H3: gotowe kwestie do wideo]
     V --> I[Kontrola ujęć]
     I --> M[Montaż i eksport na serwerze]
     M --> F[Kontrola finalna i pliki wynikowe]
@@ -77,7 +79,7 @@ Strzałki pokazują zależności jednej kwestii. Różne kwestie i filmy znajduj
 | Praca | Propozycja wykonania | Powiązanie |
 | --- | --- | --- |
 | Głos | Osobny proces ComfyUI z Chatterbox, jeden aktywny graf głosowy. | R2–R4 |
-| Wideo | Osobny proces ComfyUI z LTX, jeden aktywny graf wideo. | R2–R4 |
+| Wideo | Osobny proces ComfyUI z MiniMax H3, jeden aktywny graf wideo. | R2–R4 |
 | Transkrypcja i kontrola słów | Wspólny proces Whisper, model ładowany raz; jawny wybór GPU albo CPU serwera według benchmarku. | R2, R3 |
 | Przycinanie, dopasowanie audio, analiza głośności | CPU serwera; współdzielona, ograniczona pula prac. | R2–R4 |
 | Montaż, plansze, napisy, kodowanie | Istniejący pipeline Pillow/ffmpeg na CPU serwera, z limitami CPU/RAM oraz liczby renderów. Obecny `libx264` pozostaje punktem odniesienia jakości. | R2, R3, R7 |
@@ -99,7 +101,7 @@ Lokalne wykonanie wybieramy wyłącznie przy konkretnej korzyści operacyjnej: n
 
 - Kolejki rozdzielają klasy prac: głos, analiza audio, wideo i CPU. Gotowe zadania wybierane są naprzemiennie między aktywnymi filmami w danej klasie; film z niezaspokojoną zależnością nie blokuje innych. Jednostką sprawiedliwości jest zadanie, nie równa liczba sekund GPU. [R1, R4, R5]
 - Nie wysyłać całego filmu do wewnętrznej kolejki ComfyUI: koordynator przydziela pracę po zwolnieniu slotu. Pozwala to dopuścić zadania drugiego filmu. [R5]
-- Podstawowy kandydat do pomiaru: jeden slot TTS i jeden slot LTX, z możliwością nakładania ich pracy. Whisper GPU jest dodatkowym kandydatem, nie trzecim procesem uruchamianym bez limitu. [R3]
+- Podstawowy kandydat do pomiaru: jeden slot TTS i jeden slot MiniMax H3, z możliwością nakładania ich pracy. Whisper GPU jest dodatkowym kandydatem, nie trzecim procesem uruchamianym bez limitu. [R3]
 - Budżet pamięci obejmuje wagi utrzymywanych modeli, bufor obliczeń aktywnych zadań i rezerwę. Sama aktualna wolna VRAM nie jest wystarczającym warunkiem startu. Profil zależy od rozdzielczości, długości i workflowu. [R3, R4]
 - Limity startowe CPU, RAM, VRAM i renderów ustala benchmark. Zestaw niezmierzony pozostaje sekwencyjny po stronie serwera; nie przenosi ciężkich prac na komputer klienta. [R2, R3]
 - Przy braku pamięci wstrzymać nowe przydziały danej klasy, zapisać błąd i zachować pozostałe zadania. Bez automatycznej pętli ponownych generacji i bez restartowania procesu obsługującego inny film. [R5, R6]
@@ -107,7 +109,7 @@ Lokalne wykonanie wybieramy wyłącznie przy konkretnej korzyści operacyjnej: n
 
 ### Implementacja ograniczenia przeładowań: zdjęcia i powiększanie
 
-Uzupełnienie 2026-10-03. Wymaganie R3 obejmuje także parę modeli zdjęć i powiększania, a nie tylko TTS/LTX. Użytkownik podał obserwacje: około 9 s na zdjęcie w pracy mieszanej wobec 2,8 s w serii samych zdjęć; średnie wykorzystanie 68%, 465 W, VRAM 27–33 GB, RAM 39 GB i 50–56 °C. To zgłoszony objaw, bez surowego śladu potwierdzającego przyczynę. Procent użycia i moc nie dowodzą, że całą różnicę czasu powoduje przeładowanie. Najpierw rozdzielić czas oczekiwania, ładowania, transferów i obliczeń. [R3]
+Uzupełnienie 2026-10-03. Wymaganie R3 obejmuje także parę modeli zdjęć i powiększania, a nie tylko TTS/MiniMax H3. Użytkownik podał obserwacje: około 9 s na zdjęcie w pracy mieszanej wobec 2,8 s w serii samych zdjęć; średnie wykorzystanie 68%, 465 W, VRAM 27–33 GB, RAM 39 GB i 50–56 °C. To zgłoszony objaw, bez surowego śladu potwierdzającego przyczynę. Procent użycia i moc nie dowodzą, że całą różnicę czasu powoduje przeładowanie. Najpierw rozdzielić czas oczekiwania, ładowania, transferów i obliczeń. [R3]
 
 #### Pierwszy krok: konfiguracja cache jednego procesu
 
@@ -127,7 +129,7 @@ Jeżeli ta zmiana usuwa przeładowania i poprawia wynik bez regresji, pozostawi�
 
 | Miejsce | Zmiana do implementacji | Wymagania |
 | --- | --- | --- |
-| `gpu/server/compose.yaml`, bootstrap, healthchecki | Jeżeli próba pojedynczego procesu nie spełni kryteriów: dodać opcjonalny profil procesów `still` i `upscale` na jednej karcie, z odrębnymi portami loopback, katalogami runtime i wspólnymi niezmiennymi wagami. Nie uruchamiać automatycznie wszystkich profili TTS/LTX/Whisper/still/upscale naraz. | R3, R5 |
+| `gpu/server/compose.yaml`, bootstrap, healthchecki | Jeżeli próba pojedynczego procesu nie spełni kryteriów: dodać opcjonalny profil procesów `still` i `upscale` na jednej karcie, z odrębnymi portami loopback, katalogami runtime i wspólnymi niezmiennymi wagami. Nie uruchamiać automatycznie wszystkich profili TTS/MiniMax H3/Whisper/still/upscale naraz. | R3, R5 |
 | Koordynator i konfiguracja wykonawców | Mapa template → grupa modeli → proces; `still` do procesu zdjęć, `upscale` do procesu powiększania. Zachować powiązanie procesu i rewizji modeli między zadaniami obu filmów. Nie wybierać przypadkowego wolnego procesu, jeżeli spowoduje przeładowanie. | R1, R3, R5 |
 | `gpu/client/gpu.py:cmd_health`, `cmd_tunnel`, start/stop | Obsługa wielu skonfigurowanych endpointów i ich gotowości po stronie serwera. Czat nadal zleca koordynatorowi; nie zarządza sam portami ani cyklem życia współdzielonych procesów. | R1, R5 |
 | Loadery w `gpu/workflows/api/still.json` i `upscale.json` | Sprawdzić zarządzanie pamięcią i cache w przypiętej wersji ComfyUI. Zachować niezmienne parametry loaderów między zadaniami; warm-up ma obejmować rzeczywiste wykonanie, nie samo zbudowanie grafu. | R3 |
@@ -142,7 +144,7 @@ Obecny `upscale` przyjmuje **wideo**, nie pojedyncze zdjęcie. Przed odtworzenie
 
 1. Weryfikacja profilu obejmuje zgodność wag i wersji silnika, warm-up obu grup oraz pomiar ich wspólnego szczytu pamięci. Oddzielne procesy nie gwarantują rezydencji: potwierdzić brak odładowania/offloadu przy zmianie typu zadania. Nie włączać globalnie flag wymuszających wszystko w VRAM bez pomiaru. [R3]
 2. Dopiero po ocenie pojedynczego procesu z `--cache-ram 10 24`, jeśli potrzebna jest eskalacja, przetestować wariant **obie grupy pozostają w pamięci w dwóch procesach, obliczenia wykonują się kolejno**. To usuwa potencjalny koszt przełączania bez dokładania konkurencji obliczeniowej. Dopiero potem przetestować jednoczesne obliczenia obu procesów. [R3]
-3. Przydział pracy rezerwuje globalny budżet VRAM: pamięć wszystkich rezydentnych grup, zmierzony przyrost aktywnych zadań i rezerwę. Uwzględnić też TTS/LTX/Whisper, konteksty CUDA oraz RAM zajęty przez offload. Profile mają określony zakres długości/rozdzielczości; zadanie poza zakresem nie korzysta z niezweryfikowanego nakładania. [R3, R5]
+3. Przydział pracy rezerwuje globalny budżet VRAM: pamięć wszystkich rezydentnych grup, zmierzony przyrost aktywnych zadań i rezerwę. Uwzględnić też TTS/MiniMax H3/Whisper, konteksty CUDA oraz RAM zajęty przez offload. Profile mają określony zakres długości/rozdzielczości; zadanie poza zakresem nie korzysta z niezweryfikowanego nakładania. [R3, R5]
 4. Jeśli trzeba zwolnić wagi, robi to koordynator wyłącznie na bezczynnym procesie. Czeka na potwierdzone zwolnienie pamięci i nie narusza aktywnego zadania innego filmu. Gdy profil nie mieści się bezpiecznie, korzystać ze sprawdzonego profilu sekwencyjnego zamiast wymuszać rezydencję. [R3, R5, R6]
 5. Jeśli rozdzielenie procesów nie pomaga, wariantem porównawczym jest jeden proces z zachowaniem obu grup w cache, o ile wspiera to używana wersja, albo grupowanie kilku zadań tego samego modelu. Grupowanie musi mieć skończony limit zadań i oczekiwania, aby nie zagłodzić drugiego filmu; wartości ustalić w benchmarku. [R3, R5]
 
@@ -183,7 +185,7 @@ Obecny `upscale` przyjmuje **wideo**, nie pojedyncze zdjęcie. Przed odtworzenie
 | --- | --- | --- |
 | Nowy moduł koordynatora w `gpu/` | Trwała kolejka, zależności, limity, korelacja, statusy i odzyskiwanie. Bez osobnego brokera na pierwszym pojedynczym serwerze. | R1, R3–R6 |
 | `gpu/client/gpu.py` | Rozdzielić zlecanie od oczekiwania/pobierania; klient wspólnego koordynatora; status i anulowanie per film; chroniony cykl życia maszyny. | R1, R2, R5, R6 |
-| `gpu/server/compose.yaml`, obrazy serwera | Oddzielne procesy TTS/LTX/analizy, serwis koordynatora, trwały stan, healthchecki i limity zasobów. | R2–R6 |
+| `gpu/server/compose.yaml`, obrazy serwera | Oddzielne procesy TTS/MiniMax H3/analizy, serwis koordynatora, trwały stan, healthchecki i limity zasobów. | R2–R6 |
 | `scripts/gpu_batches.py`, `fit_lines.py` | Etapy per kwestia, zależności od zaakceptowanego audio, bezpieczny zapis wyników i współdzielony Whisper. Zachować istniejące reguły jakości. | R2, R4, R6, R7 |
 | `inspect_take.py`, `qa_report.py`, `assemble.py`, `make_edl.py`, `encode_variants.py` | Wykonanie serwerowe, wspólna analiza audio i kontrolowana pula CPU; finalny montaż dopiero po gotowości wszystkich potrzebnych materiałów. | R2–R4, R7 |
 | `SKILL.md`, referencje, README | Praca zdalna, kilka czatów, odbiór podglądów, wznowienie, brak automatycznego stop maszyny po jednym filmie. | R1, R2, R5–R7 |
@@ -195,7 +197,7 @@ Stan poniżej wynika z Dockerfile, compose, bootstrap i importów skryptów w ba
 | Warstwa | Już zadeklarowane | Co trzeba dodać lub zweryfikować |
 | --- | --- | --- |
 | Host | Ubuntu 24.04; istniejący sterownik NVIDIA, Docker i NVIDIA Container Toolkit są wymaganiami obrazu VM. Bootstrap sprawdza GPU i Compose, instaluje tylko brakujące ufw. | Jawny preflight `python3`, `curl`, `rsync`, SSH, Docker Compose i widoczności GPU w kontenerze. Bootstrap nie instaluje wszystkich tych zależności i nie naprawia sterownika. |
-| ComfyUI / TTS / LTX | Obraz przypięty digestem: ComfyUI 0.35.0, PyTorch 2.13, CUDA 13.0; Chatterbox node przypięty commitem; TorchCodec 0.17.0 oraz systemowe FFmpeg. | Dwie usługi z tego sprawdzonego obrazu, rozdzielone porty loopback i katalogi runtime, wspólne niezmienne wagi, limity. Zachować zgodność torch/torchaudio/TorchCodec; nie instalować osobno przypadkowej najnowszej wersji torch. |
+| ComfyUI / TTS / MiniMax H3 | Obraz przypięty digestem: ComfyUI 0.35.0, PyTorch 2.13, CUDA 13.0; Chatterbox node przypięty commitem; TorchCodec 0.17.0 oraz systemowe FFmpeg. | Dwie usługi z tego sprawdzonego obrazu, rozdzielone porty loopback i katalogi runtime, wspólne niezmienne wagi, limity. Zachować zgodność torch/torchaudio/TorchCodec; nie instalować osobno przypadkowej najnowszej wersji torch. |
 | Whisper GPU | Obecny editor ma tylko torch 2.11.0 z repozytorium CPU. | Osobny obraz analizy z kompatybilnym PyTorch CUDA, `openai-whisper`, NumPy i FFmpeg/ffprobe. Przypiąć zweryfikowane wersje i digest przy implementacji. Jawne urządzenie, precyzja i jeden model na proces; nie nadpisywać środowiska ComfyUI paczkami editora. |
 | Editor CPU | Python 3.12 slim, torch CPU 2.11.0, Pillow 12.3.0, NumPy 2.4.4, openai-whisper 20250625; statyczne FFmpeg 8.1 sprawdzane SHA-256. | Zachować do montażu; limity CPU/RAM i liczby procesów ffmpeg. Ograniczyć także wątki ffmpeg/BLAS/torch, aby jeden render nie zajął wszystkich rdzeni. Podłączyć font Manrope, branding i wersję skryptów przypisaną do runu. |
 | Koordynator | Brak. | Usługa Python z trwałym stanem. SQLite może korzystać ze standardowego `sqlite3`; Redis, Celery i PostgreSQL nie są wymaganiem tego designu. Sprawdzić obsługę SQLite w wybranym obrazie; trwały wolumen i pojedynczy aktywny scheduler. |
@@ -203,7 +205,7 @@ Stan poniżej wynika z Dockerfile, compose, bootstrap i importów skryptów w ba
 
 Obecne skrypty potrzebują różnych argumentów: `fit_lines.py` przyjmuje trzy ścieżki, natomiast `assemble.py` katalog projektu. `cmd_edit` automatycznie dokleja jedną ścieżkę projektu, więc nie jest uniwersalnym adapterem do całego pipeline'u. Koordynator musi wywoływać każdy etap zgodnie z jego interfejsem i używać ścieżek serwerowych. `fit_lines.py` ma ponadto język transkrypcji ustawiony na `en`; zachować aktualny zakres angielskiego pilota i nie ogłaszać pełnej obsługi innych języków bez odrębnej weryfikacji. [R2, R4, R7]
 
-Gotowość usług sprawdzamy przed dopuszczeniem zadania: importy bibliotek, odpowiednie urządzenie, dostęp do wag i fontów, zapis/odczyt audio, dostępne kodery/filtry FFmpeg oraz krótki rzeczywisty przebieg TTS, Whisper, LTX i renderu. Sam `/system_stats` nie potwierdza tych zależności. Próby runtime wykonuje się w uzgodnionym oknie, bez ingerencji w cudzy film. [R2–R5]
+Gotowość usług sprawdzamy przed dopuszczeniem zadania: importy bibliotek, odpowiednie urządzenie, dostęp do wag i fontów, zapis/odczyt audio, dostępne kodery/filtry FFmpeg oraz krótki rzeczywisty przebieg TTS, Whisper, MiniMax H3 i renderu. Sam `/system_stats` nie potwierdza tych zależności. Próby runtime wykonuje się w uzgodnionym oknie, bez ingerencji w cudzy film. [R2–R5]
 
 ## Testing Strategy
 
@@ -214,7 +216,7 @@ Nie wystarczy pokazać dwa zajęte procesy lub niski procent użycia GPU. Kryter
 3. **Słaby klient:** środowisko bez Whispera, ffmpeg i GPU przechodzi zlecenie, obserwowanie, rozłączenie, ponowne dołączenie i pobranie ukończonego filmu. [R2, R6]
 4. **Awarie:** utrata odpowiedzi po zgłoszeniu, restart koordynatora i przerwane pobieranie nie powodują ślepego ponowienia zadania ani uznania częściowego pliku za gotowy. [R6]
 5. **Niezależne zatrzymanie:** zakończenie/anulowanie filmu A nie przerywa B. Próba wyłączenia serwera z aktywną produkcją B jest odrzucana także przy równoczesnym zgłoszeniu nowego zadania. [R5]
-6. **Benchmark:** ten sam zestaw dwóch filmów, modele, seedy, rozdzielczości, liczba wariantów i ustawienia QA; porównanie trybu sekwencyjnego, TTS+LTX oraz TTS+LTX+Whisper GPU. Uwzględnić wariant Whisper CPU na serwerze. Osobno zimny start i rozgrzane modele; powtórzenia do oceny zmienności. [R3, R4]
+6. **Benchmark:** ten sam zestaw dwóch filmów, modele, seedy, rozdzielczości, liczba wariantów i ustawienia QA; porównanie trybu sekwencyjnego, TTS+MiniMax H3 oraz TTS+MiniMax H3+Whisper GPU. Uwzględnić wariant Whisper CPU na serwerze. Osobno zimny start i rozgrzane modele; powtórzenia do oceny zmienności. [R3, R4]
 7. **Pomiary:** czas obu gotowych filmów, czas pierwszego gotowego ujęcia, oczekiwanie każdego filmu, czasy etapów, przeładowania, szczyty VRAM/RAM, użycie CPU, błędy i koszt czasu maszyny. Profil równoległy dopuszczamy, gdy skraca łączny czas ponad zmienność pomiaru, nie pogarsza QA i nie powoduje wyczerpania pamięci. Bez obietnicy ×2. [R3, R7]
 
 Testy jednostkowe obejmują scheduler, zależności, klucze ponownego zgłoszenia i zapisy stanu. Integracyjne obejmują prawdziwe procesy, restart, komunikację z ComfyUI i dwóch klientów. Test na GPU oraz końcowy odsłuch/oględziny są konieczne do potwierdzenia wydajności i jakości, lecz nie są wykonywane w ramach tego designu.
@@ -225,7 +227,7 @@ Testy jednostkowe obejmują scheduler, zależności, klucze ponownego zgłoszeni
 2. Dodać koordynator, trwały stan i niezależne identyfikatory; sprawdzić na symulowanych wykonawcach dwóch klientów i awarie. [R1, R5, R6]
 3. Podłączyć istniejący jeden proces ComfyUI do koordynatora; potwierdzić odzyskiwanie zadań i zgodność wyników. [R6, R7]
 4. Przenieść cały ciąg audio → kontrola → ujęcie → montaż → finalne QA na serwer; zintegrować wspólny proces Whisper i wersjonowane zasoby. [R2, R4]
-5. Rozdzielić TTS i LTX, zmierzyć profile zasobów i nakładanie obliczeń; wybrać położenie Whispera według wyniku. [R3]
+5. Rozdzielić TTS i MiniMax H3, zmierzyć profile zasobów i nakładanie obliczeń; wybrać położenie Whispera według wyniku. [R3]
 6. Wykonać test dwóch czatów i zaktualizować instrukcje skilla; włączyć tryb współdzielony dopiero po kryteriach powyżej. [R1–R7]
 
 ## Risks & Considerations
@@ -240,7 +242,7 @@ Testy jednostkowe obejmują scheduler, zależności, klucze ponownego zgłoszeni
 
 - Kilka klientów wysyłających bezpośrednio do jednego ComfyUI: pozwala kolejkować, lecz nie nakłada wykonywania modeli i nie rozwiązuje własności ani odzyskiwania. [R1, R3, R6]
 - Osobny komplet modeli na każdy film: mnoży pamięć i przeładowania, zamiast współdzielić wyspecjalizowane procesy. [R3]
-- Wiele ciężkich generacji LTX naraz: do osobnego benchmarku po pomiarze wariantu TTS+LTX; nie jest warunkiem równoległej pracy dwóch użytkowników. [R1, R3]
+- Wiele ciężkich generacji MiniMax H3 naraz: do osobnego benchmarku po pomiarze wariantu TTS+MiniMax H3; nie jest warunkiem równoległej pracy dwóch użytkowników. [R1, R3]
 - Lokalny Whisper lub montaż jako obowiązkowy etap: nie spełnia wymagania słabego komputera. Jako świadomie wybrana, sprawdzona opcja jest dopuszczony zgodnie z R2. [R2]
 
 ## Przekazanie Adrianowi

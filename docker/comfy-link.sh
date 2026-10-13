@@ -50,6 +50,8 @@ sync_pipeline() {  # the YesOpen pipeline nodes, the editor service and the skil
   local host="$1" skill="${SKILL_DIR:-/skill}"
   tar -C "$skill/gpu/server" --exclude=__pycache__ -czf - yesopen_pipeline \
     | ssh "${SSH_OPTS[@]}" "$host" "sudo mkdir -p /srv/yesopen/comfy && sudo tar -C /srv/yesopen/comfy -xzf -" || return 1
+  tar -C "$skill/gpu" -czf - workflows/api workflows/params client/gpu.py \
+    | ssh "${SSH_OPTS[@]}" "$host" "sudo tar -C /srv/yesopen/comfy/yesopen_pipeline -xzf -" || return 1
   tar -C "$skill/gpu" -czf - editor/api.py \
     | ssh "${SSH_OPTS[@]}" "$host" "sudo mkdir -p /srv/yesopen/stack && sudo tar -C /srv/yesopen/stack -xzf -" || return 1
   # what the editor needs: scripts, brand assets, templates (not the examples, the GPU stack or the Git history)

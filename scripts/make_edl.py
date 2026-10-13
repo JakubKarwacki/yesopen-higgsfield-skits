@@ -118,6 +118,7 @@ def build(project, cfg, cuts_doc, upto=None, with_endcard=True, out_dir=None):
         "ding": "edit/assets/ding.wav",
         "ding_volume": cfg.get("ding_volume", 0.55),
         "caption_words": caption_words,
+        "captions_enabled": cfg.get('captions', {}).get('enabled', True),
         "language": takes.language,
         "caption_fixes": fixes_all,
         "caption_style": cfg.get("captions", {}).get("style", {}),
@@ -125,7 +126,7 @@ def build(project, cfg, cuts_doc, upto=None, with_endcard=True, out_dir=None):
         "_dialogue_seconds": round(t, 2),
         "_dialogue_frames": sum(round((s["out"] - s["in"]) * fps) for s in segments),
     }
-    if cfg.get("music"):  # only when there is one, so an edit without music keeps its exact EDL
+    if cfg.get("music") and cfg['music'].get('enabled', True):
         edl["music"] = {"thr": cfg.get("speech", {}).get("thr", -26.0), **cfg["music"]}
     return edl
 

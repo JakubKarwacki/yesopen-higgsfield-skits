@@ -109,12 +109,14 @@ def main():
     ap.add_argument("lines")
     ap.add_argument("voice_dir")
     ap.add_argument("out_dir")
-    ap.add_argument("--lead", type=float, default=0.3)
-    ap.add_argument("--tail", type=float, default=0.12)
+    ap.add_argument("--lead", type=float)
+    ap.add_argument("--tail", type=float)
+    ap.add_argument("--candidate", action='append', help='Only these filenames in voice_dir may be fitted')
+    ap.add_argument("--min-ratio", type=float)
     ap.add_argument("--model", default="large-v3-turbo")
     ap.add_argument("--lang", help="explicit ASR language; must match declared project language")
     ap.add_argument("--only", help="comma-separated line ids")
-    ap.add_argument("--max-pause", type=float, default=0.75,
+    ap.add_argument("--max-pause", type=float,
                     help="silences between the line's words longer than this are shortened to it")
     a = ap.parse_args()
     doc = json.loads(Path(a.lines).read_text())
@@ -143,9 +145,19 @@ def main():
     report = json.loads(report_path.read_text()) if report_path.exists() else {}
     aliases = cfg.get('speech', {}).get('number_aliases', {})
     for line in lines:
+        policy = {**cfg.get('speech', {}).get('fit', {}), **doc.get('fit', {}), **line.get('fit', {})}
+        lead = a.lead if a.lead is not None else float(policy.get('lead', 0.3))
+        tail = a.tail if a.tail is not None else float(policy.get('tail', 0.12))
+        max_pause = a.max_pause if a.max_pause is not None else policy.get('max_pause')
+        min_ratio = a.min_ratio if a.min_ratio is not None else float(policy.get('min_ratio', 1.0))
+        if lead < 0 or tail < 0 or not 0 < min_ratio <= 1 or (max_pause is not None and max_pause < 0):
+            raise ValueError('Invalid audio fit policy')
         want = letters(line["text"], lang, aliases)
         best = None
-        for take in sorted(Path(a.voice_dir).glob(f"{line['id']}-s*.audio.flac")):
+        candidates = sorted(Path(a.voice_dir).glob(f"{line['id']}-s*.audio.flac"))
+        if a.candidate:
+            candidates = [p for p in candidates if p.name in a.candidate]
+        for take in candidates:
             result = model.transcribe(str(take), language=lang, word_timestamps=True,
                                       condition_on_previous_text=False, fp16=False)
             words = [w for s in result["segments"] for w in s["words"]]
@@ -161,7 +173,7 @@ def main():
             extra = words[k_best:]
             gap = float(extra[0]["start"] - last_end) if extra else None
             audio = load(take)
-            cut = float(min(sound_end(audio, last_end) + a.tail, len(audio) / 48000))
+            cut = float(min(sound_end(audio, last_end) + tail, len(audio) / 48000))
             if gap is not None:
                 cut = min(cut, float(extra[0]["start"]) - 0.05)
             # sound between the words that Whisper did not write down (a hum, a laugh, mumbling)
@@ -173,7 +185,7 @@ def main():
                 lo, hi = int((float(w0["end"]) + 0.15) * 100), int((float(w1["start"]) - 0.15) * 100)
                 if hi > lo:
                     mumble = max(mumble, float((level[lo:hi] > -30).sum()) / 100)
-            ok = bool(ratio_best >= 0.9 and (gap is None or gap >= 0.25) and mumble <= 0.4)
+            ok = bool(ratio_best >= min_ratio and (gap is None or gap >= 0.25) and mumble <= 0.4)
             said = " ".join(w["word"].strip() for w in words[:k_best])
             spans = [(float(w["start"]), float(w["end"])) for w in words[:k_best]]
             cand = {"take": take.name, "ratio": round(ratio_best, 3), "cut": round(cut, 2), "said": said, "spans": spans,
@@ -198,9 +210,14 @@ def main():
         dst = out / f"{line['id']}.wav"
         audio = load(src)[: int(best["cut"] * 48000)].copy()
         fade = int(0.04 * 48000)
+        fade = min(fade, len(audio))
         audio[-fade:] *= np.linspace(1, 0, fade, dtype=np.float32)
-        audio, removed = shorten_pauses(audio, best.pop("spans"), a.max_pause)
-        audio = np.concatenate([np.zeros(int(a.lead * 48000), np.float32), audio])
+        spans = best.pop('spans')
+        audio, removed = shorten_pauses(audio, spans, float(max_pause)) if max_pause is not None else (audio, 0.0)
+        audio = np.concatenate([np.zeros(int(lead * 48000), np.float32), audio])
+        best['policy'] = {'lead': lead, 'tail': tail, 'max_pause': max_pause, 'min_ratio': min_ratio}
+        import hashlib
+        best['source_sha256'] = hashlib.sha256(src.read_bytes()).hexdigest()
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "f32le", "-ar", "48000", "-ac", "1", "-i", "-",
                         str(dst)], input=audio.tobytes(), check=True)
         best["pauses_removed"] = round(removed, 2)

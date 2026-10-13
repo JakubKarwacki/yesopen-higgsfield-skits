@@ -18,6 +18,7 @@ import numpy as np
 import torch
 from PIL import Image
 from .runtime import cached, checkpoint, digest, manifest, require_files, require_qa, require_takes, reusable, signature, verify_qa_files, write_json
+from .contracts import formats, music_plan, prepare_template, safe_file
 
 WORK = Path(os.environ.get("YESOPEN_WORK", "/work"))
 EDITOR = os.environ.get("YESOPEN_EDITOR_URL", "http://editor-api:8190")
@@ -232,7 +233,7 @@ class Gate:
                 raise RuntimeError('Obsada: każda kwestia musi mieć wybrany still i głos.')
             require_files(root, files)
         if approved and gate.startswith('6'):
-            verify_qa_files(project_dir(project), FORMATS)
+            verify_qa_files(project_dir(project), formats(project_dir(project)))
         return (project if approved else blocked(),)
 
 
@@ -318,23 +319,22 @@ class FitLine:
             report = f'{line}: wznowiono dopasowane audio z checkpointu.'
         else:
             save_audio(audio, root / "voice" / f"{line}-s{seed}.audio.flac")
-            report = editor(project, "fit_lines.py", ["lines.json", "voice", "lines", "--only", line])
+            report = editor(project, "fit_lines.py", ["lines.json", "voice", "lines", "--only", line,
+                                                     '--candidate', f'{line}-s{seed}.audio.flac'])
         fit = json.loads((root / "lines" / "fit.json").read_text()).get(line, {})
         if not fit.get("ok", False) or not (root / "lines" / f"{line}.wav").exists():
             raise RuntimeError(f"{line}: żadne nagranie nie przeszło fit_lines (zmień seed w 'Kwestia z projektu'):\n"
                                f"{report[-2000:]}")
         report += editor(project, "gpu_batches.py", ["takes", ".", "--only", line, "--out", f"takes/batch-{line}.json"])
         values = batch_job(root, f"takes/batch-{line}.json", line)
-        if json.loads((root / f'takes/batch-{line}.json').read_text())['jobs'][0]['template'] != 'talk':
-            raise RuntimeError(f'{line}: graf produkcyjny obsługuje LTX talk; H3 uruchom oddzielnie.')
         still_path = (root / "takes" / values["image"]).resolve()
         has_still = still_path.exists()
         if not has_still:
             raise RuntimeError(f'{line}: wybierz istniejący still w lines.json przed generowaniem ujęcia.')
         still = load_image(still_path)
-        result = (load_audio((root / "takes" / values["audio"]).resolve()), values["prompt"], float(values["seconds"]),
+        result = (load_audio(root / 'lines' / f'{line}.wav'), values["prompt"], float(values["seconds"]),
                   int(values["seed"]), still, has_still, report[-3000:])
-        checkpoint(root, 'voice/' + line, [root / 'lines' / f'{line}.wav'])
+        checkpoint(root, 'voice/' + line, [root / 'lines' / f'{line}.wav', root / 'lines' / f'{line}.fit.json'])
         write_json(root / f'lines/{line}.source.json', {'signature': expected})
         return {'ui': {'text': [report[-3000:]]}, 'result': result}
 
@@ -342,7 +342,7 @@ class FitLine:
 class VoiceApproval:
     @classmethod
     def INPUT_TYPES(cls):
-        return {'required': {'project': (PROJECT,), 'audio': ('AUDIO',),
+        return {'required': {'project': (PROJECT,), 'audio': ('AUDIO',), 'line': ('STRING', {'default': 'l01'}),
                              'approved': ('BOOLEAN', {'default': False})},
                 'hidden': {'prompt': 'PROMPT', 'unique_id': 'UNIQUE_ID'}}
     RETURN_TYPES = ('AUDIO',)
@@ -354,7 +354,7 @@ class VoiceApproval:
     def IS_CHANGED(cls, project=None, **kw):
         return state(selected_project(project, kw.get('prompt'), kw.get('unique_id')), 'lines/*.wav')
 
-    def run(self, project, audio, approved, **kw):
+    def run(self, project, audio, approved, line, **kw):
         root = project_dir(project[0])
         path = root / 'edit/pipeline-state.json'
         saved = json.loads(path.read_text()) if path.exists() else {}
@@ -362,7 +362,14 @@ class VoiceApproval:
             saved.pop('approved-voices', None)
             write_json(path, saved)
             return ([blocked()],)
-        files = sorted((root / 'lines').glob('*.wav'))
+        if len(line) != len(audio) or len(set(line)) != len(line):
+            raise RuntimeError('Odsłuch: identyfikatory muszą odpowiadać dokładnie wybranym nagraniom.')
+        files = [safe_file(root, f'lines/{item}.wav') for item in line]
+        require_files(root, [str(p.relative_to(root)) for p in files])
+        for supplied, path in zip(audio, files):
+            actual = load_audio(path)
+            if supplied['sample_rate'] != actual['sample_rate'] or not torch.equal(supplied['waveform'], actual['waveform']):
+                raise RuntimeError('Odsłuch nie odpowiada aktualnemu plikowi kwestii.')
         now = {str(p.relative_to(root)): digest(p) for p in files}
         if saved.get('approved-voices') and saved['approved-voices'] != now:
             raise RuntimeError('Audio zmieniło się po odsłuchu. Wyłącz approved, uruchom odsłuch, zatwierdź ponownie.')
@@ -374,18 +381,18 @@ class JoinProduction:
     """Wait for all mapped takes and the bed before starting project-level edit steps."""
     @classmethod
     def INPUT_TYPES(cls):
-        return {'required': {'project': (PROJECT,), 'music': ('STRING',)}}
+        return {'required': {'project': (PROJECT,)}, 'optional': {'music': ('STRING',)}}
     INPUT_IS_LIST = True
     RETURN_TYPES = (PROJECT, 'STRING')
     FUNCTION = 'run'
     CATEGORY = CATEGORY
-    def run(self, project, music):
+    def run(self, project, music=None):
         if len(set(project)) != 1:
             raise RuntimeError('Połącz ujęcia tylko jednego projektu.')
         root = project_dir(project[0])
         require_takes(root)
-        require_files(root, [str(Path(p).relative_to(root)) for p in music])
-        return (project[0], f'Gotowe: {len(project)} ujęć, muzyka zapisana.')
+        require_files(root, [str(Path(p).relative_to(root)) for p in (music or []) if p])
+        return (project[0], f'Gotowe: {len(project)} ujęć; decyzja o muzyce zachowana.')
 
 
 # ---------- GPU results into the project ----------
@@ -432,20 +439,41 @@ class SaveTake:
     def check_lazy_status(self, project, line, suffix='', video=None, prompt=None, unique_id=None):
         root = project_dir(project)
         expected = signature(root, line, prompt=prompt, unique_id=unique_id, input_name='video')
-        return [] if reusable(root, 'take/' + line + suffix, f'takes/{line}{suffix}.source.json', expected) or video is not None else ['video']
+        return [] if self.complete(root, line + suffix, expected) or self.reinspect(root, line + suffix, expected) or video is not None else ['video']
+
+    @staticmethod
+    def complete(root, line, expected):
+        state_path = root / 'edit/pipeline-state.json'
+        state_doc = json.loads(state_path.read_text()) if state_path.is_file() else {}
+        files = state_doc.get('take/' + line, {})
+        return f'takes/{line}.video.words.json' in files and reusable(root, 'take/' + line, f'takes/{line}.source.json', expected)
+
+    @staticmethod
+    def reinspect(root, line, expected):
+        source, video = root / f'takes/{line}.source.json', root / f'takes/{line}.video.mp4'
+        data = json.loads(source.read_text()) if source.is_file() else {}
+        return video.is_file() and data.get('signature') == expected and data.get('video_sha256') == digest(video)
 
     def run(self, project, line, video=None, suffix='', prompt=None, unique_id=None):
         root = project_dir(project)
         expected = signature(root, line, prompt=prompt, unique_id=unique_id, input_name='video')
         line = line + suffix
-        if reusable(root, 'take/' + line, f'takes/{line}.source.json', expected):
+        if self.complete(root, line, expected):
+            cfg = json.loads((root / 'project.json').read_text())
+            cfg.setdefault('takes', {})[line] = f'takes/{line}.video.mp4'
+            write_json(root / 'project.json', cfg)
             return {'ui': {'text': [f'{line}: wznowiono gotowe ujęcie.']}, 'result': (project, f'{line}: checkpoint OK')}
-        path = project_dir(project) / "takes" / f"{line}.video.mp4"
+        path = safe_file(root, f'takes/{line}.video.mp4')
         path.parent.mkdir(parents=True, exist_ok=True)
-        video.save_to(str(path))
+        if video is not None:
+            video.save_to(str(path))
         report = editor(project, "inspect_take.py", [f"takes/{line}.video.mp4"])
-        checkpoint(project_dir(project), 'take/' + line, [path])
-        write_json(root / f'takes/{line}.source.json', {'signature': expected})
+        words = path.with_suffix('.words.json')
+        checkpoint(root, 'take/' + line, [path, words])
+        write_json(root / f'takes/{line}.source.json', {'signature': expected, 'video_sha256': digest(path)})
+        cfg = json.loads((root / 'project.json').read_text())
+        cfg.setdefault('takes', {})[line] = str(path.relative_to(root))
+        write_json(root / 'project.json', cfg)
         return {"ui": {"text": [report[-3000:]]}, "result": (project, report[-3000:])}
 
 
@@ -469,21 +497,21 @@ class SaveMusic:
 
     def check_lazy_status(self, project, name, audio=None, prompt=None, unique_id=None):
         root = project_dir(project)
+        mode, _ = music_plan(root)
+        if mode != 'generate':
+            return []
         expected = signature(root, None, prompt=prompt, unique_id=unique_id, input_name='audio')
         return [] if reusable(root, 'music', f'music/{Path(name).name}.source.json', expected) or audio is not None else ['audio']
 
     def run(self, project, name, audio=None, prompt=None, unique_id=None):
         path = project_dir(project) / "music" / f"{Path(name).name}.flac"
         root = project_dir(project)
-        expected = signature(root, None, prompt=prompt, unique_id=unique_id, input_name='audio')
-        if not reusable(root, 'music', f'music/{Path(name).name}.source.json', expected):
-            save_audio(audio, path)
-        cfg = json.loads((root / 'project.json').read_text())
-        cfg.setdefault('music', {})['file'] = str(path.relative_to(root))
-        write_json(root / 'project.json', cfg)
-        checkpoint(root, 'music', [path])
-        write_json(root / f'music/{Path(name).name}.source.json', {'signature': expected})
-        return {"ui": {"text": [str(path)]}, "result": (str(path),)}
+        mode, values = music_plan(root)
+        if mode == 'off':
+            return ('',)
+        if mode == 'existing':
+            return (str(safe_file(root, values['file'])),)
+        raise RuntimeError('Use YesOpenMusic: generated audio must carry the exact music specification and BPM.')
 
 
 # ---------- the edit, formats, QA and delivery (the skill's scripts in the editor) ----------
@@ -538,10 +566,12 @@ class MakeEDL(Step):
 def final_video(project: str, fmt: str):
     from comfy_api.input_impl import VideoFromFile
     tag = fmt.replace(":", "x")
-    found = sorted((project_dir(project) / "final").glob(f"*-{tag}.mp4"), key=lambda p: p.stat().st_mtime)
-    if not found:
+    root = project_dir(project)
+    cfg = json.loads((root / 'project.json').read_text())
+    path = root / 'final' / f'{cfg.get("name", root.name)}-{tag}.mp4'
+    if not path.is_file():
         raise RuntimeError(f"Brak final/*-{tag}.mp4 po renderze.")
-    return VideoFromFile(str(found[-1])), str(found[-1])
+    return VideoFromFile(str(path)), str(path)
 
 
 class Assemble(Step):
@@ -557,7 +587,14 @@ class Assemble(Step):
                 'hidden': {'prompt': 'PROMPT', 'unique_id': 'UNIQUE_ID'}}
 
     def run(self, project, format, crop_safe, **kw):
+        if format not in formats(project_dir(project)):
+            return {'result': (project, blocked(), 'Format pominięty przez project.formats')}
         args = [".", "--format", format] + (["--crop-safe"] if crop_safe and format == "9:16" else [])
+        cfg = json.loads((project_dir(project) / 'project.json').read_text())
+        if not cfg.get('captions', {}).get('enabled', True):
+            args.append('--no-captions')
+        if not cfg.get('music', {}).get('enabled', bool(cfg.get('music'))):
+            args.append('--no-music')
         log = editor(project, self.SCRIPT, args)
         video, path = final_video(project, format)
         checkpoint(project_dir(project), 'render/' + format, [Path(path)])
@@ -568,6 +605,20 @@ class CropFormats(Step):
     SCRIPT, ARGS = "crop_formats.py", ["."]
     DESCRIPTION = "4:5 and 1:1 cut from the 9:16 master with their own end cards (crop_formats.py)."
     CACHE_INPUTS = EDIT_INPUTS + ('final/*-9x16.mp4', 'edit/assets/**/*')
+
+    def run(self, project, **kw):
+        selected = [fmt for fmt in formats(project_dir(project)) if fmt in ('4:5', '1:1')]
+        if not selected:
+            return {'result': (project, 'Brak wybranych formatów do kadrowania')}
+        from .generation import RenderFormats
+        # Render directly from the EDL: no unrequested 9:16 master or burned-caption crop.
+        logs = []
+        cfg = json.loads((project_dir(project) / 'project.json').read_text())
+        switches = ([] if cfg.get('captions', {}).get('enabled', True) else ['--no-captions'])
+        switches += [] if cfg.get('music', {}).get('enabled', bool(cfg.get('music'))) else ['--no-music']
+        for fmt in selected:
+            logs.append(editor(project, 'assemble.py', ['.', '--format', fmt] + switches))
+        return {'result': (project, '\n'.join(logs)[-3000:])}
 
 
 class QAReport(Step):
@@ -585,6 +636,8 @@ class QAReport(Step):
 
     def run(self, project, format, whisper, **kw):
         root = project_dir(project)
+        if format not in formats(root):
+            return {'result': (project, 'Format pominięty przez project.formats')}
         log = editor(project, self.SCRIPT, self.args(format, whisper))
         path = root / f'edit/qa-{format.replace(":", "x")}.json'
         report = json.loads(path.read_text())
@@ -606,13 +659,13 @@ class EncodeVariants(Step):
         return [str(Path(path).relative_to(project_dir(self.project)))]
 
     def run(self, project, **kw):
-        verify_qa_files(project_dir(project), FORMATS)
+        verify_qa_files(project_dir(project), formats(project_dir(project)))
         logs = []
         root = project_dir(project)
-        for fmt in FORMATS:
+        for fmt in formats(root):
             _, path = final_video(project, fmt)
             logs.append(editor(project, self.SCRIPT, [str(Path(path).relative_to(root))]))
-        data = manifest(project_dir(project))
+        data = manifest(project_dir(project), formats(root))
         text = json.dumps(data, ensure_ascii=False)
         checkpoint(root, 'delivery', [root / item['path'] for item in data['files']])
         return {'ui': {'text': [text]}, 'result': (project, text)}
@@ -639,3 +692,6 @@ NODES = {
 }
 NODE_CLASS_MAPPINGS = {k: v[0] for k, v in NODES.items()}
 NODE_DISPLAY_NAME_MAPPINGS = {k: v[1] for k, v in NODES.items()}
+from .generation import NODES as GENERATION_NODES
+NODE_CLASS_MAPPINGS.update(GENERATION_NODES)
+NODE_DISPLAY_NAME_MAPPINGS.update({k: k.replace('YesOpen', 'YesOpen · ') for k in GENERATION_NODES})

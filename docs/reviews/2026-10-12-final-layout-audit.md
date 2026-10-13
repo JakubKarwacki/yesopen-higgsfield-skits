@@ -1,5 +1,7 @@
 # Końcowa analiza layoutu i rozmiarów — 12 października 2026
 
+> Zapis historyczny implementacji lub wykonanej produkcji. Od 13 października 2026 głównym wyborem projektu jest MiniMax H3, a Wan 3.0 hostowany lokalnie jest alternatywą do testów. Nazwy poprzednich modeli i wyniki poniżej opisują stan z daty raportu; bieżące instrukcje i status migracji: references/video-models.md.
+
 Analizowana wersja: `yesopen-skit-pipeline-layout-v7`. Pomiary wykonano na
 rzeczywistych elementach DOM ComfyUI, po wejściu do każdego z siedmiu podgrafów.
 Przegląd dotyczy geometrii, nie wykonania produkcji na GPU.

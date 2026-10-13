@@ -23,6 +23,14 @@ Use a non-root SSH user (for example `nebius`) with `/bin/bash`, an authorized p
 
 The same `gpu/server` and `gpu/editor` sources and model manifest can prepare a Nebius disk. A CPU preparation VM can build both Docker images and download models; do not run `bootstrap.sh` unchanged on CPU because it requires a GPU. Pass any required Hugging Face token only in process memory. Keep ComfyUI ports bound to localhost and access them through SSH tunnels.
 
-Verified on a 600 GiB disk: 50 model files including LTX and MiniMax H3, both images, ComfyUI 0.35.0 CPU API, all node classes required by the 16 API workflows, editor imports/FFmpeg and Whisper cache. GPU generation has not been tested on Nebius. Model weights and operational checkpoints do not belong in this Git repository.
+The prepared 600 GiB disk contains MiniMax H3 weights, the current manifest's supporting and legacy files, both images, ComfyUI 0.35.0 CPU API, workflow node classes, editor imports/FFmpeg and Whisper cache. The selected video engine is MiniMax H3; locally hosted Wan 3.0 is an alternative to evaluate after verifying official weights and runtime ([model policy](video-models.md)). The graphical H3 path is implemented; end-to-end generation quality still needs validation on a dev GPU. Model weights and operational checkpoints do not belong in Git.
+
+## Production and development disks
+
+Keep the original disk for employee video generation. Jakub and Kacper use an independent 600 GiB dev clone made from a snapshot. Capture the disk IDs and provenance in local operational configuration. Do not let dev deployment overwrite the production filesystem or choose a disk by an ambiguous name.
+
+Nebius supports snapshots of an attached disk without stopping its VM: [snapshot documentation](https://docs.nebius.com/compute/storage/disk-snapshots). After the snapshot is ready, create a separate disk from it with matching size, type and block size and deletion protection. The dev disk needs its own instance attachment when used.
+
+The current `nebius_session.py` checks all project instances and assumes one active machine. Targeted dev/production disk and instance selection is required before this wrapper can operate concurrent environments safely. Cloning a disk does not itself implement that selection.
 
 This is manual Nebius access and preparation support. Automatic Verda-first/Nebius fallback is not implemented in `gpu.py` yet.

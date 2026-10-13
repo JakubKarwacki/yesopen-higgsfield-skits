@@ -2,7 +2,7 @@
 
 An agent skill that turns "make something like this for YesOpen" plus a link to a short video into a finished,
 funny skit, delivered in 9:16, 4:5, 1:1 and 16:9. The cast stills, the voices and the talking, lip-synced takes
-come from your own GPU server with open models (ComfyUI with Z-Image, Chatterbox, LTX-2.3 and ACE-Step), or from
+come from your own GPU server (ComfyUI with Z-Image, Chatterbox, MiniMax H3 and ACE-Step), or from
 Higgsfield (Soul 2 and Seedance 2.5). The edit (cuts, punch-ins, captions, YesOpen notification banners, end card,
 an optional music bed on the beat, loudness) is a scripted ffmpeg pipeline driven by one JSON file.
 
@@ -12,7 +12,11 @@ an optional music bed on the beat, loudness) is a scripted ffmpeg pipeline drive
   <img src="examples/gym-breakup/final/web/its-not-you-its-your-invoices-16x9-poster.jpg" height="240" alt="Higgsfield, 16:9">
 </p>
 
-The first skit, **"It's not you. It's your invoices."**: a gym owner breaks up with his marketing agency, and
+Current model policy: **MiniMax H3 is the primary video engine**; **locally hosted Wan 3.0 is an alternative to test**.
+H3 is the default for new projects and the production graph uses the same audio-conditioned API templates as the client.
+Existing explicit per-project/per-line model choices are respected. GPU quality validation remains pending. See [model selection and availability](references/video-models.md).
+
+The historical first skit, **"It's not you. It's your invoices."**: a gym owner breaks up with his marketing agency, and
 every "I don't know" is answered by a YesOpen notification on his phone. It was made twice from the same script:
 
 - on one rented H200 with open models:
@@ -72,8 +76,8 @@ agents/openai.yaml          display metadata for agents that read it
 - **GPU engine:** a GPU server you rent or own: one NVIDIA card with 80 GB or more (H100, H200, B200), an
   Ubuntu 24.04 VM with Docker and the NVIDIA Container Toolkit, root login by SSH key, a 300 GB disk. Tested on
   1× H200 at [Verda](https://verda.com). Optional: the `verda` CLI with API credentials, so the client orders and
-  deletes the machine by itself; a Hugging Face read token with the LTX-2.5 licence accepted, for silent action
-  shots. Everything that runs on the server is in `gpu/` and installs itself.
+  deletes the machine by itself. Fetch the MiniMax files explicitly with `gpu.py fetch h3-talk,h3-i2v,h3-r2v --variant-b`.
+  Everything that runs on the server is in `gpu/`; check H3 readiness after bootstrap.
 - **Higgsfield engine:** a Higgsfield account with credit and an API key. `scripts/hf-job` creates its own
   virtualenv with `higgsfield-client` on first use.
 
@@ -101,11 +105,10 @@ with `verda ssh-key add`, and fill `verda.instance_type`, `verda.ssh_key_id` and
 or make a machine anywhere yourself and give the client its address with `gpu.py use <address>`. Step by step:
 [references/gpu-engine.md](references/gpu-engine.md), section 2, and [gpu/README.md](gpu/README.md).
 
-Optional, for silent action shots (LTX-2.5): accept the licence on the Hugging Face page `Lightricks/LTX-2.5`,
-create a read token and store it. The command asks for the value and does not echo it:
+Prepare the MiniMax H3 model files on the kept disk:
 
 ```bash
-security add-generic-password -U -s huggingface -a token -w
+python3 $SK/gpu/client/gpu.py fetch h3-talk,h3-i2v,h3-r2v --variant-b
 ```
 
 Higgsfield engine, once: store your key the same way.
@@ -142,7 +145,7 @@ $G start --yes                                                   # connect, or o
 python3 $SK/scripts/gpu_batches.py stills && $G batch stills/batch.json
 python3 $SK/scripts/gpu_batches.py voice && $G batch voice/batch.json
 python3 $SK/scripts/fit_lines.py lines.json voice lines
-python3 $SK/scripts/gpu_batches.py takes && $G batch takes/batch.json
+python3 $SK/scripts/gpu_batches.py takes --model h3 && $G batch takes/batch.json
 python3 $SK/scripts/inspect_take.py takes/l01.video.mp4          # every take
 $G stop --yes                                                    # delete the machine, keep the disk
 python3 $SK/scripts/make_edl.py .
@@ -174,7 +177,9 @@ md5 -q examples/gym-breakup/final/its-not-you-its-your-invoices-9x16.mp4        
 The byte-identical check holds with the same ffmpeg build (8.x on macOS); another build can differ in bytes but
 not in timing.
 
-## The first skit in numbers
+## The historical first skit in numbers
+
+These measurements describe the original pilot, not MiniMax H3 throughput. H3 needs a separate MVP benchmark.
 
 | | GPU server (2026-10-02) | Higgsfield (2026-10-01) |
 | --- | --- | --- |
@@ -206,9 +211,9 @@ The GPU cut is 12 s shorter and tighter: each line was trimmed to its words befo
 - The ComfyUI workflow templates in `gpu/workflows/ui/` are Comfy-Org's, under the MIT licence
   (`gpu/workflows/ui/LICENSE.txt`); `gpu/workflows/api/` holds the same graphs converted and patched.
 - The models are not included and each keeps its own licence (`gpu/README.md`): Apache 2.0 for Z-Image Turbo,
-  Qwen-Image-Edit, ACE-Step and SeedVR2, MIT for Chatterbox. LTX-2.3 and LTX-2.5 are under the LTX-2 Community
-  License: free for a company under $10 million in yearly revenue, no deepfakes of real people without their
-  consent, and content made with it is marked as generated.
+  Qwen-Image-Edit, ACE-Step and SeedVR2, MIT for Chatterbox. MiniMax H3 uses its Community License Agreement;
+  see [model terms and deployment status](references/video-models.md). The Wan 3.0 local experiment starts with
+  verification of official weights, licence and runtime.
 - The Higgsfield example's stills and takes were generated with Higgsfield (Soul 2, Seedance 2.5) under the
   account owner's Higgsfield terms. The GPU example's voices were cloned from those takes, and its takes were made
-  with LTX-2.3.
+  with the earlier GPU engine documented in the example's historical records.

@@ -1,14 +1,20 @@
-# Talk workflow controls
+# Kontrola jakości ujęć MiniMax H3
 
-## Corrected CFG mapping and optional negative conditioning
+Główny silnik i stan migracji: [video-models.md](video-models.md).
 
-`cfg_first` now targets `340:315`, the guider feeding initial sampler `340:291` (sigmas begin at 1.0).
-The previous mapping targeted `340:290`, the second-stage guider feeding sampler `340:310`; old experiments
-labelled first-stage CFG therefore cannot be treated as first-stage evidence. Default CFG remains 1.0, so
-this mapping correction leaves default graphs unchanged. Revalidate any explicitly configured CFG experiment.
+Każde zadanie zawiera ID ujęcia, wybrany still, zatwierdzone audio, prompt H3,
+czas, seed, profil jakości i wersję modeli. Zapisuj wartości faktycznie użyte.
 
-`take.negative_prompt` / `lines[].negative_prompt` is now forwarded to `340:314`, the negative text encoder
-connected to first-stage conditioning. A line overrides the project setting; omission preserves the workflow's
-existing text. Use the supported parameter rather than a project-local hardcoded node override. On the Polish
-salon pilot, first-stage CFG 2.0 plus targeted negatives removed invented subtitles, but that combined observation
-is not a universal optimum or an isolated proof of causation. Keep the second stage unchanged and inspect a pilot.
+Wspierane ustawienia batcha: `take.model: "h3"`, `take.h3_template`,
+`lines[].h3_prompt`, `tail`, `silence_before`, `seconds`, `seed`, `take.fast`
+oraz `take.megapixels`. Sprawdź nadpisania modelu per kwestia i kontrakt
+`gpu/workflows/params/h3-talk.json`; parametry poprzedniego silnika nie stają się
+automatycznie parametrami H3.
+
+Przed pełną partią porównaj zwykły profil z turbo na tych samych wejściach.
+Oceń dialog, pauzę komediową, lipsync, tożsamość, rekwizyty, zakończenie akcji
+i HOLD. Zapisz czas GPU, VRAM, rzeczywiste prompty i wybrane pliki.
+Nie przenoś wcześniejszych benchmarków na MiniMax.
+
+Wan 3.0 podlega tym samym próbom po potwierdzeniu oficjalnego lokalnego wydania.
+Historia wcześniejszych eksperymentów: `docs/archive/pre-minimax/performance-controls.md`.

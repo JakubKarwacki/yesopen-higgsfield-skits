@@ -512,6 +512,8 @@ def optimise_subgraph(sg, data):
 
 
 def main():
+    from pipeline_contract_graph import configure
+    configure(globals())
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--ui", type=Path, default=DEFAULT_UI)
     ap.add_argument("--out", type=Path, default=DEFAULT_OUT)
@@ -647,7 +649,7 @@ def main():
         gone_any = False
         for n in list(nodes_all):
             outs = n.get("outputs") or []
-            if not outs or n["type"] in sg_names or n["type"].startswith(("Save", "Preview")) or any(o.get("links") for o in outs):
+            if not outs or n["type"] in sg_names or n["type"].startswith(("Save", "Preview", "YesOpen")) or any(o.get("links") for o in outs):
                 continue
             for i in n.get("inputs") or []:
                 if i.get("link") is not None:

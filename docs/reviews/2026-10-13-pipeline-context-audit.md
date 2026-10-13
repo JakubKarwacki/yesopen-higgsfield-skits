@@ -1,5 +1,10 @@
 # Audyt nodów, stałych wartości i kontekstu pipeline’u
 
+> Ustalenia poniżej zachowują stan sprzed poprawek. Implementacja napraw wszystkich
+> 14 punktów: [raport napraw](2026-10-13-pipeline-context-fixes.md). Testy jakości GPU pozostają w MVP.
+
+> Zapis historyczny implementacji lub wykonanej produkcji. Od 13 października 2026 głównym wyborem projektu jest MiniMax H3, a Wan 3.0 hostowany lokalnie jest alternatywą do testów. Nazwy poprzednich modeli i wyniki poniżej opisują stan z daty raportu; bieżące instrukcje i status migracji: references/video-models.md.
+
 Data: 13 października 2026. Zakres: `yesopen-skit-pipeline`, 81 nodów głównych,
 7 podgrafów, nody `yesopen_pipeline`, generator grafu i skrypty przygotowujące
 audio, prompty oraz montaż. Sprawdzono również zapisany graf na uruchomionym

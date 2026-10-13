@@ -1,6 +1,6 @@
 ---
 name: yesopen-higgsfield-skits
-description: Make short, funny YesOpen video skits for TikTok, Reels and Shorts on your own GPU server with open models (ComfyUI: Chatterbox voices, LTX lip sync, Z-Image, ACE-Step music) or with Higgsfield. Take a reference video's comedy mechanics, write a skit where YesOpen is only the punchline, cast it, record every line and film it to that sound, cut it with scripted ffmpeg (captions, notification banners, end card, music on the beat) and deliver 9:16, 4:5, 1:1 and 16:9. Its client finds, connects to or orders the GPU machine and sets it up. Use whenever the user shares a YouTube, TikTok or Instagram link and asks for "taką scenkę", "coś takiego dla YesOpen", a funny video, short, reel, skit, filmik or ad for YesOpen or local businesses (gyms, restaurants, salons, shops), wants it "na naszym serwerze", "lokalnie", "na GPU" or with Higgsfield, or wants to re-cut, reformat or continue the gym breakup skit ("It's not you. It's your invoices."). Not for product demos, screen recordings or feature explainers.
+description: Make short, funny YesOpen video skits for TikTok, Reels and Shorts on your own GPU server (ComfyUI, MiniMax H3 video, Chatterbox voices, Z-Image, ACE-Step music) or with Higgsfield. Analyze a reference, write a script with YesOpen as the punchline, cast it, record approved dialogue, generate shots and deliver edited variants. MiniMax H3 is the primary video engine; locally hosted Wan 3.0 is an alternative to evaluate. Use for funny skits, reels and shorts for YesOpen or local businesses, including follow-ups to the gym breakup example. Not for product demos or screen recordings.
 ---
 
 ## GPU retirement and API-first operation
@@ -15,8 +15,9 @@ other formats. Two engines make the pictures and the voices:
 
 - **GPU, the default** (`"engine": "gpu"`): your own GPU server with ComfyUI and open models. Every line is
   recorded first (Chatterbox, a voice cloned from a sample), checked word by word, and the take is then filmed to
-  that sound (LTX-2.3 lip sync). You pay for the machine's hours, not per job: the gym skit needed 10 minutes of
-  GPU time and its whole first session cost $4.86. Everything the server needs is in `gpu/`;
+  that sound (MiniMax H3, `h3-talk`). Explicitly select `take.model: "h3"` or `--model h3`;
+  the graphical production branch and runtime defaults still require migration. You pay for machine time;
+  historical gym-pilot timings are not H3 measurements. Everything the server needs is in `gpu/`;
   `references/gpu-engine.md` is the guide.
 - **Higgsfield** (`"engine": "higgsfield"`): Soul stills and Seedance 2.5 takes through the Higgsfield API, paid
   per second of video (the gym skit: $49). No server.
@@ -80,8 +81,9 @@ Do not turn a user's temporary inability to listen into repeated approval reques
    your computer: never commit, publish or upload them (also not to the GPU server), never paste them, and never
    retell its dialogue, even in other words.
 5. **Only voices and faces we may use.** Clone only synthetic voices (our own generated takes, Chatterbox's own
-   voices) or a person who agreed in writing; never a real person's voice or face from the reference. The LTX-2
-   licence asks that content made with it is marked as AI-generated: use the platform's label when posting.
+   voices) or a person who agreed in writing; never a real person's voice or face from the reference.
+   Apply the selected model's terms and the platform's AI-generation labelling requirements;
+   the current MiniMax terms and deployment status are in `references/video-models.md`.
 6. **Keys stay in the Keychain.** The Higgsfield key (service `higgsfield`, account `api-key`) and the Hugging Face
    token (service `huggingface`, account `token`) are read by the scripts and never printed. Never write a key into
    args, logs, scripts, commits, memory or chat. If a key is pasted into a chat, store it with
@@ -123,7 +125,7 @@ that hides the missing event. After regeneration, review and select the edit bou
 | Python 3.11 | `pip install pillow numpy faster-whisper` (Whisper `large-v3-turbo`, int8 on the CPU, downloads on first use; the transcript only validates the known text and times its words, `scripts/speech.py`; `openai-whisper` still works as a fallback, `YESOPEN_ASR=openai`) |
 | GPU engine | a GPU server: one NVIDIA card with 80 GB or more, an Ubuntu 24.04 VM with Docker and the NVIDIA Container Toolkit, root login by SSH key, a 300 GB disk. Verda, another provider or your own machine: `references/gpu-engine.md`, section 2. Here: `ssh`, `rsync`, an SSH key and the settings in `~/.config/yesopen-gpu/config.json` |
 | GPU engine at Verda, required | the `verda` CLI, set up by the user: installed, logged in with API credentials of the Verda project, and `verda.instance_type` and `verda.ssh_key_id` filled in the config. Before the first GPU step run `python3 $SK/gpu/client/gpu.py verda-check`. When it says the CLI is not set up, stop and tell the user plainly that they must set it up first, and give them the steps it prints. The user runs `verda auth login` in their own terminal; never ask for the client secret, never take it in the chat and never read it. The credentials may also reach the CLI from the environment (`VERDA_CLIENT_ID`, `VERDA_CLIENT_SECRET`), the way `scripts/verda-vault.py` passes the team vault entry (`references/verda-operations.md`); `verda-check` tests them with a read-only call. `start`, `stop`, `up`, `down` and `status` refuse to run until the check passes. A server elsewhere, or a machine a teammate starts for you: `"provider": "other"` in the config |
-| GPU engine, optional | a Hugging Face token for silent `action` shots (LTX-2.5); Docker here for the editor container |
+| GPU engine | MiniMax H3 files fetched explicitly with `--variant-b`; Docker for the editor container; local Wan 3.0 availability and tests tracked in `references/video-models.md` |
 | Higgsfield engine | an account with credit and an API key `<key-id>:<secret>` in the Keychain (service `higgsfield`, account `api-key`) or `HF_KEY`; `hf-job` finds or creates a venv with `higgsfield-client` |
 | Ego Browser | captures the reference (global skill `ego-browser`); without it, save frames and the transcript by hand into `reference/private/` |
 | Localesto checkout | optional: product copy for claims and the default project root; `LOCALESTO_ROOT` if it is not a parent folder |
@@ -217,7 +219,8 @@ back and the owner knows it; never as a shortcut for a new role.
 Check every claim (`rg` in `business-card/messages/en`) and write the claims table. Write `script.md` from the
 template. With the GPU engine also write `lines.json` from `templates/lines.json`: the line table in the form the
 batches read (who, the text with numbers as words, exaggeration, acting, what we see), and run
-`python3 $SK/scripts/gpu_batches.py estimate` for the GPU minutes.
+`python3 $SK/scripts/gpu_batches.py estimate --model h3` for the known cost components;
+H3 GPU timing is not yet measured, so add a dev pilot before promising a total.
 
 Present it in chat, short and in the user's language: the idea in two sentences, the line table, what is borrowed
 (mechanics only), the claims, open decisions each with a recommendation, the cost (GPU: the session's hours at the
@@ -255,7 +258,7 @@ python3 $SK/scripts/contact_sheet.py stills/still-owner-*.png -o stills/sheet-ow
 script, not the sheet alone: the role, the place, the props and the variants the later shots need. Write each pick
 and its reason in `script.md`, and the picks to `lines.json` → `characters.<name>.still` (GPU) or
 `stills/picked.json` (Higgsfield), and to `project.json` → `cast`. A new character's voice is made from its picked
-still and its role (GPU: a short `h3-i2v` take of the character speaking in character, cut to 5–15 s), not borrowed
+still and its role (GPU: a short MiniMax `h3-i2v` take under the applicable model terms, cut to 5–15 s), not borrowed
 from another skit. Returning characters come from `assets/cast/` with their stills and voice samples, only when
 the script brings them back (Phase 2). Gate 3.
 
@@ -272,7 +275,7 @@ python3 $SK/scripts/gpu_batches.py voice && $G batch voice/batch.json      # eve
 python3 $SK/scripts/fit_lines.py lines.json voice lines                    # check, cut and pick: lines/<id>.wav
 python3 $SK/scripts/gpu_batches.py reseed l18 && $G batch voice/batch-l18.json   # only for a line that failed
 python3 $SK/scripts/fit_lines.py lines.json voice lines --only l18
-python3 $SK/scripts/gpu_batches.py takes && $G batch takes/batch.json      # 13 s per take on an H200
+python3 $SK/scripts/gpu_batches.py takes --model h3 && $G batch takes/batch.json # measure H3 on the dev disk
 python3 $SK/scripts/inspect_take.py takes/l01.video.mp4                    # words, sheet, boundaries; every take
 ```
 
@@ -280,9 +283,10 @@ Voice samples: `voices/<character>.wav`, 5–15 s of one clean synthetic voice (
 from our own earlier take). Listen to the lines that carry the joke (`key_shots`) before any picture is made: the
 picture follows the sound, so a wrong word, or a question where the script has a full stop, is fixed here for
 seconds of GPU time. A silent beat before a line: `silence_before` on that line, with a whole `prompt` that says
-what happens first. The takes are LTX-2.3 by default; with MiniMax's consent a film (or one line) can be made on
-MiniMax H3 instead: `"model": "h3"` in `lines.json` → `take`, or `gpu_batches.py takes --model h3` (`gpu-engine.md`,
-section 6). Make the music bed in the same session if the skit wants one (`gpu-engine.md`, section 7).
+what happens first. The selected video engine is MiniMax H3: set `"model": "h3"` in `lines.json` → `take`
+and use `gpu_batches.py takes --model h3`; inspect per-line model overrides. Follow `gpu-engine.md`, section 6,
+and `video-models.md` for implementation status and model terms. Locally hosted Wan 3.0 is a test candidate
+after official weights and runtime are confirmed. Make a music bed only if the project selected music.
 After Gate 4, retire resources only when the remaining edit/QA no longer needs that host and the
 production procedure permits it. A shared machine may still have CPU/export work.
 
@@ -379,7 +383,8 @@ python3 $SK/scripts/encode_variants.py final/<name>-9x16.mp4       # -share.mp4 
 
 ## Cost and time
 
-**GPU engine**, measured on 2 October 2026 on one H200 at Verda (`gpu-engine.md`, section 9):
+**Historical GPU pilot**, measured on 2 October 2026 on one H200 at Verda, using the earlier video engine.
+These figures are not a MiniMax H3 benchmark. Measure H3 separately on the dev disk (`gpu-engine.md`, section 9):
 
 | Item | Price or time | The gym skit |
 | --- | --- | --- |
@@ -393,7 +398,7 @@ python3 $SK/scripts/encode_variants.py final/<name>-9x16.mp4       # -share.mp4 
 | Edit, all formats, QA | on your computer, as for Higgsfield | |
 
 The skit itself took 10.4 min of GPU time; the hours around it are what costs. Have `lines.json`, the looks and
-the voice samples ready before `start`, run approved batches without unnecessary gaps, and follow the retirement checks when host work ends. `gpu_batches.py estimate` prints the GPU minutes of a new skit.
+the voice samples ready before `start`, run approved batches without unnecessary gaps, and follow the retirement checks when host work ends. `gpu_batches.py estimate --model h3` reports measured components and marks H3 timing as unmeasured.
 
 **Higgsfield engine**, list prices on 2026-10-01:
 
@@ -468,8 +473,8 @@ returns no cost and there is no balance endpoint.
 - Delivery detours cost 25 minutes and the user's patience: links to the files on disk come first.
 - GPU: the voice model often talks on after the line or mumbles in a pause, and once said "two AMA"; every line is
   fitted and checked before any picture is made (2 of 21 lines needed new seeds).
-- GPU: LTX-2.3 pushes in on the face at the end of a take unless the prompt says the framing stays the same, and
-  a phone screen facing the camera gets an invented app on it.
+- GPU: explicitly describe framing and camera motion in the MiniMax prompt and inspect the pilot for unwanted
+  push-ins; a phone screen facing the camera can introduce an invented interface.
 - GPU: the machine is the cost, not the jobs (10 min of GPU time in a 1 h session); prepare everything before
   `start`; retire resources according to the authorized operation and verified workload.
 

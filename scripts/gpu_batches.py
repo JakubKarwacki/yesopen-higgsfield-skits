@@ -61,7 +61,7 @@ H3_TAKE_TEMPLATE = (
     "comedic acting with clear facial expressions. No other people, no text on screen.\n"
     "Audio: only {his} voice, close to the phone's microphone, in a quiet room; no music.")
 DEFAULT_TAKE = {"template": TAKE_TEMPLATE, "h3_template": H3_TAKE_TEMPLATE, "tail": 0.6, "seed": 500,
-                "model": "ltx"}
+                "model": "h3"}
 MODELS = {"ltx": "talk", "h3": "h3-talk"}
 LTX_OPTIONS = ("enhance_prompt", "cfg_first", "negative_prompt")  # talk only (references/performance-controls.md)
 PRONOUNS = {"him": ("he", "his"), "her": ("she", "her"), "them": ("they", "their")}
@@ -284,7 +284,7 @@ def cmd_takes(project: Path, doc: dict, args) -> None:
                       f"was trained on; split the line, or make it with LTX (\"model\": \"ltx\" on the line)",
                       file=sys.stderr)
             values["seconds"] = max(values["seconds"], H3_MIN_SECONDS)
-            values.update({key: take[key] for key in ("fast", "megapixels") if key in take})
+            values.update({key: line.get(key, take.get(key)) for key in ("fast", "megapixels", "aspect") if key in line or key in take})
             ltx_only.update(key for key in LTX_OPTIONS if key in line or key in take)
         else:
             values.update({key: line.get(key, take.get(key)) for key in LTX_OPTIONS if key in line or key in take})

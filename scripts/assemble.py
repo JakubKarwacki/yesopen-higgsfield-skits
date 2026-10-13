@@ -59,6 +59,8 @@ def assemble(project, layout, edl_path=None, out_path=None, captions=True, whisp
     cfg = load_project(project)
     edl_path = pathlib.Path(edl_path or project / "edit" / "edl.json").resolve()
     edl = json.loads(edl_path.read_text())
+    captions = captions and edl.get('captions_enabled', cfg.get('captions', {}).get('enabled', True))
+    music = music and edl.get('music', cfg.get('music', {})).get('enabled', True)
     root = (edl_path.parent / edl.get("root", "..")).resolve()
     fps = edl.get("fps", 30)
     W, H = layout["size"]

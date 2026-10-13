@@ -20,7 +20,8 @@
   }
  },
  "take": {
-  "model": "ltx",
+  "model": "h3",
+  "postprocess": {"upscale": {"enabled": false, "multiplier": 1.5}, "interpolate": {"enabled": false, "multiplier": 2, "multiply_fps": true}},
   "tail": 0.6,
   "seed": 500
  },

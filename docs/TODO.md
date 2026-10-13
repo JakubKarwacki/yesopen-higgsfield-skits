@@ -20,6 +20,9 @@ Robocza lista dalszego rozwoju pipeline’u. Kolejność pokazuje zależności i
 
 ## Sprawdzenie i usprawnienia
 
+- [x] Przenieść główny graf ComfyUI, domyślne ustawienia klienta i kontrakty ujęć na MiniMax H3; połączyć `h3-talk` z zatwierdzonym audio, checkpointami i pełną ścieżką montażu. Testy jakości GPU pozostają w MVP.
+- [ ] Zweryfikować oficjalne wagi, licencję i runtime Wan 3.0 do lokalnego hostingu. Po potwierdzeniu dostępności uruchomić na dysku dev i porównać z MiniMax: lipsync, tożsamość, rekwizyty, zakończenie akcji, VRAM, koszt i czas GPU ([plan](../references/video-models.md)).
+- [ ] Dodać jawny wybór dysku i instancji dev/production w kliencie Nebius, aby testy Jakuba i Kacpra mogły działać równolegle z produkcją pracowników.
 - [ ] Przeprowadzić testy MVP całego pipeline’u.
 - [ ] Optymalizować koszty użycia modeli Gemini.
 - [ ] Opracować asynchroniczne wykonywanie pipeline’u.

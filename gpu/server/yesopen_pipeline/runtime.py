@@ -46,9 +46,27 @@ def signature(root, line, seed=None, prompt=None, unique_id=None, input_name=Non
     entry = next(item for item in doc['lines'] if item['id'] == line) if line else {}
     char = doc['characters'][entry['who']] if line else {}
     values = {'line': entry, 'character': char, 'language': doc.get('language'), 'take': doc.get('take'), 'seed': seed}
+    cfg = json.loads((root / 'project.json').read_text())
+    values['policy'] = {'speech': cfg.get('speech'), 'language': cfg.get('language')}
+    if line is None:
+        values['policy']['music'] = cfg.get('music')
+    values['fit'] = doc.get('fit')
     names = [char.get('voice'), entry.get('still') or char.get('still')]
     if input_name == 'video':
         names.append(f'lines/{line}.wav')
+        for variant in entry.get('variants', {}).values():
+            names.extend(value for key, value in variant.get('set', {}).items()
+                         if key in ('image', 'audio', 'video', 'first_frame', 'last_frame') and isinstance(value, str))
+        from .generation import workflows
+        assets = workflows()
+        take = doc.get('take', {})
+        templates = {'h3-talk' if entry.get('model', take.get('model', 'h3')) == 'h3' else 'talk'}
+        post = {**take.get('postprocess', {}), **entry.get('postprocess', {})}
+        templates.update(key for key, settings in post.items() if settings.get('enabled'))
+        templates.update(v.get('template') for v in entry.get('variants', {}).values())
+        values['templates'] = {str(p.relative_to(assets)): digest(p) for template in templates if template
+                               for p in (assets / 'api' / f'{template}.json', assets / 'params' / f'{template}.json') if p.is_file()}
+        values['contract'] = {p.name: digest(p) for p in [Path(__file__), Path(__file__).with_name('generation.py'), Path(__file__).with_name('contracts.py')]}
     values['files'] = {name: digest(root / name) for name in names if name and (root / name).is_file()}
     if input_name and prompt and unique_id:
         edge = prompt.get(str(unique_id), {}).get('inputs', {}).get(input_name)
@@ -64,7 +82,7 @@ def signature(root, line, seed=None, prompt=None, unique_id=None, input_name=Non
                 # Keep voice seed/line selection without approval/cache/UI switches.
                 if kind == 'YesOpenLine':
                     graph[nid] = {'class_type': kind, 'inputs': {k: v for k, v in node.get('inputs', {}).items() if k in ('line', 'take')}}
-                elif kind not in {'YesOpenVoiceApproval', 'YesOpenFitLine'}:
+                elif kind not in {'YesOpenVoiceApproval', 'YesOpenFitLine', 'YesOpenGenerateTake'}:
                     continue
             else:
                 graph[nid] = node
@@ -91,8 +109,27 @@ def require_takes(root):
     cuts = json.loads((root / 'edit/cuts.json').read_text()).get('cuts', [])
     if not cuts:
         raise RuntimeError('edit/cuts.json: brak ujęć do montażu.')
-    require_files(root, [f'takes/{c["take"]}.video.mp4' for c in cuts])
-    require_files(root, [f'takes/{c["take"]}.video.words.json' for c in cuts])
+    cfg = json.loads((root / 'project.json').read_text())
+    doc = json.loads((root / 'lines.json').read_text())
+    known = {line['id'] for line in doc['lines']}
+    ids = {c['take'] for c in cuts}
+    ids.update(e['take'] for c in cuts for e in c.get('events', []) if e['type'] == 'cutaway')
+    covered = {line for line in known if line in ids or any(take.startswith(line + '-') for take in ids)}
+    omitted = set(cfg.get('edit', {}).get('omitted_lines', []))
+    if known - covered - omitted:
+        raise RuntimeError('cuts.json pomija kwestie bez jawnej decyzji edit.omitted_lines: ' + ', '.join(sorted(known - covered - omitted)))
+    mapping = cfg.get('takes', {})
+    required = []
+    for take in sorted(ids):
+        if take not in mapping:
+            raise RuntimeError(f'project.takes: brak wybranego ujęcia {take}')
+        if take not in known and not any(take.startswith(k + '-') for k in known):
+            raise RuntimeError(f'cuts.json: ujęcie {take} nie pochodzi z lines.json')
+        path = Path(mapping[take])
+        if (root / path).resolve().is_relative_to(root.resolve()) is False:
+            raise RuntimeError('Ujęcie poza projektem')
+        required.extend([str(path), str(path.with_suffix('.words.json'))])
+    require_files(root, required)
 
 
 def require_qa(report, whisper=False):
@@ -102,8 +139,12 @@ def require_qa(report, whisper=False):
         raise RuntimeError('QA nie przeszło: ' + ', '.join(failed))
 
 
-def manifest(root):
+def manifest(root, formats=None):
     files = sorted(p for p in (root / 'final').rglob('*') if p.is_file() and p.name != 'manifest.json')
+    if formats is not None:
+        cfg = json.loads((root / 'project.json').read_text())
+        stems = {cfg.get('name', root.name) + '-' + f.replace(':', 'x') for f in formats}
+        files = [p for p in files if any(p.stem in (s, s + '-share', s + '-poster') for s in stems)]
     if not files:
         raise RuntimeError('Brak plików końcowych.')
     data = {'project': root.name, 'files': [
@@ -119,7 +160,7 @@ def verify_qa_files(root, formats):
         path = root / f'edit/qa-{tag}.json'
         require_files(root, [str(path.relative_to(root))])
         report = json.loads(path.read_text())
-        require_qa(report, whisper=fmt == '9:16')
+        require_qa(report, whisper=True)
         video = Path(report['video'])
         if not video.is_absolute():
             video = root / video

@@ -37,11 +37,13 @@
   "l02": "takes/l02.video.mp4"
  },
  "speech": {
+  "fit": {"lead": 0.3, "tail": 0.12, "max_pause": null, "min_ratio": 1.0},
   "thr": -26.0,
   "gap": 0.12,
   "reach": 0.8
  },
  "captions": {
+  "enabled": true,
   "style": {
    "max_words": 3,
    "max_chars": 18,
@@ -77,5 +79,6 @@
   "url": "yesopens.com",
   "dur": 2.6
  },
- "ding_volume": 0.55
+ "ding_volume": 0.55,
+ "music": {"enabled": false}
 }

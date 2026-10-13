@@ -1,5 +1,7 @@
 # Example: "It's not you. It's your invoices." on the GPU server
 
+> Zapis historyczny implementacji lub wykonanej produkcji. Od 13 października 2026 głównym wyborem projektu jest MiniMax H3, a Wan 3.0 hostowany lokalnie jest alternatywą do testów. Nazwy poprzednich modeli i wyniki poniżej opisują stan z daty raportu; bieżące instrukcje i status migracji: references/video-models.md.
+
 The first YesOpen skit made a second time, on 2 October 2026, from the same script and the same edit, on one
 rented H200 with open models instead of Higgsfield. A gym owner breaks up with his marketing agency; every "I don't
 know" is answered by a YesOpen notification on his phone. 61.4 s, English. Compare it with the Higgsfield version

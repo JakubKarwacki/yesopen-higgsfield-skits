@@ -1,5 +1,7 @@
 # Graph routing optimisation — 12 October 2026
 
+> Zapis historyczny implementacji lub wykonanej produkcji. Od 13 października 2026 głównym wyborem projektu jest MiniMax H3, a Wan 3.0 hostowany lokalnie jest alternatywą do testów. Nazwy poprzednich modeli i wyniki poniżej opisują stan z daty raportu; bieżące instrukcje i status migracji: references/video-models.md.
+
 Context: continuation of the chat “Rozbudowaw pipeline”, after commit `16a2562`.
 This work concerns graph geometry and wiring, independently of production execution.
 

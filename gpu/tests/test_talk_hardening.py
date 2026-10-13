@@ -35,7 +35,7 @@ class TalkNegativeConditioning(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             doc = {'characters': {'a': {'still': 'a.png', 'who': 'Woman', 'where': 'salon'}},
-                   'take': {'negative_prompt': 'subtitles'},
+                   'take': {'model': 'ltx', 'negative_prompt': 'subtitles'},
                    'lines': [{'id': 'l01', 'who': 'a', 'text': 'Hello',
                               'negative_prompt': 'subtitles, foreground person'}]}
             with patch.object(gpu_batches, 'line_seconds', return_value=2):

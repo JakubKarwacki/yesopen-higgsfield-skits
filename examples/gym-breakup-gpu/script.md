@@ -1,5 +1,7 @@
 # It's not you. It's your invoices. (serwer GPU)
 
+> Zapis historyczny implementacji lub wykonanej produkcji. Od 13 października 2026 głównym wyborem projektu jest MiniMax H3, a Wan 3.0 hostowany lokalnie jest alternatywą do testów. Nazwy poprzednich modeli i wyniki poniżej opisują stan z daty raportu; bieżące instrukcje i status migracji: references/video-models.md.
+
 - **Status:** scenariusz zaakceptowany 2026-10-01 dla wersji z Higgsfield (`../gym-breakup/script.md`). Tę wersję zrobiliśmy 2026-10-02 na własnym serwerze GPU, żeby porównać oba silniki na tym samym scenariuszu i montażu.
 - **Pomysł:** właściciel siłowni zrywa ze swoją agencją marketingową. Agencja straszy pytaniami „a kto będzie…?”, a on za każdym razem udaje, że nie wie. Wtedy jego telefon dzwoni powiadomieniem, które odpowiada na to pytanie. Agencja zaczyna podejrzewać, że ma kogoś innego. Funkcje YesOpen pojawiają się tylko jako puenty, a nie jako prezentacja.
 - **Długość:** 61,4 s, pionowo 9:16, po angielsku.
