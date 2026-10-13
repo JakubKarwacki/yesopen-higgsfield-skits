@@ -6,11 +6,13 @@ script in web/live_refresh.js reloads the workflow if the tab has no unsaved cha
 says that a newer version exists). No node is added to ComfyUI.
 """
 import os
+import json
 import threading
 import time
 
 import folder_paths
 from server import PromptServer
+from aiohttp import web
 
 NODE_CLASS_MAPPINGS = {}
 WEB_DIRECTORY = "./web"
@@ -21,6 +23,40 @@ POLL_SECONDS = 1.0
 
 def _workflows_dir():
     return os.path.join(folder_paths.get_user_directory(), "default", "workflows")
+
+
+@PromptServer.instance.routes.get('/yesopen/project-profile')
+async def project_profile(request):
+    """The node library is derived from the active project graphs, including subgraphs."""
+    root = _workflows_dir()
+    allowed = set()
+    # API-only utility nodes may not appear in the visual templates.
+    manifest = os.path.join(os.path.dirname(root), 'yesopen-node-types.json')
+    if os.path.isfile(manifest):
+        with open(manifest, encoding='utf-8') as source:
+            allowed.update(json.load(source))
+
+    def visit(value):
+        if isinstance(value, dict):
+            for key in ('type', 'class_type'):
+                if isinstance(value.get(key), str):
+                    allowed.add(value[key])
+            for child in value.values():
+                visit(child)
+        elif isinstance(value, list):
+            for child in value:
+                visit(child)
+
+    main = os.path.join(root, 'yesopen-skit-pipeline.json')
+    if not os.path.isfile(main):
+        raise web.HTTPNotFound(text='The YesOpen pipeline has not been installed.')
+    for base, _, files in os.walk(root):
+        for name in files:
+            if name.endswith('.json'):
+                with open(os.path.join(base, name), encoding='utf-8') as source:
+                    visit(json.load(source))
+    return web.json_response({'workflow': 'workflows/yesopen-skit-pipeline.json',
+                              'node_types': sorted(allowed)})
 
 
 def _snapshot(root):

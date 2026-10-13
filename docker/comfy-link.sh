@@ -11,8 +11,6 @@ set -uo pipefail
 
 KEY="$HOME/.ssh/id_ed25519_yesopen_gpu"
 STATE="${YESOPEN_GPU_HOME:-$HOME/.config/yesopen-gpu}/state.json"
-WF_ROOT="${SKILL_DIR:-/skill}/gpu/workflows"
-REMOTE_WF=/srv/yesopen/comfy/user/default/workflows
 REMOTE_LIVE=/srv/yesopen/comfy/live_refresh
 SSH_OPTS=(-i "$KEY" -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/dev/null
           -o ConnectTimeout=10 -o ServerAliveInterval=30 -o ServerAliveCountMax=3)
@@ -32,12 +30,10 @@ if ip:
 PY
 }
 
-sync_workflows() {  # copy the UI workflows (not index.json) to the machine; existing files are overwritten
-  local host="$1" tmp="/tmp/wf-$(date +%s)"
-  ssh "${SSH_OPTS[@]}" "$host" "mkdir $tmp" || return 1
-  # ui/: the 15 template workflows; pipeline/: the whole pipeline in one graph (yesopen-skit-pipeline.json)
-  (cd "$WF_ROOT" && scp -q "${SSH_OPTS[@]}" $(ls ui/*.json pipeline/*.json | grep -v '^ui/index.json$') "$host:$tmp/") || return 1
-  ssh "${SSH_OPTS[@]}" "$host" "sudo mkdir -p $REMOTE_WF && sudo cp $tmp/*.json $REMOTE_WF/" || return 1
+sync_workflows() {  # install the active project graphs; obsolete versions are recoverable in an archive
+  local host="$1"
+  # One main graph, related templates in their own folder, obsolete previews outside the workflow browser.
+  python3 "${SKILL_DIR:-/skill}/gpu/tools/install_comfy_workspace.py" "$host" || return 1
   echo "workflows synced to $host"
 }
 

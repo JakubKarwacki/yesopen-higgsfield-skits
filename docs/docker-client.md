@@ -112,7 +112,8 @@ docker compose rm -sf comfy-link                    # stop the tunnel
 ```
 
 The `comfy-link` service reads the machine's address from `state.json`, keeps an SSH tunnel to its ComfyUI and copies
-the 15 workflows of `gpu/workflows/ui` into the machine's ComfyUI (panel Workflows, key `W`). It follows a new address
+the main `yesopen-skit-pipeline` graph plus the 15 workflows of `gpu/workflows/ui` into a `templates/` subfolder
+in the machine's ComfyUI (panel Workflows, key `W`). It follows a new address
 by itself after the next session. It orders and deletes nothing: the machine is ended with `nebius-down` / `gpu stop`.
 **Live refresh.** Every browser showing a workflow reloads it when its saved file changes on the machine (a toast says
 "Workflow odświeżony", the viewer's zoom and position stay). A tab with unsaved changes of its own is never
@@ -122,6 +123,12 @@ workflows folder and sends the event `yesopen.workflow_changed`); `comfy-link` c
 it with `python3 gpu/tools/build_pipeline_graph.py` and restart `comfy-link` (it syncs the files): all open screens
 update by themselves. Saving in the ComfyUI UI (`Ctrl+S`) refreshes the other open tabs the same way.
 **Busy badge.** A badge at the top of every tab (`gpu/server/live_refresh/web/busy_indicator.js`) reads ComfyUI's queue: green "Wolne" = nobody generates, amber = you do, red = another browser does (your Run would queue behind it). Alt+R reloads the open workflow from the server. One "Run" runs the whole GPU pipeline of `yesopen-skit-pipeline` (MiniMax H3 is muted: it needs the vendor's written consent).
+
+**Project workspace.** Opening the server without a workflow link loads the saved `yesopen-skit-pipeline` as the
+default graph. The node library includes only node classes used by the project's visual and API templates;
+the backend keeps its installed dependencies. On synchronization, obsolete previews and changed older graphs
+move to `/srv/yesopen/comfy/workflow-archive/<UTC timestamp>/`, outside the workflow browser. The installer
+(`gpu/tools/install_comfy_workspace.py`) preserves these copies on the persistent disk for recovery.
 
 **The whole pipeline in one graph.** `yesopen-skit-pipeline` runs a skit project from its script to the delivered files. The YesOpen nodes (`gpu/server/yesopen_pipeline`, mounted into ComfyUI by `compose.yaml`) read the project in `/srv/yesopen/projects/<project>` (`gpu.py push <project>`; the browser shows it as `/work/<project>`), feed one line of `lines.json` into Chatterbox and Z-Image, fit the recorded line (`fit_lines.py`), film the take to it with the project's prompt, length, seed and picked still, and save every result under the skill's names (`voice/`, `lines/`, `takes/`, `stills/`, `music/`). After gate 4 the same graph runs the edit (`build_assets.py`, `make_edl.py`, `assemble.py`), after gate 5 the formats and QA, after gate 6 the delivery copies (`encode_variants.py`). Those scripts run in the `editor-api` service (`gpu/editor/api.py`, the editor image: the same ffmpeg, Python and Whisper as on the Mac), on the compose network only. A gate passes the project on only when its `approved` switch is on; the reference (phase 1) stays on your computer and never reaches the server. `comfy-link` copies the nodes, the service and the skill's scripts to the machine; ComfyUI loads new nodes at its next start.
 
