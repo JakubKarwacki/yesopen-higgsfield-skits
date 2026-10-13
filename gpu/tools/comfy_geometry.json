@@ -14,6 +14,22 @@
     12
    ]
   },
+  "10": {
+   "box": [
+    0,
+    -30,
+    270,
+    130
+   ],
+   "ins": {
+    "on_false": 12,
+    "on_true": 32,
+    "switch": 58
+   },
+   "outs": [
+    12
+   ]
+  },
   "1077": {
    "box": [
     0,
@@ -95,6 +111,37 @@
     52
    ]
   },
+  "11": {
+   "box": [
+    0,
+    -30,
+    400,
+    210
+   ],
+   "ins": {
+    "values.a": 12,
+    "values.b": 32,
+    "values.c": 52
+   },
+   "outs": [
+    12,
+    32
+   ]
+  },
+  "13": {
+   "box": [
+    0,
+    -30,
+    325,
+    90
+   ],
+   "ins": {
+    "value": 37.9
+   },
+   "outs": [
+    11.9
+   ]
+  },
   "2": {
    "box": [
     0,
@@ -103,12 +150,28 @@
     110
    ],
    "ins": {
-    "images": 32,
-    "interp_model": 12,
-    "multiplier": 58
+    "images": 31.9,
+    "interp_model": 11.9,
+    "multiplier": 57.8
    },
    "outs": [
-    12
+    11.9
+   ]
+  },
+  "3": {
+   "box": [
+    0,
+    -30,
+    230,
+    114
+   ],
+   "ins": {
+    "video": 12
+   },
+   "outs": [
+    12,
+    32,
+    52
    ]
   },
   "5": {
@@ -120,10 +183,22 @@
    ],
    "ins": {
     "audio": 32,
-    "bit_depth": 86,
-    "color_space": 114,
     "fps": 58,
     "images": 12
+   },
+   "outs": [
+    12
+   ]
+  },
+  "9": {
+   "box": [
+    0,
+    -30,
+    270,
+    90
+   ],
+   "ins": {
+    "value": 38
    },
    "outs": [
     12
@@ -818,9 +893,7 @@
     280,
     110
    ],
-   "ins": {
-    "noise_seed": 38
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -861,9 +934,7 @@
     280,
     110
    ],
-   "ins": {
-    "sampler_name": 38
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -876,15 +947,62 @@
     170
    ],
    "ins": {
-    "guider": 32,
-    "latent_image": 92,
-    "noise": 12,
-    "sampler": 52,
-    "sigmas": 72
+    "guider": 31.9,
+    "latent_image": 91.8,
+    "noise": 11.9,
+    "sampler": 51.9,
+    "sigmas": 71.8
    },
    "outs": [
-    12,
-    32
+    11.9,
+    31.9
+   ]
+  },
+  "348": {
+   "box": [
+    0,
+    -30,
+    330,
+    120
+   ],
+   "ins": {
+    "samples": 12,
+    "upscale_model": 32,
+    "vae": 52
+   },
+   "outs": [
+    12
+   ]
+  },
+  "349": {
+   "box": [
+    0,
+    -30,
+    300,
+    180
+   ],
+   "ins": {
+    "bypass": 78,
+    "image": 32,
+    "latent": 52,
+    "vae": 12
+   },
+   "outs": [
+    12
+   ]
+  },
+  "350": {
+   "box": [
+    0,
+    -30,
+    290,
+    110
+   ],
+   "ins": {
+    "image": 12
+   },
+   "outs": [
+    12
    ]
   },
   "351": {
@@ -895,10 +1013,7 @@
     118
    ],
    "ins": {
-    "input": 12,
-    "resize_type": 38,
-    "resize_type.longer_size": 66,
-    "scale_method": 94
+    "input": 12
    },
    "outs": [
     12
@@ -911,9 +1026,7 @@
     280,
     110
    ],
-   "ins": {
-    "sampler_name": 38
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -926,7 +1039,6 @@
     142
    ],
    "ins": {
-    "expression": 98,
     "values.a": 12,
     "values.b": 32
    },
@@ -944,7 +1056,6 @@
     142
    ],
    "ins": {
-    "expression": 98,
     "values.a": 12,
     "values.b": 32
    },
@@ -962,7 +1073,6 @@
     200
    ],
    "ins": {
-    "batch_size": 122,
     "height": 66,
     "length": 94,
     "width": 38
@@ -979,10 +1089,9 @@
     180
    ],
    "ins": {
-    "bypass": 106,
+    "bypass": 78,
     "image": 32,
     "latent": 52,
-    "strength": 78,
     "vae": 12
    },
    "outs": [
@@ -1012,7 +1121,6 @@
     142
    ],
    "ins": {
-    "expression": 98,
     "values.a": 12,
     "values.b": 32
    },
@@ -1071,9 +1179,7 @@
     370,
     100
    ],
-   "ins": {
-    "value": 38
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -1083,14 +1189,18 @@
     0,
     -30,
     550,
-    740
+    360
    ],
    "ins": {
     "clip": 12,
-    "text": 377
+    "text": 187
    },
    "outs": [
     12
+   ],
+   "requested_size": [
+    550,
+    360
    ]
   },
   "365": {
@@ -1119,7 +1229,6 @@
    ],
    "ins": {
     "audio_vae": 12,
-    "batch_size": 94,
     "frame_rate": 66,
     "frames_number": 38
    },
@@ -1150,15 +1259,15 @@
     170
    ],
    "ins": {
-    "guider": 32,
-    "latent_image": 92,
-    "noise": 12,
-    "sampler": 52,
-    "sigmas": 72
+    "guider": 31.9,
+    "latent_image": 91.8,
+    "noise": 11.9,
+    "sampler": 51.9,
+    "sigmas": 71.8
    },
    "outs": [
-    12,
-    32
+    11.9,
+    31.9
    ]
   },
   "369": {
@@ -1185,8 +1294,6 @@
    ],
    "ins": {
     "audio": 32,
-    "bit_depth": 86,
-    "color_space": 114,
     "fps": 58,
     "images": 12
    },
@@ -1230,8 +1337,7 @@
     240
    ],
    "ins": {
-    "clip": 12,
-    "text": 127
+    "clip": 12
    },
    "outs": [
     12
@@ -1245,11 +1351,7 @@
     200
    ],
    "ins": {
-    "overlap": 86,
     "samples": 12,
-    "temporal_overlap": 142,
-    "temporal_size": 114,
-    "tile_size": 58,
     "vae": 32
    },
    "outs": [
@@ -1293,15 +1395,14 @@
     148
    ],
    "ins": {
-    "expression": 101,
-    "values.a": 12,
-    "values.b": 32,
-    "values.c": 52
+    "values.a": 11.9,
+    "values.b": 31.9,
+    "values.c": 51.8
    },
    "outs": [
-    12,
-    32,
-    52
+    11.9,
+    31.9,
+    51.8
    ]
   },
   "380": {
@@ -1315,21 +1416,15 @@
     "audio": 72,
     "clip": 12,
     "image": 32,
-    "max_length": 166,
     "prompt": 118,
-    "sampling_mode": 194,
-    "sampling_mode.min_p": 306,
-    "sampling_mode.presence_penalty": 390,
-    "sampling_mode.repetition_penalty": 334,
-    "sampling_mode.seed": 362,
-    "sampling_mode.temperature": 222,
-    "sampling_mode.top_k": 250,
-    "sampling_mode.top_p": 278,
-    "thinking": 418,
     "video": 52
    },
    "outs": [
     12
+   ],
+   "requested_size": [
+    400,
+    380
    ]
   },
   "381": {
@@ -1337,13 +1432,17 @@
     0,
     -30,
     510,
-    360
+    200
    ],
    "ins": {
     "source": 12
    },
    "outs": [
     12
+   ],
+   "requested_size": [
+    510,
+    200
    ]
   },
   "382": {
@@ -1370,7 +1469,7 @@
     100
    ],
    "ins": {
-    "value": 38
+    "value": 37.9
    },
    "outs": [
     12
@@ -1426,8 +1525,7 @@
     120
    ],
    "ins": {
-    "clip_name": 38,
-    "type": 66
+    "clip_name": 38
    },
    "outs": [
     12
@@ -1441,11 +1539,9 @@
     160
    ],
    "ins": {
-    "audio_cfg": 106,
     "model": 12,
     "negative": 52,
-    "positive": 32,
-    "video_cfg": 78
+    "positive": 32
    },
    "outs": [
     12
@@ -1459,11 +1555,9 @@
     160
    ],
    "ins": {
-    "audio_cfg": 106,
     "model": 12,
     "negative": 52,
-    "positive": 32,
-    "video_cfg": 78
+    "positive": 32
    },
    "outs": [
     12
@@ -1477,8 +1571,7 @@
     120
    ],
    "ins": {
-    "clip_name": 38,
-    "type": 66
+    "clip_name": 38
    },
    "outs": [
     12
@@ -1491,9 +1584,7 @@
     290,
     110
    ],
-   "ins": {
-    "sigmas": 42
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -1505,9 +1596,7 @@
     500,
     100
    ],
-   "ins": {
-    "sigmas": 42
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -1521,9 +1610,7 @@
     280,
     110
    ],
-   "ins": {
-    "noise_seed": 38
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -1564,9 +1651,7 @@
     280,
     110
    ],
-   "ins": {
-    "sampler_name": 38
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -1578,9 +1663,7 @@
     280,
     110
    ],
-   "ins": {
-    "sigmas": 42
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -1593,7 +1676,6 @@
     160
    ],
    "ins": {
-    "cfg": 78,
     "model": 12,
     "negative": 52,
     "positive": 32
@@ -1610,15 +1692,15 @@
     170
    ],
    "ins": {
-    "guider": 32,
-    "latent_image": 92,
-    "noise": 12,
-    "sampler": 52,
-    "sigmas": 72
+    "guider": 31.9,
+    "latent_image": 91.8,
+    "noise": 11.9,
+    "sampler": 51.9,
+    "sigmas": 71.8
    },
    "outs": [
-    12,
-    32
+    11.9,
+    31.9
    ]
   },
   "292": {
@@ -1648,8 +1730,7 @@
    ],
    "ins": {
     "lora_name": 38,
-    "model": 12,
-    "strength_model": 66
+    "model": 12
    },
    "outs": [
     12
@@ -1679,10 +1760,9 @@
     180
    ],
    "ins": {
-    "bypass": 106,
+    "bypass": 78,
     "image": 32,
     "latent": 52,
-    "strength": 78,
     "vae": 12
    },
    "outs": [
@@ -1698,11 +1778,8 @@
    ],
    "ins": {
     "input": 12,
-    "resize_type": 38,
-    "resize_type.crop": 122,
-    "resize_type.height": 94,
-    "resize_type.width": 66,
-    "scale_method": 150
+    "resize_type.height": 66,
+    "resize_type.width": 38
    },
    "outs": [
     12
@@ -1715,9 +1792,7 @@
     280,
     110
    ],
-   "ins": {
-    "sampler_name": 38
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -1730,7 +1805,6 @@
     142
    ],
    "ins": {
-    "expression": 98,
     "values.a": 12,
     "values.b": 32
    },
@@ -1747,7 +1821,9 @@
     75,
     26
    ],
-   "ins": {},
+   "ins": {
+    "": -18
+   },
    "outs": [
     -20
    ]
@@ -1760,7 +1836,6 @@
     142
    ],
    "ins": {
-    "expression": 98,
     "values.a": 12,
     "values.b": 32
    },
@@ -1778,7 +1853,6 @@
     200
    ],
    "ins": {
-    "batch_size": 122,
     "height": 66,
     "length": 94,
     "width": 38
@@ -1810,7 +1884,6 @@
     142
    ],
    "ins": {
-    "expression": 98,
     "values.a": 12,
     "values.b": 32
    },
@@ -1827,9 +1900,7 @@
     370,
     100
    ],
-   "ins": {
-    "value": 38
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -1839,14 +1910,18 @@
     0,
     -30,
     600,
-    390
+    320
    ],
    "ins": {
     "clip": 12,
-    "text": 202
+    "text": 167
    },
    "outs": [
     12
+   ],
+   "requested_size": [
+    600,
+    320
    ]
   },
   "307": {
@@ -1873,9 +1948,7 @@
     500,
     110
    ],
-   "ins": {
-    "sigmas": 42
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -1903,15 +1976,15 @@
     170
    ],
    "ins": {
-    "guider": 32,
-    "latent_image": 92,
-    "noise": 12,
-    "sampler": 52,
-    "sigmas": 72
+    "guider": 31.9,
+    "latent_image": 91.8,
+    "noise": 11.9,
+    "sampler": 51.9,
+    "sigmas": 71.8
    },
    "outs": [
-    12,
-    32
+    11.9,
+    31.9
    ]
   },
   "311": {
@@ -1938,8 +2011,6 @@
    ],
    "ins": {
     "audio": 32,
-    "bit_depth": 86,
-    "color_space": 114,
     "fps": 58,
     "images": 12
    },
@@ -1969,8 +2040,7 @@
     170
    ],
    "ins": {
-    "clip": 12,
-    "text": 92
+    "clip": 12
    },
    "outs": [
     12
@@ -1984,7 +2054,6 @@
     160
    ],
    "ins": {
-    "cfg": 78,
     "model": 12,
     "negative": 52,
     "positive": 32
@@ -2089,10 +2158,9 @@
     180
    ],
    "ins": {
-    "bypass": 106,
+    "bypass": 78,
     "image": 32,
     "latent": 52,
-    "strength": 78,
     "vae": 12
    },
    "outs": [
@@ -2152,7 +2220,6 @@
     148
    ],
    "ins": {
-    "expression": 101,
     "values.a": 12,
     "values.b": 32,
     "values.c": 52
@@ -2215,9 +2282,8 @@
     170
    ],
    "ins": {
-    "height": 94,
-    "value": 38,
-    "width": 66
+    "height": 66,
+    "width": 38
    },
    "outs": [
     12
@@ -2231,8 +2297,7 @@
     110
    ],
    "ins": {
-    "image": 12,
-    "img_compression": 38
+    "image": 12
    },
    "outs": [
     12
@@ -2262,9 +2327,7 @@
    "ins": {
     "clip": 32,
     "lora_name": 58,
-    "model": 12,
-    "strength_clip": 114,
-    "strength_model": 86
+    "model": 12
    },
    "outs": [
     12,
@@ -2282,21 +2345,15 @@
     "audio": 72,
     "clip": 12,
     "image": 32,
-    "max_length": 166,
     "prompt": 118,
-    "sampling_mode": 194,
-    "sampling_mode.min_p": 306,
-    "sampling_mode.presence_penalty": 390,
-    "sampling_mode.repetition_penalty": 334,
-    "sampling_mode.seed": 362,
-    "sampling_mode.temperature": 222,
-    "sampling_mode.top_k": 250,
-    "sampling_mode.top_p": 278,
-    "thinking": 418,
     "video": 52
    },
    "outs": [
     12
+   ],
+   "requested_size": [
+    400,
+    380
    ]
   },
   "347": {
@@ -2304,13 +2361,17 @@
     0,
     -30,
     510,
-    360
+    200
    ],
    "ins": {
     "source": 12
    },
    "outs": [
     12
+   ],
+   "requested_size": [
+    510,
+    200
    ]
   },
   "348": {
@@ -2337,7 +2398,7 @@
     100
    ],
    "ins": {
-    "value": 38
+    "value": 37.9
    },
    "outs": [
     12
@@ -2351,10 +2412,7 @@
     118
    ],
    "ins": {
-    "input": 12,
-    "resize_type": 38,
-    "resize_type.longer_size": 66,
-    "scale_method": 94
+    "input": 12
    },
    "outs": [
     12
@@ -2713,8 +2771,7 @@
     110
    ],
    "ins": {
-    "model": 12,
-    "shift": 38
+    "model": 12
    },
    "outs": [
     12
@@ -2728,7 +2785,6 @@
     170
    ],
    "ins": {
-    "batch_size": 94,
     "height": 66,
     "width": 38
    },
@@ -2741,14 +2797,18 @@
     0,
     -30,
     450,
-    650
+    320
    ],
    "ins": {
     "clip": 12,
-    "text": 332
+    "text": 167
    },
    "outs": [
     12
+   ],
+   "requested_size": [
+    450,
+    320
    ]
   },
   "28": {
@@ -2787,14 +2847,10 @@
     350
    ],
    "ins": {
-    "cfg": 154,
-    "denoise": 238,
     "latent_image": 72,
     "model": 12,
     "negative": 52,
     "positive": 32,
-    "sampler_name": 182,
-    "scheduler": 210,
     "seed": 98,
     "steps": 126
    },
@@ -2810,8 +2866,7 @@
     150
    ],
    "ins": {
-    "clip_name": 38,
-    "type": 66
+    "clip_name": 38
    },
    "outs": [
     12
@@ -3060,21 +3115,15 @@
    ],
    "ins": {
     "audio_prompt": 12,
-    "cfg_weight": 182,
-    "exaggeration": 154,
-    "keep_model_loaded": 378,
-    "language": 126,
-    "min_p": 266,
-    "repetition_penalty": 238,
-    "seed": 322,
-    "temperature": 210,
-    "text": 78,
-    "top_p": 294,
-    "use_cpu": 350
+    "cfg_weight": 154.2,
+    "exaggeration": 126.1,
+    "language": 210.2,
+    "seed": 182.2,
+    "text": 78.1
    },
    "outs": [
     12,
-    32
+    32.1
    ]
   },
   "1002": {
@@ -3101,7 +3150,6 @@
     500
    ],
    "ins": {
-    "filename_prefix": 42,
     "images": 12
    },
    "outs": [
@@ -3116,14 +3164,7 @@
     470
    ],
    "ins": {
-    "clip_name": 394,
-    "height": 282,
-    "seed": 310,
-    "steps": 338,
-    "text": 132,
-    "unet_name": 366,
-    "vae_name": 422,
-    "width": 254
+    "text": 132
    },
    "outs": [
     12
@@ -3136,9 +3177,7 @@
     230,
     110
    ],
-   "ins": {
-    "value": 38
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -3150,9 +3189,7 @@
     230,
     110
    ],
-   "ins": {
-    "value": 38
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -3178,9 +3215,7 @@
     230,
     110
    ],
-   "ins": {
-    "value": 38
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -3211,14 +3246,12 @@
    ],
    "ins": {
     "audio": 32,
-    "ckpt_name": 450,
     "input": 12,
-    "lora_name": 478,
-    "lora_name_1": 562,
-    "model_name": 534,
+    "lora_name": 450,
+    "lora_name_1": 506,
+    "model_name": 478,
     "noise_seed": 422,
     "start_index": 338,
-    "text_encoder": 506,
     "value": 142,
     "value_1": 282,
     "value_2": 310,
@@ -3238,9 +3271,6 @@
     126
    ],
    "ins": {
-    "filename_prefix": 42,
-    "format": 74,
-    "format.codec": 102,
     "video": 12
    },
    "outs": [
@@ -3255,21 +3285,16 @@
     630
    ],
    "ins": {
-    "clip_name": 414,
     "first_frame": 12,
-    "height": 302,
+    "height": 274,
     "last_frame": 32,
-    "lora_name": 526,
-    "noise_seed": 358,
-    "prompt": 152,
-    "strength_model_1": 554,
-    "unet_name": 386,
-    "vae_name": 442,
-    "vae_name_1": 470,
-    "value": 498,
-    "value_1": 330,
-    "value_2": 582,
-    "width": 274
+    "noise_seed": 442,
+    "strength_model_1": 386,
+    "vae_name_1": 330,
+    "value": 358,
+    "value_1": 302,
+    "value_2": 414,
+    "width": 152
    },
    "outs": [
     12
@@ -3287,10 +3312,9 @@
     "image": 12,
     "image2": 32,
     "image3": 52,
-    "lora_name": 664,
     "prompt": 182.5,
     "prompt_1": 419.5,
-    "seed": 692,
+    "seed": 664,
     "unet_name_1": 552,
     "vae_name_1": 608,
     "value": 636
@@ -3307,8 +3331,6 @@
     130
    ],
    "ins": {
-    "filename_prefix": 42,
-    "format": 74,
     "images": 12
    },
    "outs": [
@@ -3323,19 +3345,12 @@
     550
    ],
    "ins": {
-    "color_correction_method": 262,
-    "denoise": 234,
-    "duration": 94,
-    "resize_type.multiplier_1": 122,
-    "sampler_name": 178,
-    "scheduler": 206,
-    "seed_1": 150,
+    "resize_type.multiplier_1": 94,
+    "seed_1": 122,
     "start_time": 66,
     "switch": 38,
-    "temporal_overlap_1": 318,
-    "unet_name": 346,
-    "vae_name": 374,
-    "value": 290,
+    "temporal_overlap_1": 178,
+    "value": 150,
     "video": 12
    },
    "outs": [
@@ -3364,45 +3379,34 @@
     0,
     -30,
     375,
-    415
+    416
    ],
    "ins": {
-    "cfg_weight": 255.2,
-    "dialog_text": 168.6,
-    "exaggeration": 227.2,
-    "keep_model_loaded": 367.2,
-    "seed": 311.2,
     "speaker_A_Audio": 12,
-    "speaker_B_Audio": 32,
-    "speaker_C_Audio": 52,
-    "speaker_D_Audio": 72,
-    "temperature": 283.2,
-    "use_cpu": 339.2
+    "speaker_B_Audio": 32.1,
+    "speaker_C_Audio": 52.1,
+    "speaker_D_Audio": 72.1
    },
    "outs": [
     12,
-    32,
-    52,
-    72,
-    92,
-    112
+    32.1,
+    52.1,
+    72.1,
+    92.1,
+    112.2
    ]
   },
   "1026": {
    "box": [
     0,
     -30,
-    283,
-    150
+    300,
+    160
    ],
    "ins": {
-    "audio": 12,
-    "filename_prefix": 42,
-    "quality": 74
+    "audio": 12
    },
-   "outs": [
-    12
-   ]
+   "outs": []
   },
   "1027": {
    "box": [
@@ -3411,9 +3415,7 @@
     283,
     138
    ],
-   "ins": {
-    "audio": 42
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -3425,9 +3427,7 @@
     283,
     138
    ],
-   "ins": {
-    "audio": 42
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -3440,9 +3440,6 @@
     126
    ],
    "ins": {
-    "filename_prefix": 42,
-    "format": 74,
-    "format.codec": 102,
     "video": 12
    },
    "outs": [
@@ -3457,20 +3454,18 @@
     670
    ],
    "ins": {
-    "clip_name": 566,
-    "clip_name_1": 622,
+    "clip_name_1": 538,
     "input": 12,
-    "model_name": 594,
-    "noise_seed": 426,
-    "unet_name": 482,
-    "vae_name": 510,
-    "vae_name_1": 538,
+    "model_name": 510,
+    "noise_seed": 566,
+    "vae_name": 454,
+    "vae_name_1": 482,
     "value": 162,
     "value_1": 314,
     "value_2": 342,
     "value_3": 370,
     "value_4": 398,
-    "value_5": 454
+    "value_5": 426
    },
    "outs": [
     12
@@ -3501,7 +3496,6 @@
     200
    ],
    "ins": {
-    "model_name": 114,
     "value": 58,
     "value_1": 86,
     "video": 12
@@ -3518,9 +3512,7 @@
     380,
     118
    ],
-   "ins": {
-    "unet_name": 38
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -3532,9 +3524,7 @@
     380,
     110
    ],
-   "ins": {
-    "vae_name": 38
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -3559,8 +3549,7 @@
     90
    ],
    "ins": {
-    "batch_size": 66,
-    "seconds": 38
+    "seconds": 37.9
    },
    "outs": [
     12
@@ -3588,16 +3577,11 @@
     350
    ],
    "ins": {
-    "cfg": 154,
-    "denoise": 238,
     "latent_image": 72,
     "model": 12,
     "negative": 52,
     "positive": 32,
-    "sampler_name": 182,
-    "scheduler": 210,
-    "seed": 98,
-    "steps": 126
+    "seed": 98
    },
    "outs": [
     12
@@ -3611,8 +3595,7 @@
     110
    ],
    "ins": {
-    "model": 12,
-    "shift": 38
+    "model": 12
    },
    "outs": [
     12
@@ -3640,11 +3623,7 @@
     380,
     180
    ],
-   "ins": {
-    "clip_name1": 38,
-    "clip_name2": 66,
-    "type": 94
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -3657,15 +3636,9 @@
     700
    ],
    "ins": {
-    "bpm": 540,
     "clip": 12,
-    "duration": 568,
-    "keyscale": 652,
-    "language": 624,
-    "lyrics": 379.5,
-    "seed": 512,
-    "tags": 142.5,
-    "timesignature": 596
+    "duration": 379.5,
+    "seed": 142.5
    },
    "outs": [
     12
@@ -3678,9 +3651,7 @@
     270,
     110
    ],
-   "ins": {
-    "value": 38
-   },
+   "ins": {},
    "outs": [
     12
    ]
@@ -3720,22 +3691,6 @@
    "box": [
     0,
     -30,
-    270,
-    130
-   ],
-   "ins": {
-    "on_false": 12,
-    "on_true": 32,
-    "switch": 58
-   },
-   "outs": [
-    12
-   ]
-  },
-  "1050": {
-   "box": [
-    0,
-    -30,
     300,
     160
    ],
@@ -3750,7 +3705,7 @@
     92
    ]
   },
-  "1051": {
+  "1050": {
    "box": [
     0,
     -30,
@@ -3759,8 +3714,21 @@
    ],
    "ins": {
     "audio": 12,
-    "duration": 66,
-    "start_index": 38
+    "duration": 38
+   },
+   "outs": [
+    12
+   ]
+  },
+  "1051": {
+   "box": [
+    0,
+    -30,
+    300,
+    100
+   ],
+   "ins": {
+    "audio": 12
    },
    "outs": [
     12
@@ -3771,11 +3739,11 @@
     0,
     -30,
     300,
-    100
+    120
    ],
    "ins": {
-    "audio": 12,
-    "volume": 38
+    "audio1": 12,
+    "audio2": 32
    },
    "outs": [
     12
@@ -3786,12 +3754,12 @@
     0,
     -30,
     300,
-    120
+    150
    ],
    "ins": {
-    "audio1": 12,
-    "audio2": 32,
-    "merge_method": 58
+    "audio": 58,
+    "fps": 32,
+    "images": 12
    },
    "outs": [
     12
@@ -3801,21 +3769,250 @@
    "box": [
     0,
     -30,
-    300,
-    150
+    290,
+    126
    ],
    "ins": {
-    "audio": 32,
-    "bit_depth": 86,
-    "color_space": 114,
-    "fps": 58,
-    "images": 12
+    "video": 12
+   },
+   "outs": []
+  },
+  "1055": {
+   "box": [
+    0,
+    -30,
+    320,
+    120
+   ],
+   "ins": {},
+   "outs": [
+    12,
+    32
+   ]
+  },
+  "1056": {
+   "box": [
+    0,
+    -30,
+    320,
+    120
+   ],
+   "ins": {
+    "project": 12
    },
    "outs": [
     12
    ]
   },
-  "1055": {
+  "1057": {
+   "box": [
+    0,
+    -30,
+    320,
+    120
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12
+   ]
+  },
+  "1058": {
+   "box": [
+    0,
+    -30,
+    320,
+    120
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12
+   ]
+  },
+  "1059": {
+   "box": [
+    0,
+    -30,
+    320,
+    282
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12,
+    32,
+    52,
+    72,
+    92,
+    112,
+    132,
+    152,
+    172
+   ]
+  },
+  "1061": {
+   "box": [
+    0,
+    -30,
+    320,
+    242
+   ],
+   "ins": {
+    "audio": 162,
+    "line": 32,
+    "project": 12,
+    "seed": 194
+   },
+   "outs": [
+    12,
+    32,
+    52,
+    72,
+    92,
+    112,
+    132
+   ]
+  },
+  "1062": {
+   "box": [
+    0,
+    -30,
+    320,
+    140
+   ],
+   "ins": {
+    "audio": 32,
+    "project": 12
+   },
+   "outs": [
+    12
+   ]
+  },
+  "1063": {
+   "box": [
+    0,
+    -30,
+    300,
+    136
+   ],
+   "ins": {
+    "audio": 12
+   },
+   "outs": []
+  },
+  "1065": {
+   "box": [
+    0,
+    -30,
+    300,
+    150
+   ],
+   "ins": {
+    "line": 32,
+    "project": 12,
+    "video": 62
+   },
+   "outs": [
+    12,
+    32
+   ]
+  },
+  "1067": {
+   "box": [
+    0,
+    -30,
+    300,
+    114
+   ],
+   "ins": {
+    "audio": 32,
+    "project": 12
+   },
+   "outs": [
+    12
+   ]
+  },
+  "1068": {
+   "box": [
+    0,
+    -30,
+    320,
+    130
+   ],
+   "ins": {
+    "music": 62,
+    "project": 12
+   },
+   "outs": [
+    12,
+    32
+   ]
+  },
+  "1069": {
+   "box": [
+    0,
+    -30,
+    320,
+    120
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12
+   ]
+  },
+  "1070": {
+   "box": [
+    0,
+    -30,
+    300,
+    90
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12,
+    32
+   ]
+  },
+  "1071": {
+   "box": [
+    0,
+    -30,
+    300,
+    90
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12,
+    32
+   ]
+  },
+  "1072": {
+   "box": [
+    0,
+    -30,
+    300,
+    154
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12,
+    32,
+    52
+   ]
+  },
+  "1073": {
    "box": [
     0,
     -30,
@@ -3823,10 +4020,167 @@
     126
    ],
    "ins": {
-    "filename_prefix": 42,
-    "format": 74,
-    "format.codec": 102,
     "video": 12
+   },
+   "outs": []
+  },
+  "1074": {
+   "box": [
+    0,
+    -30,
+    320,
+    120
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12
+   ]
+  },
+  "1075": {
+   "box": [
+    0,
+    -30,
+    300,
+    90
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12,
+    32
+   ]
+  },
+  "1076": {
+   "box": [
+    0,
+    -30,
+    300,
+    154
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12,
+    32,
+    52
+   ]
+  },
+  "1077": {
+   "box": [
+    0,
+    -30,
+    300,
+    140
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12,
+    32
+   ]
+  },
+  "1078": {
+   "box": [
+    0,
+    -30,
+    300,
+    140
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12,
+    32
+   ]
+  },
+  "1079": {
+   "box": [
+    0,
+    -30,
+    300,
+    140
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12,
+    32
+   ]
+  },
+  "1080": {
+   "box": [
+    0,
+    -30,
+    300,
+    140
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12,
+    32
+   ]
+  },
+  "1081": {
+   "box": [
+    0,
+    -30,
+    420,
+    300
+   ],
+   "ins": {
+    "source": 12
+   },
+   "outs": [
+    12
+   ]
+  },
+  "1082": {
+   "box": [
+    0,
+    -30,
+    320,
+    120
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12
+   ]
+  },
+  "1083": {
+   "box": [
+    0,
+    -30,
+    300,
+    90
+   ],
+   "ins": {
+    "project": 12
+   },
+   "outs": [
+    12,
+    32
+   ]
+  },
+  "1084": {
+   "box": [
+    0,
+    -30,
+    420,
+    240
+   ],
+   "ins": {
+    "source": 12
    },
    "outs": [
     12

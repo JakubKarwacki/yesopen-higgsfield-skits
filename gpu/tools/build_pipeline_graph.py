@@ -36,6 +36,14 @@ DEFAULT_OUT = HERE.parent / "workflows" / "pipeline" / "yesopen-skit-pipeline.js
 # node boxes and socket rows as the ComfyUI frontend draws them, measured in the browser (see graph_layout.Geometry)
 GEOMETRY = HERE / "comfy_geometry.json"
 
+# Body heights for text panels. The measured cache records requested_size so
+# frontend minimum sizes can exceed these requests without repeated shrinking.
+SUBGRAPH_HEIGHTS = {
+    "Text to Image (Z-Image-Turbo)": {27: 320},
+    "Video Generation (LTX-2.3)": {306: 320, 346: 380, 347: 200},
+    "Image to Video (LTX-2.5)": {364: 360, 380: 380, 381: 200},
+}
+
 # placeholder inputs of the official templates -> files in comfy/input of the kept disk (a still, two voices, a line, a clip)
 INPUTS = {
     "lily_girl_blue.png": "562e5da24638c2a6-owner.png",
@@ -115,10 +123,10 @@ def swap_models(obj):
     return obj
 
 
-PAD = 50                       # group padding
-COL_GAP = 160                  # least room between stage columns (more when the lanes need it)
-ROW_GAP = 160                  # least room between rows (more when the channels need it)
-GROUP_TITLE_H = 50             # a group's title strip
+PAD = 36                       # group padding
+COL_GAP = 128                  # corridors expand when additional lanes need room
+ROW_GAP = 128                  # rows expand when additional channels need room
+GROUP_TITLE_H = 44             # room for the 30 px group title
 NOTE_MIN_W = 360               # a stage note is at least this wide when its text is longer
 NOTE_MAX_W = 640               # ... and at most this wide (the computer steps), the title at most TITLE_MAX_W
 TITLE_MAX_W = 1400
@@ -461,6 +469,15 @@ def optimise_subgraph(sg, data):
     sg["groups"] = []
     for n in sg["nodes"]:
         (n.get("flags") or {}).pop("collapsed", None)
+        height = SUBGRAPH_HEIGHTS.get(sg["name"], {}).get(n["id"])
+        if height is not None:
+            cached = data.setdefault(sg["id"], {}).get(str(n["id"]))
+            width = cached["box"][2] - cached["box"][0] if cached else n["size"][0]
+            requested = [width, height]
+            n["size"] = requested
+            if cached and cached.get("requested_size") != requested:
+                cached["box"][3] = height
+                cached["requested_size"] = requested
     io = data.get("io", {}).get(sg["id"], {})
     pseudo = {}
     for nid, side, key in ((-10, "inputNode", "in"), (-20, "outputNode", "out")):
@@ -522,7 +539,7 @@ def main():
             continue
         if not file or file in BUILT:
             continue
-        wf = json.load(open(args.ui / f"{file}.json"))
+        wf = json.loads((args.ui / f"{file}.json").read_text(encoding="utf-8"))
         ns = copy.deepcopy(wf["nodes"])
         wf_links = copy.deepcopy(wf.get("links", []))
         drop_audiocrop(ns, wf_links)
@@ -642,7 +659,7 @@ def main():
             gone_any = True
 
     # 3. the insides of the subgraphs
-    data = json.load(open(GEOMETRY)) if GEOMETRY.exists() else {}
+    data = json.loads(GEOMETRY.read_text(encoding="utf-8")) if GEOMETRY.exists() else {}
     for sg in subgraphs:
         optimise_subgraph(sg, data)
 
@@ -806,7 +823,8 @@ def main():
         "version": 0.4, "definitions": {"subgraphs": subgraphs},
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    json.dump(out, open(args.out, "w"), ensure_ascii=False, indent=1)
+    with args.out.open("w", encoding="utf-8") as stream:
+        json.dump(out, stream, ensure_ascii=False, indent=1)
     print(f"{args.out}: nodes {len(nodes_final)}, links {len(links_out)}, groups {len(groups_out)}, subgraphs {len(subgraphs)}, "
           f"reroutes {len(reroutes)}, canvas {round(total_w)} x {round(total_h)}")
     print("  grid (column, row): " + ", ".join(f"{k} {cells[k]}" for k in gpu) + f"  (score {score:.0f})")

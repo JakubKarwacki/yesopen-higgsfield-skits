@@ -14,14 +14,13 @@
   possible, each crossing counted per link.
 - build_reroutes: the paths as native ComfyUI reroutes (link render mode "Straight").
 """
-import itertools
 import math
 import random
 
 TITLE_H = 30                   # node title bar above the node's pos
 LANE_X0, LANE_DX = 30, 22      # first lane and lane pitch of the vertical runs in a corridor between two columns
 CHANNEL_DY = 22                # pitch of the horizontal channels links use to skip columns
-GAP_X, GAP_Y = 90, 40          # between node columns / stacked nodes inside a block
+GAP_X, GAP_Y = 72, 28          # corridors still expand to fit all routing lanes
 LEVEL = 6                      # a link whose ends differ by at most this needs no reroute (a jog of a few px at most)
 
 
@@ -104,24 +103,54 @@ def crossings(order):
 
 
 def best_order(items):
-    """The lane order with the fewest crossings: every order for up to 7 lanes, else moves of one lane at a time."""
-    if len(items) <= 7:
-        return list(min(itertools.permutations(items), key=lambda o: (crossings(o), [it[0] for it in o])))
+    """Exact subset optimisation up to 12 lanes; cached pair costs for larger corridors.
+
+    Every crossing belongs to a pair of lanes. Appending one lane therefore adds
+    only its costs against the preceding subset, avoiding factorial enumeration.
+    Original indices break equal-height ties without comparing source identifiers.
+    """
+    n = len(items)
+    pair = [[crossings([a, b]) if i != j else 0
+             for j, b in enumerate(items)] for i, a in enumerate(items)]
+    if n <= 12:
+        scores, orders = [0] + [math.inf] * ((1 << n) - 1), [()] * (1 << n)
+        tie = lambda order: (tuple(items[i][0] for i in order), order)
+        for mask in range(1, 1 << n):
+            for j in range(n):
+                if not mask & (1 << j):
+                    continue
+                prev = mask ^ (1 << j)
+                score = scores[prev] + sum(pair[i][j] for i in range(n) if prev & (1 << i))
+                order = orders[prev] + (j,)
+                if score < scores[mask] or (score == scores[mask] and tie(order) < tie(orders[mask])):
+                    scores[mask], orders[mask] = score, order
+        return [items[i] for i in orders[-1]]
+
+    def score(order):
+        return sum(pair[a][b] for k, a in enumerate(order) for b in order[k + 1:])
+
     best = None
     for key in (lambda l: l[0], lambda l: -l[0], lambda l: sum(l[1]) / len(l[1]), lambda l: -sum(l[1]) / len(l[1])):
-        order = sorted(items, key=key)
+        order = sorted(range(n), key=lambda i: key(items[i]))
+        current = score(order)
         improved = True
         while improved:
             improved = False
             for i in range(len(order)):
                 for j in range(len(order)):
-                    cand = order[:i] + order[i + 1:]
-                    cand.insert(j, order[i])
-                    if crossings(cand) < crossings(order):
-                        order, improved = cand, True
-        if best is None or crossings(order) < crossings(best):
-            best = order
-    return best
+                    lane = order[i]
+                    between = order[i + 1:j + 1] if j > i else order[j:i]
+                    delta = sum(pair[b][lane] - pair[lane][b] for b in between)
+                    if j < i:
+                        delta = -delta
+                    if delta < 0:
+                        order.pop(i)
+                        order.insert(j, lane)
+                        current += delta
+                        improved = True
+        if best is None or current < best_score:
+            best, best_score = order, current
+    return [items[i] for i in best]
 
 
 def lanes_per_corridor(items):
@@ -139,10 +168,16 @@ def lane_paths(specs, items, link_chan, corridors, ends):
     skips columns two (in its channel). Per corridor two arrangements are compared, a crossing counting as two reroutes:
     the lane order with the fewest crossings (a lane takes its own halfway line when that fits the order), and every lane
     on its own halfway line unless it would run along another source's lane."""
+    mid_counts = {}
+    for lid, src, _, _, ca, cb, _ in specs:
+        if cb == ca + 1:
+            mid = round((ends[lid][0] + ends[lid][1]) / 2)
+            counts = mid_counts.setdefault((ca, src), {})
+            counts[mid] = counts.get(mid, 0) + 1
+    natural = {k: min(counts, key=lambda x: (-counts[x], x)) for k, counts in mid_counts.items()}
+
     def naturals(c, key):
-        mids = [round((ends[s[0]][0] + ends[s[0]][1]) / 2) for s in specs
-                if s[1] == key[1] and s[4] == c and s[5] == c + 1 and key[2] == "o"]
-        return max(set(mids), key=mids.count) if mids else None
+        return natural.get((c, key[1])) if key[2] == "o" else None
 
     def span(key):
         ys = [items[key][0]] + list(items[key][1])
@@ -250,23 +285,66 @@ def simplify(paths, ends_xy, boxes):
     def length(pcs):
         return sum(abs(a[0] - b[0]) + abs(a[1] - b[1]) for _, _, a, b in pcs)
 
-    # links of one source that share their first reroute run as one bus: they are simplified together, and only into
-    # paths that still share their vertical (the same halfway line), so the bus stays one line
+    # Simplify existing trunks together before trying to merge separate trunks.
     groups = {}
     for lid in cur:
         src, pts = paths[lid]
         if pts:
-            groups.setdefault((src, pts[0]), []).append(lid)
+            groups.setdefault((src, tuple(pts[0])), []).append(lid)
     for members in groups.values():
         if len(members) < 2:
             continue
         src = paths[members[0]][0]
+        changed = True
+        while changed:
+            changed = False
+            common = list(zip(*(paths[l][1] for l in members)))
+            for i, points in enumerate(common):
+                if len(set(map(tuple, points))) != 1:
+                    break
+                candidates = [paths[l][1][:i] + paths[l][1][i + 1:] for l in members]
+                # Keep a common first waypoint so the trunk remains a bus.
+                if not all(candidates) or len({tuple(p[0]) for p in candidates}) != 1:
+                    continue
+                pcs = [free(l, src, p) for l, p in zip(members, candidates)]
+                if all(p is not None for p in pcs) and sum(length(p) for p in pcs) <= sum(length(cur[l]) for l in members):
+                    for l, points, p in zip(members, candidates, pcs):
+                        paths[l], cur[l] = (src, points), p
+                    dropped += len(members)
+                    changed = True
+                    break
         plains = [free(l, src, []) for l in members]
         mids = {round((ends_xy[l][0][0] + ends_xy[l][1][0]) / 2) for l in members}
-        if all(p is not None for p in plains) and max(mids) - min(mids) < 2:
+        horizontal_trunk = all(abs(paths[l][1][0][1] - ends_xy[l][0][1]) < 1 for l in members)
+        if all(p is not None for p in plains) and (max(mids) - min(mids) < 2 or horizontal_trunk):
             for l, p in zip(members, plains):
                 dropped += len(paths[l][1])
                 paths[l], cur[l] = (src, []), p
+        elif any(len(paths[l][1]) > 1 for l in members):
+            # Shorten a whole fan-out together. A single common waypoint keeps
+            # the source-to-waypoint trunk shared, unlike independent per-link
+            # shortcuts which can split the bus into parallel vertical runs.
+            points = {tuple(p) for l in members for p in paths[l][1]}
+            yo = ends_xy[members[0]][0][1]
+            xs = {p[0] for p in points}
+            lo = min(ends_xy[l][0][0] for l in members)
+            hi = max(ends_xy[l][1][0] for l in members)
+            xs.update(lo + LANE_DX * k for k in range(max(0, int((hi - lo) // LANE_DX)) + 1))
+            ys = {p[1] for p in points}
+            candidates = sorted(points | {(x, y) for x in xs for y in ys if abs(y - yo) > LEVEL})
+            chosen, best_pieces, best_length = None, None, math.inf
+            old_length = sum(length(cur[l]) for l in members)
+            for pt in candidates:
+                pcs = [free(l, src, [pt]) for l in members]
+                if any(p is None for p in pcs):
+                    continue
+                distance = sum(length(p) for p in pcs)
+                if distance <= old_length and distance < best_length:
+                    chosen, best_pieces, best_length = pt, pcs, distance
+            if chosen is not None:
+                for l, p in zip(members, best_pieces):
+                    dropped += len(paths[l][1]) - 1
+                    paths[l], cur[l] = (src, [chosen]), p
 
     solo = {l for ms in groups.values() if len(ms) == 1 for l in ms}
     for lid in sorted(cur, key=lambda l: -len(paths[l][1])):
@@ -288,12 +366,127 @@ def simplify(paths, ends_xy, boxes):
                     if pcs is not None and (best is None or length(pcs) < length(best)):
                         best, chosen = pcs, cand
             if chosen is None:
-                continue
+                # One waypoint may be impossible even when several individual
+                # corners are redundant. Remove those without lengthening the
+                # path or introducing a collision.
+                chosen = list(pts)
+                best = cur[lid]
+                changed = True
+                while changed:
+                    changed = False
+                    for i in range(len(chosen)):
+                        cand = chosen[:i] + chosen[i + 1:]
+                        pcs = free(lid, src, cand)
+                        if pcs is not None and length(pcs) <= length(best):
+                            chosen, best, changed = cand, pcs, True
+                            break
         else:
             continue
         dropped += len(pts) - len(chosen)
         paths[lid] = (src, chosen)
         cur[lid] = best
+    sources = {}
+    for lid in cur:
+        if paths[lid][1]:
+            sources.setdefault(paths[lid][0], []).append(lid)
+    for src, members in sources.items():
+        if len(members) < 2:
+            continue
+        prefixes = {tuple(map(tuple, paths[l][1][:i + 1])) for l in members for i in range(len(paths[l][1]))}
+        if len(prefixes) <= 1:
+            continue
+        points = {tuple(p) for l in members for p in paths[l][1]}
+        xs = {p[0] for p in points}
+        lo = min(ends_xy[l][0][0] for l in members)
+        hi = max(ends_xy[l][1][0] for l in members)
+        xs.update(lo + LANE_DX * k for k in range(max(0, int((hi - lo) // LANE_DX)) + 1))
+        candidates = sorted(points | {(x, y) for x in xs for _, y in points})
+        old_length = sum(length(cur[l]) for l in members)
+        best = None
+        for pt in candidates:
+            pcs = [free(l, src, [pt]) for l in members]
+            if any(p is None for p in pcs):
+                continue
+            distance = sum(length(p) for p in pcs)
+            if distance <= old_length and (best is None or distance < best[0]):
+                best = distance, pt, pcs
+        if best is not None:
+            _, pt, pcs = best
+            for l, p in zip(members, pcs):
+                dropped += len(paths[l][1]) - 1
+                paths[l], cur[l] = (src, [pt]), p
+
+    def shape(pcs):
+        """Polyline without zero-length segments or straight intermediate points."""
+        poly = []
+        for _, _, a, b in pcs:
+            if not poly:
+                poly.append(a)
+            if b == poly[-1]:
+                continue
+            poly.append(b)
+            while len(poly) >= 3:
+                a, b, c = poly[-3:]
+                u, v = (b[0] - a[0], b[1] - a[1]), (c[0] - b[0], c[1] - b[1])
+                if abs(u[0] * v[1] - u[1] * v[0]) > 0.01 or u[0] * v[0] + u[1] * v[1] < 0:
+                    break
+                poly.pop(-2)
+        return poly
+
+    # Existing fan-outs can have redundant points after their shared trunk.
+    # The old solo pass skipped every link in such a fan-out. Recompute prefix
+    # ownership after each pass; removing a tail may make another tail removable.
+    changed = True
+    while changed:
+        changed = False
+        owners = {}
+        for lid in cur:
+            src, pts = paths[lid]
+            for i in range(len(pts)):
+                key = (src, tuple(map(tuple, pts[:i + 1])))
+                owners[key] = owners.get(key, 0) + 1
+        for lid in sorted(cur):
+            src, pts = paths[lid]
+            for i in reversed(range(len(pts))):
+                cand = pts[:i] + pts[i + 1:]
+                pcs = drawn_pieces({lid: (src, cand)}, ends_xy)
+                identical = shape(pcs) == shape(cur[lid])
+                exclusive = owners[(src, tuple(map(tuple, pts[:i + 1])))] == 1
+                if not identical:
+                    pcs = free(lid, src, cand)
+                    # A shared point needed by another branch need not force a
+                    # shorter branch through the same detour. Keep the waypoint
+                    # for its remaining users while allowing a clear shortcut.
+                    if not exclusive and (pcs is None or length(pcs) > length(cur[lid])):
+                        continue
+                    # A short detour is preferable to an extra visible waypoint.
+                    # Limit the trade-off to one lane pitch per removed point.
+                    if pcs is None or length(pcs) > length(cur[lid]) + LANE_DX:
+                        continue
+                paths[lid], cur[lid] = (src, cand), pcs
+                dropped += 1
+                changed = True
+                break
+        if not changed:
+            # A subtree may share an intermediate waypoint even after other
+            # branches have diverged. Optimise that subtree as a unit.
+            subtrees = {}
+            for lid in cur:
+                src, pts = paths[lid]
+                for i in range(1, len(pts)):
+                    subtrees.setdefault((src, tuple(map(tuple, pts[:i + 1]))), []).append(lid)
+            for (src, prefix), members in sorted(subtrees.items(), key=lambda kv: -len(kv[0][1])):
+                if len(members) < 2:
+                    continue
+                i = len(prefix) - 1
+                candidates = [paths[l][1][:i] + paths[l][1][i + 1:] for l in members]
+                pcs = [free(l, src, p) for l, p in zip(members, candidates)]
+                if all(p is not None for p in pcs) and sum(length(p) for p in pcs) <= sum(length(cur[l]) for l in members):
+                    for l, points, p in zip(members, candidates, pcs):
+                        paths[l], cur[l] = (src, points), p
+                    dropped += len(members)
+                    changed = True
+                    break
     return dropped
 
 
@@ -322,6 +515,10 @@ def layout_block(nodes, links, geo, exports=(), imports=(), io_in=None, io_out=N
     "_io", "size" and "_slots"); they take the first and the last column.
     Returns (width, height, {link id: (source key, points)})."""
     flow = list(nodes) + [n for n in (io_in, io_out) if n]
+    for n in flow:
+        # Persist the rendered dimensions too: routing against a larger measured
+        # box while saving a smaller node makes the frontend resize it on import.
+        n["size"] = list(geo.size(n))
     by_id = {n["id"]: n for n in flow}
     own = [l for l in links if l[1] in by_id and l[3] in by_id]
     preds = {i: [] for i in by_id}
